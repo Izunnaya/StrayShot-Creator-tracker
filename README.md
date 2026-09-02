@@ -90,6 +90,43 @@ component hardcodes a colour.
 
 ---
 
+## Tests
+
+```bash
+npm test        # run once
+npm run test:watch
+```
+
+**71 tests over the domain layer** (Vitest), covering every calculation, rule
+and threshold. The domain is plain TypeScript with no React, so the tests need
+no browser environment and run in well under a second.
+
+Each module has a test file beside it, and [`src/testing/createTestCreator.ts`](src/testing/createTestCreator.ts)
+builds creators with neutral defaults so a test states only the fields it is
+actually about.
+
+What is covered:
+
+| File | Guards |
+| --- | --- |
+| `creatorCalculations.test.ts` | Amounts paid and owed, payment progress, cost per install, delivery counts, lifecycle status, and which creators land in each status panel |
+| `costPerInstallRating.test.ts` | The rating bands, including both boundaries — exactly on target, and exactly at the top of the tolerance band |
+| `campaignSummary.test.ts` | The four headline figures, blending rather than averaging, and empty input |
+| `creatorFiltering.test.ts` | Both filters alone and together, and the chip counts ignoring the status filter |
+| `creatorSorting.test.ts` | Direction per column type, click-to-toggle behaviour, non-mutation, and unmeasurable figures sorting last |
+
+Edge cases are pinned deliberately, so a change in behaviour shows up as a
+failing test rather than a silent shift: overpayment clamping to a zero balance
+(open question Q5), a zero contracted amount not causing a division error, and
+an unpaid creator being unmeasurable rather than free — the last one being the
+bug the design prototype originally shipped, where creators with nothing paid
+sorted to the top of the table as the cheapest on the campaign.
+
+Several tests also assert against the real fixture data, so the reference
+figures below cannot drift unnoticed.
+
+---
+
 ## Build status
 
 Following the phased plan in the master checklist: planning → static screens →

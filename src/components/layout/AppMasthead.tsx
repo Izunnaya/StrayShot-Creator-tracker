@@ -1,4 +1,4 @@
-import { Button } from "../ui";
+import { Button } from "../../ui";
 
 /* Static masthead — task 0.14. The tabs render their selected state but do not
    switch views yet; that is Phase 3. */
@@ -8,7 +8,7 @@ const tabs = [
   { id: "payments", label: "Payments" },
 ];
 
-export function Masthead({ active = "overview" }: { active?: string }) {
+export function AppMasthead({ activeTab = "overview" }: { activeTab?: string }) {
   return (
     <header className="grain-masthead flex h-16 items-center justify-between border-b border-amber px-8">
       <div className="flex cursor-pointer items-baseline gap-3.5">
@@ -26,7 +26,7 @@ export function Masthead({ active = "overview" }: { active?: string }) {
             key={tab.id}
             className={
               "cursor-pointer border-none bg-transparent px-0.5 pb-1 pt-1.5 font-head text-[13px] uppercase tracking-[2px] " +
-              (tab.id === active
+              (tab.id === activeTab
                 ? "border-b-2 border-amber text-amber"
                 : "border-b-2 border-transparent text-ink-muted hover:text-ink")
             }

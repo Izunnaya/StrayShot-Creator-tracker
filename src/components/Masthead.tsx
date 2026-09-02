@@ -10,8 +10,8 @@ const tabs = [
 
 export function Masthead({ active = "overview" }: { active?: string }) {
   return (
-    <header className="grain-masthead flex h-[64px] items-center justify-between border-b border-amber px-[32px]">
-      <div className="flex cursor-pointer items-baseline gap-[14px]">
+    <header className="grain-masthead flex h-16 items-center justify-between border-b border-amber px-8">
+      <div className="flex cursor-pointer items-baseline gap-3.5">
         <div className="font-display text-[25px] uppercase tracking-[1px] text-amber text-shadow-stencil whitespace-nowrap">
           Stray Shot
         </div>
@@ -20,7 +20,7 @@ export function Masthead({ active = "overview" }: { active?: string }) {
         </div>
       </div>
 
-      <nav className="flex gap-[26px]">
+      <nav className="flex gap-6.5">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -36,7 +36,7 @@ export function Masthead({ active = "overview" }: { active?: string }) {
         ))}
       </nav>
 
-      <div className="flex items-center gap-[20px]">
+      <div className="flex items-center gap-5">
         <a
           href="#"
           className="overflow-hidden text-ellipsis whitespace-nowrap text-[13px] uppercase tracking-[1px] text-ink-muted hover:text-amber"

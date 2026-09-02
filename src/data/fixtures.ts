@@ -4,14 +4,8 @@ import type { Campaign, Creator, CreatorStatus, Payment } from './types'
    screens show the same figures the design was reviewed against. Phase 3
    replaces this module with the API; nothing else should need to change. */
 
-const P = (
-  id: number,
-  date: string,
-  amount: number,
-  method: string,
-  ref: string,
-  by: string,
-): Payment => ({ id, date, amount, method, ref, by })
+/** Named-argument constructor, so each payment reads clearly at the call site. */
+const createPayment = (payment: Payment): Payment => payment
 
 export const campaigns: Campaign[] = [
   {
@@ -41,8 +35,22 @@ export const creators: Creator[] = [
     agreed: 3, streams: 3, views: 298000, peak: 6400, installs: 4210, contract: 4800, rate: 1600,
     audience: '412K', channel: 'twitch.tv/novakess', invite: 'claimed',
     payments: [
-      P(101, '2026-07-24', 1600, 'Bank transfer', 'TRF-2291-04', 'A. Raouf'),
-      P(102, '2026-08-14', 1600, 'Bank transfer', 'TRF-2413-11', 'A. Raouf'),
+      createPayment({
+        id: 101,
+        date: '2026-07-24',
+        amount: 1600,
+        method: 'Bank transfer',
+        ref: 'TRF-2291-04',
+        by: 'A. Raouf',
+      }),
+      createPayment({
+        id: 102,
+        date: '2026-08-14',
+        amount: 1600,
+        method: 'Bank transfer',
+        ref: 'TRF-2413-11',
+        by: 'A. Raouf',
+      }),
     ],
   },
   {
@@ -50,23 +58,60 @@ export const creators: Creator[] = [
     agreed: 4, streams: 4, views: 412000, peak: 8900, installs: 6120, contract: 9000, rate: 2250,
     audience: '640K', channel: 'youtube.com/@razehavoc', invite: 'claimed',
     payments: [
-      P(103, '2026-07-18', 4500, 'Wise', 'WISE-7710-A', 'M. Devlin'),
-      P(104, '2026-08-20', 4500, 'Wise', 'WISE-8842-B', 'M. Devlin'),
+      createPayment({
+        id: 103,
+        date: '2026-07-18',
+        amount: 4500,
+        method: 'Wise',
+        ref: 'WISE-7710-A',
+        by: 'M. Devlin',
+      }),
+      createPayment({
+        id: 104,
+        date: '2026-08-20',
+        amount: 4500,
+        method: 'Wise',
+        ref: 'WISE-8842-B',
+        by: 'M. Devlin',
+      }),
     ],
   },
   {
     id: 3, name: 'PixelMara', platform: 'Twitch', code: 'MARA', campaign: 'Clan Wars Update',
     agreed: 3, streams: 2, views: 151000, peak: 3900, installs: 2140, contract: 3200, rate: 1067,
     audience: '188K', channel: 'twitch.tv/pixelmara', invite: 'claimed',
-    payments: [P(105, '2026-07-30', 3200, 'PayPal', 'PP-5521-K', 'M. Devlin')],
+    payments: [
+      createPayment({
+        id: 105,
+        date: '2026-07-30',
+        amount: 3200,
+        method: 'PayPal',
+        ref: 'PP-5521-K',
+        by: 'M. Devlin',
+      }),
+    ],
   },
   {
     id: 4, name: 'GrimTactix', platform: 'YouTube', code: 'GRIM', campaign: 'Season 2 Launch',
     agreed: 3, streams: 3, views: 265000, peak: 5100, installs: 3980, contract: 6000, rate: 2000,
     audience: '520K', channel: 'youtube.com/@grimtactix', invite: 'claimed',
     payments: [
-      P(106, '2026-07-21', 3000, 'Bank transfer', 'TRF-2280-09', 'A. Raouf'),
-      P(107, '2026-08-18', 1500, 'Bank transfer', 'TRF-2451-02', 'A. Raouf'),
+      createPayment({
+        id: 106,
+        date: '2026-07-21',
+        amount: 3000,
+        method: 'Bank transfer',
+        ref: 'TRF-2280-09',
+        by: 'A. Raouf',
+      }),
+      createPayment({
+        id: 107,
+        date: '2026-08-18',
+        amount: 1500,
+        method: 'Bank transfer',
+        ref: 'TRF-2451-02',
+        by: 'A. Raouf',
+      }),
     ],
   },
   {
@@ -74,60 +119,151 @@ export const creators: Creator[] = [
     agreed: 5, streams: 5, views: 340000, peak: 7200, installs: 3010, contract: 7500, rate: 1500,
     audience: '710K', channel: 'youtube.com/@deadeyedee', invite: 'claimed',
     payments: [
-      P(108, '2026-07-16', 3750, 'Wise', 'WISE-7702-C', 'M. Devlin'),
-      P(109, '2026-08-22', 3750, 'Wise', 'WISE-8901-D', 'M. Devlin'),
+      createPayment({
+        id: 108,
+        date: '2026-07-16',
+        amount: 3750,
+        method: 'Wise',
+        ref: 'WISE-7702-C',
+        by: 'M. Devlin',
+      }),
+      createPayment({
+        id: 109,
+        date: '2026-08-22',
+        amount: 3750,
+        method: 'Wise',
+        ref: 'WISE-8901-D',
+        by: 'M. Devlin',
+      }),
     ],
   },
   {
     id: 6, name: 'SableFPS', platform: 'Twitch', code: 'SABLE', campaign: 'Clan Wars Update',
     agreed: 2, streams: 2, views: 96000, peak: 2600, installs: 860, contract: 2400, rate: 1200,
     audience: '145K', channel: 'twitch.tv/sablefps', invite: 'claimed',
-    payments: [P(110, '2026-08-06', 2400, 'PayPal', 'PP-5610-M', 'A. Raouf')],
+    payments: [
+      createPayment({
+        id: 110,
+        date: '2026-08-06',
+        amount: 2400,
+        method: 'PayPal',
+        ref: 'PP-5610-M',
+        by: 'A. Raouf',
+      }),
+    ],
   },
   {
     id: 7, name: 'TorqueOG', platform: 'YouTube', code: 'TORQ', campaign: 'Season 2 Launch',
     agreed: 2, streams: 2, views: 188000, peak: 4400, installs: 1620, contract: 5000, rate: 2500,
     audience: '480K', channel: 'youtube.com/@torqueog', invite: 'claimed',
-    payments: [P(111, '2026-07-27', 2500, 'Bank transfer', 'TRF-2334-06', 'A. Raouf')],
+    payments: [
+      createPayment({
+        id: 111,
+        date: '2026-07-27',
+        amount: 2500,
+        method: 'Bank transfer',
+        ref: 'TRF-2334-06',
+        by: 'A. Raouf',
+      }),
+    ],
   },
   {
     id: 8, name: 'MiraPlays', platform: 'Twitch', code: 'MIRA', campaign: 'Clan Wars Update',
     agreed: 3, streams: 2, views: 74000, peak: 1900, installs: 540, contract: 1800, rate: 600,
     audience: '92K', channel: 'twitch.tv/miraplays', invite: 'claimed',
-    payments: [P(112, '2026-08-02', 1800, 'USDC', '0x4f9c...8b21', 'K. Osei')],
+    payments: [
+      createPayment({
+        id: 112,
+        date: '2026-08-02',
+        amount: 1800,
+        method: 'USDC',
+        ref: '0x4f9c...8b21',
+        by: 'K. Osei',
+      }),
+    ],
   },
   {
     id: 9, name: 'IronLotus', platform: 'YouTube', code: 'LOTUS', campaign: 'Season 2 Launch',
     agreed: 2, streams: 2, views: 132000, peak: 3100, installs: 1180, contract: 4400, rate: 2200,
     audience: '365K', channel: 'youtube.com/@ironlotus', invite: 'claimed',
     payments: [
-      P(113, '2026-07-29', 2200, 'Wise', 'WISE-7788-E', 'M. Devlin'),
-      P(114, '2026-08-25', 2200, 'Wise', 'WISE-8955-F', 'M. Devlin'),
+      createPayment({
+        id: 113,
+        date: '2026-07-29',
+        amount: 2200,
+        method: 'Wise',
+        ref: 'WISE-7788-E',
+        by: 'M. Devlin',
+      }),
+      createPayment({
+        id: 114,
+        date: '2026-08-25',
+        amount: 2200,
+        method: 'Wise',
+        ref: 'WISE-8955-F',
+        by: 'M. Devlin',
+      }),
     ],
   },
   {
     id: 10, name: 'CrashKoda', platform: 'Twitch', code: 'KODA', campaign: 'Clan Wars Update',
     agreed: 4, streams: 2, views: 58000, peak: 1500, installs: 470, contract: 2000, rate: 500,
     audience: '76K', channel: 'twitch.tv/crashkoda', invite: 'claimed',
-    payments: [P(115, '2026-08-04', 2000, 'USDC', '0x91ad...3c07', 'K. Osei')],
+    payments: [
+      createPayment({
+        id: 115,
+        date: '2026-08-04',
+        amount: 2000,
+        method: 'USDC',
+        ref: '0x91ad...3c07',
+        by: 'K. Osei',
+      }),
+    ],
   },
   {
     id: 11, name: 'VexaRun', platform: 'YouTube', code: 'VEXA', campaign: 'Season 2 Launch',
     agreed: 2, streams: 2, views: 110000, peak: 2400, installs: 700, contract: 3600, rate: 1800,
     audience: '295K', channel: 'youtube.com/@vexarun', invite: 'claimed',
-    payments: [P(116, '2026-08-11', 3600, 'Bank transfer', 'TRF-2402-08', 'A. Raouf')],
+    payments: [
+      createPayment({
+        id: 116,
+        date: '2026-08-11',
+        amount: 3600,
+        method: 'Bank transfer',
+        ref: 'TRF-2402-08',
+        by: 'A. Raouf',
+      }),
+    ],
   },
   {
     id: 12, name: 'HollowPoint', platform: 'YouTube', code: 'HOLO', campaign: 'Clan Wars Update',
     agreed: 2, streams: 2, views: 88000, peak: 2000, installs: 380, contract: 2800, rate: 1400,
     audience: '240K', channel: 'youtube.com/@hollowpoint', invite: 'claimed',
-    payments: [P(117, '2026-08-08', 1400, 'PayPal', 'PP-5702-R', 'K. Osei')],
+    payments: [
+      createPayment({
+        id: 117,
+        date: '2026-08-08',
+        amount: 1400,
+        method: 'PayPal',
+        ref: 'PP-5702-R',
+        by: 'K. Osei',
+      }),
+    ],
   },
   {
     id: 13, name: 'BluntForce', platform: 'Twitch', code: 'BLUNT', campaign: 'Season 2 Launch',
     agreed: 1, streams: 1, views: 41000, peak: 1100, installs: 240, contract: 1500, rate: 1500,
     audience: '118K', channel: 'twitch.tv/bluntforce', invite: 'claimed',
-    payments: [P(118, '2026-07-31', 1500, 'PayPal', 'PP-5588-T', 'A. Raouf')],
+    payments: [
+      createPayment({
+        id: 118,
+        date: '2026-07-31',
+        amount: 1500,
+        method: 'PayPal',
+        ref: 'PP-5588-T',
+        by: 'A. Raouf',
+      }),
+    ],
   },
   {
     id: 14, name: 'QuietStorm', platform: 'Twitch', code: 'STORM', campaign: 'Clan Wars Update',

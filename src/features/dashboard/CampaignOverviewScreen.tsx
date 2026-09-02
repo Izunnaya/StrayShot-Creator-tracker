@@ -104,7 +104,7 @@ export function CampaignOverviewScreen() {
     selectedCampaign?.targetCostPerInstall ?? DEFAULT_TARGET_COST_PER_INSTALL;
 
   return (
-    <div className="mx-auto flex max-w-[1280px] flex-col gap-6 px-8 pb-12 pt-7">
+    <div className="mx-auto flex max-w-7xl flex-col gap-6 px-8 pb-12 pt-7">
       <DashboardSummaryStrip summary={summary} />
 
       <div className="flex flex-col gap-4">

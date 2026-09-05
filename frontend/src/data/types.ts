@@ -79,3 +79,28 @@ export interface Creator {
   /** Every payment made so far. Amounts paid and owed derive from this list. */
   payments: Payment[]
 }
+
+/**
+ * One stream a creator went live with, as detected on their platform.
+ *
+ * These are never typed in by a person. Modules 14 and 15 poll YouTube and
+ * Twitch, Module 16 decides which campaign a stream belongs to, and Module 19
+ * credits it with installs. Until those exist the fixtures stand in, which is
+ * why every field here is something a platform API can actually answer.
+ */
+export interface Stream {
+  id: number
+  creatorId: number
+  /** ISO date the stream went live. */
+  streamedOn: string
+  title: string
+  platform: StreamingPlatform
+  views: number
+  /**
+   * Highest concurrent viewers during the stream. Only obtainable by polling
+   * while the stream is live — see open questions Q33 and Q34.
+   */
+  peakConcurrentViewers: number
+  /** Installs credited to this individual stream. */
+  installsAttributed: number
+}

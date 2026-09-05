@@ -1,5 +1,5 @@
 
-import type { Campaign, Creator, CreatorLifecycleStatus, Payment } from './types'
+import type { Campaign, Creator, CreatorLifecycleStatus, Payment, Stream } from './types'
 
 
 /* Static fixture data, carried over from the design prototype so the static
@@ -214,3 +214,71 @@ export const streamDayMarkers: StreamDayMarker[] = [
 ]
 
 export const chartWeekLabels = ['Jul 19', 'Jul 26', 'Aug 2', 'Aug 9', 'Aug 16', 'Aug 23', 'Aug 30']
+
+/* ---------------------------------------------------------------------------
+   Detected streams
+
+   Real streams arrive from the YouTube and Twitch integrations, and a
+   creator's totals are then the sum of them. The fixtures work the other way
+   round: they split each creator's known totals back into individual streams,
+   so the detail screen and the dashboard can never disagree with each other
+   while the integrations do not exist yet.
+--------------------------------------------------------------------------- */
+
+/** The six titles the design prototype cycled through, kept so the detail
+    screen reads the way it was reviewed. */
+const FIXTURE_STREAM_TITLES = [
+  'Season 2 drop day grind',
+  'Clan Wars first look',
+  'Ranked to Legend, no deaths',
+  'Viewer squads all night',
+  'New map deep dive',
+  'Loadout lab: meta builds',
+]
+
+/** The most recent fixture stream. Earlier ones step back from here. */
+const MOST_RECENT_FIXTURE_STREAM_DATE = '2026-08-26'
+const DAYS_BETWEEN_FIXTURE_STREAMS = 9
+
+function isoDateDaysBefore(isoDate: string, daysEarlier: number): string {
+  const [year, month, day] = isoDate.split('-').map(Number)
+  const shifted = new Date(year, month - 1, day - daysEarlier)
+  const shiftedMonth = String(shifted.getMonth() + 1).padStart(2, '0')
+  const shiftedDay = String(shifted.getDate()).padStart(2, '0')
+  return `${shifted.getFullYear()}-${shiftedMonth}-${shiftedDay}`
+}
+
+/**
+ * Splits one creator's totals across the streams they have delivered.
+ *
+ * The weights are (n, n-1, … 1) over their triangular sum, so they add up to
+ * exactly one: the most recent stream carries the largest share and the
+ * rows always total the creator's views and installs. Peak viewers taper
+ * instead of splitting, since a peak is a high-water mark rather than
+ * something that divides.
+ */
+function buildStreamHistory(creator: Creator): Stream[] {
+  const streamCount = creator.streamsDelivered
+  const weightTotal = (streamCount * (streamCount + 1)) / 2
+
+  return Array.from({ length: streamCount }, (_, index) => {
+    const shareOfTotals = (streamCount - index) / weightTotal
+
+    return {
+      id: creator.id * 100 + index,
+      creatorId: creator.id,
+      streamedOn: isoDateDaysBefore(
+        MOST_RECENT_FIXTURE_STREAM_DATE,
+        index * DAYS_BETWEEN_FIXTURE_STREAMS,
+      ),
+      title: FIXTURE_STREAM_TITLES[(creator.id + index) % FIXTURE_STREAM_TITLES.length],
+      platform: creator.platform,
+      views: Math.round(creator.totalViews * shareOfTotals),
+      peakConcurrentViewers: Math.round(creator.peakConcurrentViewers * (1 - index * 0.12)),
+      installsAttributed: Math.round(creator.installsAttributed * shareOfTotals),
+    }
+  })
+}
+
+/** Every detected stream across every creator, newest first per creator. */
+export const streams: Stream[] = creators.flatMap(buildStreamHistory)

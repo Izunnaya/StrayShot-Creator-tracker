@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react'
-import { joinClassNames } from '../lib/classNames'
-import { Label } from './Label'
+import type { ReactNode } from "react";
+import { joinClassNames } from "../lib/classNames";
+import { Label } from "./Label";
 
 /**
  * The row of headline figures at the top of a screen. Strip and tile live in
@@ -14,52 +14,67 @@ export function StatStrip({
   hasAmberFrame = true,
   columnCount = 4,
 }: {
-  children: ReactNode
-  hasAmberFrame?: boolean
-  columnCount?: 3 | 4
+  children: ReactNode;
+  hasAmberFrame?: boolean;
+  columnCount?: 3 | 4;
 }) {
   return (
     <div
       className={joinClassNames(
-        'grid gap-px bg-hair border grid-cols-2',
-        columnCount === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3',
-        hasAmberFrame ? 'border-amber' : 'border-hair',
+        "grid gap-px bg-hair border grid-cols-2 rounded-md overflow-hidden",
+        columnCount === 4 ? "md:grid-cols-4" : "md:grid-cols-3",
+        hasAmberFrame ? "border-amber" : "border-hair",
       )}
     >
       {children}
     </div>
-  )
+  );
 }
 
 /** How much visual weight the figure carries, by meaning rather than colour. */
-export type StatTileTone = 'neutral' | 'accent' | 'needsAttention' | 'settled'
+export type StatTileTone = "neutral" | "accent" | "needsAttention" | "settled";
 
 const toneClasses: Record<StatTileTone, string> = {
-  neutral: 'text-ink',
-  accent: 'text-amber',
-  needsAttention: 'text-bad',
-  settled: 'text-good',
-}
+  neutral: "text-ink",
+  accent: "text-amber",
+  needsAttention: "text-bad",
+  settled: "text-good",
+};
 
 export function StatTile({
   label,
   value,
   supportingText,
-  tone = 'neutral',
+  tone = "neutral",
+  size = "large",
 }: {
-  label: string
-  value: string
+  label: string;
+  value: string;
   /** The smaller line under the figure, giving it context. */
-  supportingText?: string
-  tone?: StatTileTone
+  supportingText?: string;
+  tone?: StatTileTone;
+  /**
+   * "large" for a screen's headline figures, "compact" where the strip is
+   * supporting detail rather than the point of the screen — as on the
+   * creator detail screen, which leads with the creator, not the numbers.
+   */
+  size?: "large" | "compact";
 }) {
   return (
-    <div className="bg-panel px-5.5 py-4.5">
+    <div className={size === "large" ? "bg-panel px-5.5 py-4.5" : "bg-panel px-4.5 py-3.5"}>
       <Label className="mb-1.5">{label}</Label>
-      <div className={joinClassNames('font-head font-semibold text-[38px] leading-none', toneClasses[tone])}>
+      <div
+        className={joinClassNames(
+          "font-head font-semibold leading-none",
+          size === "large" ? "text-[38px]" : "text-[28px]",
+          toneClasses[tone],
+        )}
+      >
         {value}
       </div>
-      {supportingText && <div className="mt-1 text-[12px] text-ink-muted">{supportingText}</div>}
+      {supportingText && (
+        <div className="mt-1 text-[12px] text-ink-muted">{supportingText}</div>
+      )}
     </div>
-  )
+  );
 }

@@ -1,0 +1,22 @@
+# Dependencies and build output
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Archives
+*.rar
+*.zip
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Tooling and editors
+.qodo/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.log

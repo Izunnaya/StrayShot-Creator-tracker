@@ -1,0 +1,153 @@
+import { describe, expect, it } from 'vitest'
+import { creators as fixtureCreators } from '../data/fixtures'
+import { createTestCreator, createTestPayment } from '../testing/createTestCreator'
+import {
+  countCreatorsByLifecycleStatus,
+  EVERY_CAMPAIGN,
+  EVERY_STATUS,
+  filterCreators,
+  filterCreatorsByCampaign,
+  filterCreatorsByLifecycleStatus,
+} from './creatorFiltering'
+
+/** A creator on each campaign, at a different point in the lifecycle. */
+const contractedOnWinter = createTestCreator({
+  id: 1,
+  name: 'Contracted Winter',
+  campaignName: 'Winter Offensive',
+  streamsCommitted: 2,
+  streamsDelivered: 0,
+})
+
+const activeOnWinter = createTestCreator({
+  id: 2,
+  name: 'Active Winter',
+  campaignName: 'Winter Offensive',
+  streamsCommitted: 2,
+  streamsDelivered: 1,
+})
+
+const completedOnSummer = createTestCreator({
+  id: 3,
+  name: 'Completed Summer',
+  campaignName: 'Summer Push',
+  streamsCommitted: 1,
+  streamsDelivered: 1,
+  contractedAmount: 1000,
+  payments: [createTestPayment({ amount: 1000 })],
+})
+
+const testCreators = [contractedOnWinter, activeOnWinter, completedOnSummer]
+
+describe('filterCreatorsByCampaign', () => {
+  it('keeps everyone when no campaign is selected', () => {
+    expect(filterCreatorsByCampaign(testCreators, EVERY_CAMPAIGN)).toHaveLength(3)
+  })
+
+  it('keeps only the creators on the named campaign', () => {
+    const winter = filterCreatorsByCampaign(testCreators, 'Winter Offensive')
+
+    expect(winter.map((creator) => creator.name)).toEqual(['Contracted Winter', 'Active Winter'])
+  })
+
+  it('returns nothing for a campaign with no creators on it', () => {
+    expect(filterCreatorsByCampaign(testCreators, 'Campaign That Does Not Exist')).toEqual([])
+  })
+})
+
+describe('filterCreatorsByLifecycleStatus', () => {
+  it('keeps everyone when no status is selected', () => {
+    expect(filterCreatorsByLifecycleStatus(testCreators, EVERY_STATUS)).toHaveLength(3)
+  })
+
+  it('keeps only the creators at the chosen point in the lifecycle', () => {
+    expect(filterCreatorsByLifecycleStatus(testCreators, 'active').map((c) => c.name)).toEqual([
+      'Active Winter',
+    ])
+    expect(filterCreatorsByLifecycleStatus(testCreators, 'completed').map((c) => c.name)).toEqual([
+      'Completed Summer',
+    ])
+  })
+
+  it('returns nothing when no creator is at that point yet', () => {
+    expect(filterCreatorsByLifecycleStatus(testCreators, 'prospect')).toEqual([])
+  })
+})
+
+describe('filterCreators', () => {
+  it('applies both filters together', () => {
+    const result = filterCreators(testCreators, {
+      campaign: 'Winter Offensive',
+      lifecycleStatus: 'active',
+    })
+
+    expect(result.map((creator) => creator.name)).toEqual(['Active Winter'])
+  })
+
+  it('returns nothing when the two filters have no overlap', () => {
+    const result = filterCreators(testCreators, {
+      campaign: 'Summer Push',
+      lifecycleStatus: 'contracted',
+    })
+
+    expect(result).toEqual([])
+  })
+
+  it('leaves the original list untouched', () => {
+    filterCreators(testCreators, { campaign: 'Summer Push', lifecycleStatus: EVERY_STATUS })
+
+    expect(testCreators).toHaveLength(3)
+  })
+})
+
+describe('countCreatorsByLifecycleStatus', () => {
+  it('counts every status within the selected campaign', () => {
+    const counts = countCreatorsByLifecycleStatus(testCreators, 'Winter Offensive')
+
+    expect(counts).toEqual({
+      total: 2,
+      prospect: 0,
+      contracted: 1,
+      active: 1,
+      completed: 0,
+    })
+  })
+
+  it('counts across every campaign when none is selected', () => {
+    const counts = countCreatorsByLifecycleStatus(testCreators, EVERY_CAMPAIGN)
+
+    expect(counts.total).toBe(3)
+    expect(counts.completed).toBe(1)
+  })
+
+  it('keeps every chip informative by ignoring the status filter', () => {
+    // The counts deliberately do not narrow when a status is selected —
+    // otherwise picking "Active" would show a figure on that chip and zero on
+    // all the others, which tells the team nothing about what else is there.
+    const counts = countCreatorsByLifecycleStatus(testCreators, EVERY_CAMPAIGN)
+
+    expect(counts.contracted).toBe(1)
+    expect(counts.active).toBe(1)
+    expect(counts.completed).toBe(1)
+  })
+})
+
+describe('the fixture data through the filters', () => {
+  it('splits 14 creators across the two campaigns', () => {
+    expect(filterCreatorsByCampaign(fixtureCreators, 'Season 2 Launch')).toHaveLength(7)
+    expect(filterCreatorsByCampaign(fixtureCreators, 'Clan Wars Update')).toHaveLength(7)
+    expect(filterCreatorsByCampaign(fixtureCreators, EVERY_CAMPAIGN)).toHaveLength(14)
+  })
+
+  it('counts 8 active and 6 completed overall', () => {
+    const counts = countCreatorsByLifecycleStatus(fixtureCreators, EVERY_CAMPAIGN)
+
+    expect(counts).toEqual({ total: 14, prospect: 0, contracted: 0, active: 8, completed: 6 })
+  })
+
+  it('counts 3 active and 4 completed within Season 2 Launch', () => {
+    const counts = countCreatorsByLifecycleStatus(fixtureCreators, 'Season 2 Launch')
+
+    expect(counts).toEqual({ total: 7, prospect: 0, contracted: 0, active: 3, completed: 4 })
+  })
+})

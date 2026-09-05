@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Stray Shot Creator Tracker — design tokens
+   Lifted from the Claude Design prototypes. Every colour, face and rule width
+   in the screens comes from here; nothing hardcodes a hex outside this file.
+--------------------------------------------------------------------------- */
+@theme {
+  /* Grounds and panels */
+  --color-ground: #0b0b0b;
+  --color-panel: #161616;
+  --color-panel-2: #141414;
+  --color-panel-3: #171717;
+  --color-panel-head: #121212;
+  --color-sunk: #0f0f0f;
+  --color-sunk-2: #101010;
+  --color-row-hover: #1d1a14;
+  --color-total-row: #171512;
+  --color-open-row: #1a1512;
+
+  /* Hairlines, lightest to darkest */
+  --color-hair: #2a2a2a;
+  --color-hair-2: #242424;
+  --color-hair-3: #222222;
+  --color-hair-4: #1f1f1f;
+  --color-hair-5: #1d1d1d;
+  --color-hair-6: #3a3a3a;
+
+  /* Ink */
+  --color-ink: #ffffff;
+  --color-ink-bright: #e8e8e8;
+  --color-ink-quiet: #c9c9c9;
+  --color-ink-muted: #9a9a9a;
+  --color-ink-soft: #8a8a8a;
+  --color-ink-dim: #7a7a7a;
+  --color-ink-faint: #666666;
+
+  /* Accent */
+  --color-amber: #ffc20a;
+  --color-amber-deep: #e0a800;
+  --color-amber-mid: #c9a227;
+  --color-amber-dim: #96760b;
+
+  /* Semantic state — separate from the accent */
+  --color-good: oklch(76% 0.14 152);
+  --color-bad: oklch(70% 0.16 28);
+
+  /* Platform */
+  --color-twitch: #b79ce8;
+
+  /* Faces */
+  --font-display: Anton, Impact, sans-serif;
+  --font-head: Oswald, "Arial Narrow", sans-serif;
+  --font-body: Barlow, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  body {
+    margin: 0;
+    background-color: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-variant-numeric: tabular-nums;
+  }
+
+  a {
+    color: var(--color-amber);
+    text-decoration: none;
+  }
+  a:hover {
+    color: var(--color-ink);
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font-family: var(--font-body);
+  }
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: 1px solid var(--color-amber);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-hair);
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-ground);
+  }
+}
+
+@layer utilities {
+  /* Concrete-noise texture behind the dashboard */
+  .grain {
+    background-color: var(--color-ground);
+    background-image:
+      radial-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1.4px),
+      radial-gradient(rgba(0, 0, 0, 0.6) 1px, transparent 1.3px);
+    background-size: 6px 6px, 9px 9px;
+    background-position: 0 0, 3px 5px;
+  }
+
+  /* Heavier grain plus a vertical fall-off, for the masthead */
+  .grain-masthead {
+    background-color: #12100c;
+    background-image:
+      radial-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1.5px),
+      radial-gradient(rgba(0, 0, 0, 0.5) 1px, transparent 1.4px),
+      linear-gradient(180deg, #17140f 0%, #0e0d0a 100%);
+    background-size: 7px 7px, 11px 11px, 100% 100%;
+    background-position: 0 0, 4px 6px, 0 0;
+  }
+
+  /* Stencil cut on the modal shells */
+  .clip-corner {
+    clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+  }
+
+  /* Angled amber fill for a part-settled progress bar */
+  .bar-partial {
+    background: repeating-linear-gradient(
+      115deg,
+      var(--color-amber) 0 6px,
+      var(--color-amber-deep) 6px 9px
+    );
+  }
+
+  .text-shadow-stencil {
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.85);
+  }
+}

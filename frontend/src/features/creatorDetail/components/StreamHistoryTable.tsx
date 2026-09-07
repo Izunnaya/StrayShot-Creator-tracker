@@ -1,5 +1,6 @@
 import type { Stream } from '../../../data/types'
 import { formatDateWithoutYear, formatNumber } from '../../../lib/format'
+import { PlatformTag } from '../../../ui'
 
 /**
  * Every stream detected for this creator, newest first.
@@ -54,8 +55,8 @@ export function StreamHistoryTable({ streams }: { streams: Stream[] }) {
 
           <div className="order-3 col-span-3 pr-3 sm:order-0 sm:col-span-1">{stream.title}</div>
 
-          <div className="order-2 text-right text-ink-muted sm:order-0 sm:text-left">
-            {stream.platform}
+          <div className="order-2 text-right sm:order-0 sm:text-left">
+            <PlatformTag platform={stream.platform} />
           </div>
 
           <div className="order-4 sm:order-0 sm:text-right">

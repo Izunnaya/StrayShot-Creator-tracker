@@ -12,18 +12,23 @@ import { formatDate, formatMoney } from '../../../lib/format'
  * the team spots a deal that stalled halfway.
  *
  * References render in the mono face because they are transcribed against a
- * bank statement, where character-by-character comparison matters.
+ * bank statement, where character-by-character comparison matters. That also
+ * sets the minimum width: a reference that wraps mid-string is useless for
+ * checking against a statement, so below that width the table scrolls
+ * sideways instead of reflowing.
  */
 
 const PAYMENT_TABLE_COLUMN_WIDTHS = 'grid-cols-[0.9fr_1fr_1.5fr_1.1fr_0.9fr]'
+const PAYMENT_TABLE_MINIMUM_WIDTH_PX = 680
 
 export function PaymentHistoryTable({ creator }: { creator: Creator }) {
   const payments = sortPaymentsNewestFirst(creator.payments)
 
   return (
-    <div className="border border-t-0 border-hair bg-panel">
+    <div className="overflow-x-auto border border-t-0 border-hair bg-panel">
       <div
         className={`grid ${PAYMENT_TABLE_COLUMN_WIDTHS} border-b border-hair bg-panel-head px-4.5 py-2.5 text-[11px] uppercase tracking-[1.5px] text-ink-muted`}
+        style={{ minWidth: PAYMENT_TABLE_MINIMUM_WIDTH_PX }}
       >
         <div>Date paid</div>
         <div>Method</div>
@@ -36,26 +41,30 @@ export function PaymentHistoryTable({ creator }: { creator: Creator }) {
         <div
           key={payment.id}
           className={`grid ${PAYMENT_TABLE_COLUMN_WIDTHS} items-center border-t border-hair-4 px-4.5 py-3 text-[14px]`}
+          style={{ minWidth: PAYMENT_TABLE_MINIMUM_WIDTH_PX }}
         >
           <div className="text-ink">{formatDate(payment.paidOn)}</div>
           <div className="text-ink-muted">{payment.method}</div>
-          <div className="font-mono text-[12px] tracking-[0.5px] text-ink-muted">
+          <div className="whitespace-nowrap font-mono text-[12px] tracking-[0.5px] text-ink-muted">
             {payment.reference || '—'}
           </div>
           <div className="text-ink-muted">{payment.recordedBy}</div>
-          <div className="text-right font-semibold">{formatMoney(payment.amount)}</div>
+          <div className="whitespace-nowrap text-right font-semibold">
+            {formatMoney(payment.amount)}
+          </div>
         </div>
       ))}
 
       {hasOutstandingBalance(creator) && (
         <div
           className={`grid ${PAYMENT_TABLE_COLUMN_WIDTHS} items-center border-t border-hair bg-open-row px-4.5 py-3 text-[14px]`}
+          style={{ minWidth: PAYMENT_TABLE_MINIMUM_WIDTH_PX }}
         >
           <div className="text-[12px] font-semibold uppercase tracking-[1px] text-bad">Open</div>
           <div className="col-span-3 text-ink-muted">
             Remaining balance on {formatMoney(creator.contractedAmount)} agreement
           </div>
-          <div className="text-right font-semibold text-bad">
+          <div className="whitespace-nowrap text-right font-semibold text-bad">
             {formatMoney(getOutstandingBalance(creator))}
           </div>
         </div>

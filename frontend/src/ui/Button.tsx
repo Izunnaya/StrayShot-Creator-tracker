@@ -24,12 +24,12 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary:
     'bg-amber text-ground border-none font-semibold text-[13px] tracking-[1.5px] px-4.5 py-2.25 hover:bg-ink',
   outline:
-    'bg-transparent border border-amber text-amber text-[11px] tracking-[1.5px] px-2.75 py-1.5 transition-colors duration-150 hover:bg-amber hover:text-ground',
+    'bg-transparent border border-amber text-amber text-[11px] tracking-[1.5px] px-2.75 py-2 md:py-1.5 transition-colors duration-150 hover:bg-amber hover:text-ground',
   secondary:
     'bg-transparent border border-hair text-ink text-[13px] tracking-[1.5px] px-4.5 py-2.75 hover:border-amber hover:text-amber',
-  text: 'bg-transparent border-none text-ink-muted text-[13px] tracking-[1px] px-1 py-1.5 hover:text-amber',
+  text: 'bg-transparent border-none text-ink-muted text-[13px] tracking-[1px] px-1 py-2 md:py-1.5 hover:text-amber',
   addNew:
-    'bg-transparent border border-dashed border-hair-6 text-ink-muted font-body font-semibold text-[13px] tracking-[0.5px] px-3.5 py-1.5 hover:text-amber hover:border-amber',
+    'bg-transparent border border-dashed border-hair-6 text-ink-muted font-body font-semibold text-[13px] tracking-[0.5px] px-3.5 py-2 md:py-1.5 hover:text-amber hover:border-amber',
 }
 
 export function Button({

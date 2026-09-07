@@ -27,7 +27,7 @@ export function PaidNotDeliveredPanel({ creators }: { creators: Creator[] }) {
         return (
           <div
             key={creator.id}
-            className="flex justify-between border-t border-hair-3 py-2 text-[14px]"
+            className="flex flex-wrap justify-between gap-x-3 gap-y-0.5 border-t border-hair-3 py-2 text-[14px]"
           >
             <span>{creator.name}</span>
             <span className="text-ink-muted">

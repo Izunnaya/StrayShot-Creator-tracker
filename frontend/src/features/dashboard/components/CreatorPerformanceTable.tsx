@@ -51,6 +51,15 @@ export function CreatorPerformanceTable({
           No creators match this filter.
         </div>
       )}
+
+      {/* On a phone most of these ten columns sit off-screen. The table is
+          scrollable rather than reflowed — money columns split mid-number
+          when compressed — so the scroll needs to be discoverable. */}
+      {creators.length > 0 && (
+        <div className="border-t border-hair-4 px-4.5 py-2.5 text-[12px] text-ink-faint lg:hidden">
+          Scroll sideways for the remaining columns
+        </div>
+      )}
     </div>
   )
 }

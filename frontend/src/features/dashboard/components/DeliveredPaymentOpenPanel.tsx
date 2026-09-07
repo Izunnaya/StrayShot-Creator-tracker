@@ -27,7 +27,7 @@ export function DeliveredPaymentOpenPanel({
   onRecordPayment?: (creator: Creator) => void
 }) {
   return (
-    <Panel className="px-5 py-4.5">
+    <Panel className="px-4 py-4 sm:px-5 sm:py-4.5">
       <div className="mb-1.5 flex items-baseline justify-between">
         <SectionTitle size="small">
           Delivered, <span className="text-bad">payment open</span>
@@ -66,7 +66,7 @@ export function DeliveredPaymentOpenPanel({
               <ProgressBar percentComplete={progressPercent} heightInPixels={5} />
             </div>
 
-            <div className="flex items-center justify-between gap-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-x-2.5 gap-y-2">
               <span className="text-[12px] text-ink-muted">
                 {formatMoney(amountPaid)} of {formatMoney(creator.contractedAmount)} ·{' '}
                 {formatMoney(getOutstandingBalance(creator))} open

@@ -110,7 +110,7 @@ export function CampaignOverviewScreen({
     selectedCampaign?.targetCostPerInstall ?? DEFAULT_TARGET_COST_PER_INSTALL;
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6 px-8 pb-12 pt-7">
+    <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 pb-10 pt-5 sm:px-6 md:gap-6 md:px-8 md:pb-12 md:pt-7">
       <DashboardSummaryStrip summary={summary} />
 
       <div className="flex flex-col gap-4">
@@ -137,8 +137,8 @@ export function CampaignOverviewScreen({
       />
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1.55fr_1fr]">
-        <Panel className="px-5.5 py-5">
-          <div className="mb-4 flex items-baseline justify-between">
+        <Panel className="px-4 py-4 sm:px-5.5 sm:py-5">
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
             <SectionTitle>
               Installs <span className="text-amber">over time</span>
             </SectionTitle>

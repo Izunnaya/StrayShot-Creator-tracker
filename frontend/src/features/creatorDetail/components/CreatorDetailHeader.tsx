@@ -31,7 +31,7 @@ export function CreatorDetailHeader({
 
       <div className="flex flex-wrap items-start justify-between gap-5">
         <div>
-          <h1 className="font-display text-[42px] uppercase leading-none tracking-[1px] text-ink text-shadow-stencil">
+          <h1 className="font-display text-[30px] uppercase leading-none tracking-[1px] text-ink text-shadow-stencil sm:text-[36px] md:text-[42px]">
             {creator.name}
           </h1>
 

@@ -22,7 +22,7 @@ export function FilterChip({
     <button
       aria-pressed={isSelected}
       className={joinClassNames(
-        'flex items-baseline border px-3.5 py-1.5 text-[13px] font-semibold tracking-[0.5px] cursor-pointer',
+        'flex items-baseline border px-3.5 py-2 md:py-1.5 text-[13px] font-semibold tracking-[0.5px] cursor-pointer',
         'focus-visible:outline-2 focus-visible:outline-amber focus-visible:outline-offset-2',
         isSelected
           ? 'bg-amber border-amber text-ground'

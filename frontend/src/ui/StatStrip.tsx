@@ -61,12 +61,18 @@ export function StatTile({
   size?: "large" | "compact";
 }) {
   return (
-    <div className={size === "large" ? "bg-panel px-5.5 py-4.5" : "bg-panel px-4.5 py-3.5"}>
+    <div
+      className={
+        size === "large"
+          ? "bg-panel px-4 py-3.5 sm:px-5.5 sm:py-4.5"
+          : "bg-panel px-3.5 py-3 sm:px-4.5 sm:py-3.5"
+      }
+    >
       <Label className="mb-1.5">{label}</Label>
       <div
         className={joinClassNames(
           "font-head font-semibold leading-none",
-          size === "large" ? "text-[38px]" : "text-[28px]",
+          size === "large" ? "text-[28px] sm:text-[38px]" : "text-[22px] sm:text-[28px]",
           toneClasses[tone],
         )}
       >

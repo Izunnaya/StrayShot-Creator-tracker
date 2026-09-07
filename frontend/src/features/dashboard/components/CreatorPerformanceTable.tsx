@@ -51,6 +51,17 @@ export function CreatorPerformanceTable({
           No creators match this filter.
         </div>
       )}
+
+      {/* Below lg every creator renders as a stacked card with all ten values
+          on screen, so nothing needs scrolling and the hint would be a lie.
+          From lg up the real columns return — and they stay wider than the
+          1280px page container at every desktop size, so the hint belongs on
+          all of them until that mismatch is settled. */}
+      {creators.length > 0 && (
+        <div className="hidden border-t border-hair-4 px-4.5 py-2.5 text-[12px] text-ink-faint lg:block">
+          Scroll sideways for the remaining columns
+        </div>
+      )}
     </div>
   )
 }
@@ -69,7 +80,7 @@ function CreatorPerformanceTableHeader({
   return (
     <div
       className={joinClassNames(
-        'grid border-b border-hair bg-panel-head',
+        'hidden border-b border-hair bg-panel-head lg:grid',
         CREATOR_TABLE_COLUMN_WIDTHS,
         CREATOR_TABLE_HORIZONTAL_PADDING,
       )}

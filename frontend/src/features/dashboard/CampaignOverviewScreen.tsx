@@ -69,9 +69,9 @@ export function CampaignOverviewScreen({
   )
 
   /**
-   * The headline figures are calculated from the same filtered set, so
-   * narrowing the filters also narrows the totals. Whether the team expects
-   * the status filter to move these figures is open question Q20.
+   * The chart is built from the same filtered set as the table, so selecting a
+   * campaign moves the line and its stream markers together with everything
+   * else on the screen rather than leaving another scope's series underneath.
    */
   const chart = useMemo(
     () =>
@@ -85,6 +85,11 @@ export function CampaignOverviewScreen({
     [filterSelection],
   )
 
+  /**
+   * The headline figures are calculated from the same filtered set, so
+   * narrowing the filters also narrows the totals. Whether the team expects
+   * the status filter to move these figures is open question Q20.
+   */
   const summary = useMemo(
     () => calculateCampaignSummary(filterCreators(allCreators, filterSelection)),
     [filterSelection],

@@ -1,7 +1,7 @@
-import type { Creator } from '../../../data/types'
-import { getAmountPaid, getUndeliveredStreamCount } from '../../../domain/creatorCalculations'
-import { formatMoney } from '../../../lib/format'
-import { Panel, SectionTitle } from '../../../ui'
+import type { Creator } from '@/data/types'
+import { getAmountPaid, getUndeliveredStreamCount } from '@/domain/creatorCalculations'
+import { formatMoney } from '@/lib/format'
+import { Panel, SectionTitle } from '@/ui'
 
 /**
  * The mirror image of the payment-open panel: creators who have taken money

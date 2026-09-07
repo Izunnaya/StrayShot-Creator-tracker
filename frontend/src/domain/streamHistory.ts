@@ -1,4 +1,4 @@
-import type { Stream } from '../data/types'
+import type { Stream } from '@/data/types'
 
 /**
  * Reading a creator's detected streams out of the full set.

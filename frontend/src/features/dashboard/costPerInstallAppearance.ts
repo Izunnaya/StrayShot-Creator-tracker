@@ -1,4 +1,4 @@
-import type { CostPerInstallRating } from '../../domain/costPerInstallRating'
+import type { CostPerInstallRating } from '@/domain/costPerInstallRating'
 
 /**
  * Turns the domain's judgement about a cost-per-install figure into colour.

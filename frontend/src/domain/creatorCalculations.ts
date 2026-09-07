@@ -1,4 +1,4 @@
-import type { Creator, CreatorLifecycleStatus } from '../data/types'
+import type { Creator, CreatorLifecycleStatus } from '@/data/types'
 
 /**
  * Everything the application knows how to work out about a single creator.
@@ -72,6 +72,15 @@ export function getUndeliveredStreamCount(creator: Creator): number {
  * only place that has to change.
  */
 export function getLifecycleStatus(creator: Creator): CreatorLifecycleStatus {
+  // Until deals have their own records, absence of all deal activity means prospect.
+  if (
+    creator.streamsCommitted === 0 &&
+    creator.contractedAmount === 0 &&
+    creator.streamsDelivered === 0 &&
+    creator.payments.length === 0
+  )
+    return 'prospect'
+
   const fullyDelivered = hasDeliveredEveryCommittedStream(creator)
   const fullyPaid = getAmountPaid(creator) >= creator.contractedAmount
 

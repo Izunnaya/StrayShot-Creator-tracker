@@ -1,6 +1,6 @@
-import type { Stream } from '../../../data/types'
-import { formatDateWithoutYear, formatNumber } from '../../../lib/format'
-import { PlatformTag } from '../../../ui'
+import type { Stream } from '@/data/types'
+import { formatDateWithoutYear, formatNumber } from '@/lib/format'
+import { PlatformTag } from '@/ui'
 
 /**
  * Every stream detected for this creator, newest first.

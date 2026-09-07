@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { joinClassNames } from '../lib/classNames'
+import { joinClassNames } from '@/lib/classNames'
 
 /**
  * A bordered box on the dark ground. The amber frame is reserved for panels

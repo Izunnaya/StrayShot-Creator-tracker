@@ -1,12 +1,12 @@
-import type { Creator } from '../../../data/types'
+import type { Creator } from '@/data/types'
 import {
   getAmountPaid,
   getOutstandingBalance,
   getPaymentProgressPercent,
-} from '../../../domain/creatorCalculations'
-import { joinClassNames } from '../../../lib/classNames'
-import { formatMoney } from '../../../lib/format'
-import { Button, Panel, ProgressBar, SectionTitle } from '../../../ui'
+} from '@/domain/creatorCalculations'
+import { joinClassNames } from '@/lib/classNames'
+import { formatMoney } from '@/lib/format'
+import { Button, Panel, ProgressBar, SectionTitle } from '@/ui'
 
 /**
  * Creators who have delivered everything they committed to but are still

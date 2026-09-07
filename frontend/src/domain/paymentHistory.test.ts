@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { creators as fixtureCreators } from '../data/fixtures'
-import { createTestPayment } from '../testing/createTestCreator'
+import { creators as fixtureCreators } from '@/data/fixtures'
+import { createTestPayment } from '@/testing/createTestCreator'
 import { countPayments, sortPaymentsNewestFirst } from './paymentHistory'
 
 const july = createTestPayment({ id: 1, paidOn: '2026-07-18', amount: 4500 })

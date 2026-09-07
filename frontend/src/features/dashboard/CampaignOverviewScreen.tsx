@@ -1,41 +1,40 @@
-import { useMemo } from "react";
-import type { Creator } from "../../data/types";
+import { useMemo } from 'react'
+import { buildInstallChart } from '@/domain/installChart'
+import type { Creator } from '@/data/types'
 import {
   campaigns,
-  chartWeekLabels,
   creators as allCreators,
-  dailyInstallCounts,
-  streamDayMarkers,
-} from "../../data/fixtures";
-import { calculateCampaignSummary } from "../../domain/campaignSummary";
-import { DEFAULT_TARGET_COST_PER_INSTALL } from "../../domain/costPerInstallRating";
-import {
-  isAwaitingPayment,
-  isPaidButUndelivered,
-} from "../../domain/creatorCalculations";
+  dailyInstalls,
+  chartStartDate,
+  chartDayCount,
+  streams,
+} from '@/data/fixtures'
+import { calculateCampaignSummary } from '@/domain/campaignSummary'
+import { DEFAULT_TARGET_COST_PER_INSTALL } from '@/domain/costPerInstallRating'
+import { isAwaitingPayment, isPaidButUndelivered } from '@/domain/creatorCalculations'
 import {
   countCreatorsByLifecycleStatus,
   EVERY_CAMPAIGN,
   filterCreators,
   filterCreatorsByCampaign,
-} from "../../domain/creatorFiltering";
-import { sortCreators } from "../../domain/creatorSorting";
-import { Panel, SectionTitle } from "../../ui";
-import { CampaignFilterChipRow } from "./components/CampaignFilterChipRow";
-import { CreatorPerformanceTable } from "./components/CreatorPerformanceTable";
-import { CreatorStatusFilterChipRow } from "./components/CreatorStatusFilterChipRow";
-import { DashboardSummaryStrip } from "./components/DashboardSummaryStrip";
-import { DeliveredPaymentOpenPanel } from "./components/DeliveredPaymentOpenPanel";
-import { InstallsOverTimeChart } from "./components/InstallsOverTimeChart";
-import { PaidNotDeliveredPanel } from "./components/PaidNotDeliveredPanel";
-import { useCreatorFilterSelection } from "./hooks/useCreatorFilterSelection";
-import { useCreatorSortSelection } from "./hooks/useCreatorSortSelection";
+} from '@/domain/creatorFiltering'
+import { sortCreators } from '@/domain/creatorSorting'
+import { Panel, SectionTitle } from '@/ui'
+import { CampaignFilterChipRow } from './components/CampaignFilterChipRow'
+import { CreatorPerformanceTable } from './components/CreatorPerformanceTable'
+import { CreatorStatusFilterChipRow } from './components/CreatorStatusFilterChipRow'
+import { DashboardSummaryStrip } from './components/DashboardSummaryStrip'
+import { DeliveredPaymentOpenPanel } from './components/DeliveredPaymentOpenPanel'
+import { InstallsOverTimeChart } from './components/InstallsOverTimeChart'
+import { PaidNotDeliveredPanel } from './components/PaidNotDeliveredPanel'
+import type { useCreatorFilterSelection } from './hooks/useCreatorFilterSelection'
+import type { useCreatorSortSelection } from './hooks/useCreatorSortSelection'
 
 /**
  * The team's main screen: how the campaign is performing, who is owed money,
  * and who still owes streams.
  *
- * This is the only place on the dashboard that holds state. Everything below
+ * The app shell preserves dashboard selection while a creator detail is open. Everything below
  * it receives what to show and reports what was clicked, which keeps the
  * components reusable on the creator detail screen and the ledger later.
  *
@@ -44,45 +43,58 @@ import { useCreatorSortSelection } from "./hooks/useCreatorSortSelection";
  */
 export function CampaignOverviewScreen({
   onSelectCreator,
+  filterState,
+  sortState,
 }: {
+  filterState: ReturnType<typeof useCreatorFilterSelection>
+  sortState: ReturnType<typeof useCreatorSortSelection>
   /** Opens the creator detail screen for the row that was clicked. */
-  onSelectCreator?: (creator: Creator) => void;
-} = {}) {
+  onSelectCreator?: (creator: Creator) => void
+}) {
   const {
     selection: filterSelection,
     selectCampaign,
     selectLifecycleStatus,
     hasSpecificCampaignSelected,
-  } = useCreatorFilterSelection();
-  const { selection: sortSelection, handleColumnClick } =
-    useCreatorSortSelection();
+  } = filterState
+  const { selection: sortSelection, handleColumnClick } = sortState
 
   /**
    * The creator table shows creators matching BOTH filters, sorted by the
    * selected column.
    */
   const creatorsInTable = useMemo(
-    () =>
-      sortCreators(filterCreators(allCreators, filterSelection), sortSelection),
+    () => sortCreators(filterCreators(allCreators, filterSelection), sortSelection),
     [filterSelection, sortSelection],
-  );
+  )
 
   /**
    * The headline figures are calculated from the same filtered set, so
    * narrowing the filters also narrows the totals. Whether the team expects
    * the status filter to move these figures is open question Q20.
    */
-  const summary = useMemo(
+  const chart = useMemo(
     () =>
-      calculateCampaignSummary(filterCreators(allCreators, filterSelection)),
+      buildInstallChart(
+        dailyInstalls,
+        streams,
+        filterCreators(allCreators, filterSelection),
+        chartStartDate,
+        chartDayCount,
+      ),
     [filterSelection],
-  );
+  )
+
+  const summary = useMemo(
+    () => calculateCampaignSummary(filterCreators(allCreators, filterSelection)),
+    [filterSelection],
+  )
 
   /** Chip counts follow the campaign filter but not the status filter. */
   const countsByStatus = useMemo(
     () => countCreatorsByLifecycleStatus(allCreators, filterSelection.campaign),
     [filterSelection.campaign],
-  );
+  )
 
   /**
    * The two status panels are scoped to the selected campaign but ignore the
@@ -93,21 +105,18 @@ export function CampaignOverviewScreen({
   const creatorsInCampaign = useMemo(
     () => filterCreatorsByCampaign(allCreators, filterSelection.campaign),
     [filterSelection.campaign],
-  );
-  const creatorsAwaitingPayment = creatorsInCampaign.filter(isAwaitingPayment);
-  const creatorsPaidButUndelivered =
-    creatorsInCampaign.filter(isPaidButUndelivered);
+  )
+  const creatorsAwaitingPayment = creatorsInCampaign.filter(isAwaitingPayment)
+  const creatorsPaidButUndelivered = creatorsInCampaign.filter(isPaidButUndelivered)
 
   /**
    * Each campaign sets its own target. With every campaign in view there is
    * no single target, so the figures fall back to a default — open question
    * Q21.
    */
-  const selectedCampaign = campaigns.find(
-    (campaign) => campaign.name === filterSelection.campaign,
-  );
+  const selectedCampaign = campaigns.find((campaign) => campaign.name === filterSelection.campaign)
   const targetCostPerInstall =
-    selectedCampaign?.targetCostPerInstall ?? DEFAULT_TARGET_COST_PER_INSTALL;
+    selectedCampaign?.targetCostPerInstall ?? DEFAULT_TARGET_COST_PER_INSTALL
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 pb-10 pt-5 sm:px-6 md:gap-6 md:px-8 md:pb-12 md:pt-7">
@@ -148,9 +157,9 @@ export function CampaignOverviewScreen({
           </div>
 
           <InstallsOverTimeChart
-            dailyInstallCounts={dailyInstallCounts}
-            streamDayMarkers={streamDayMarkers}
-            weekLabels={chartWeekLabels}
+            dailyInstallCounts={chart.dailyInstallCounts}
+            streamDayMarkers={chart.streamDayMarkers}
+            weekLabels={chart.weekLabels}
           />
         </Panel>
 
@@ -158,8 +167,7 @@ export function CampaignOverviewScreen({
           <DeliveredPaymentOpenPanel
             creators={creatorsAwaitingPayment}
             totalOutstandingBalance={
-              calculateCampaignSummary(creatorsAwaitingPayment)
-                .totalOutstandingBalance
+              calculateCampaignSummary(creatorsAwaitingPayment).totalOutstandingBalance
             }
           />
 
@@ -167,8 +175,8 @@ export function CampaignOverviewScreen({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 /** Re-exported so the filter sentinel is available to callers of this screen. */
-export { EVERY_CAMPAIGN };
+export { EVERY_CAMPAIGN }

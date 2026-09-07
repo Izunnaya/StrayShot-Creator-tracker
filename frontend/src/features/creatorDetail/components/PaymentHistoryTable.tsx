@@ -1,7 +1,7 @@
-import type { Creator } from '../../../data/types'
-import { getOutstandingBalance, hasOutstandingBalance } from '../../../domain/creatorCalculations'
-import { sortPaymentsNewestFirst } from '../../../domain/paymentHistory'
-import { formatDate, formatMoney } from '../../../lib/format'
+import type { Creator } from '@/data/types'
+import { getOutstandingBalance, hasOutstandingBalance } from '@/domain/creatorCalculations'
+import { sortPaymentsNewestFirst } from '@/domain/paymentHistory'
+import { formatDate, formatPaymentAmount } from '@/lib/format'
 
 /**
  * Every payment made to this creator, one row each, newest first.
@@ -56,7 +56,7 @@ export function PaymentHistoryTable({ creator }: { creator: Creator }) {
           </div>
 
           <div className="order-2 whitespace-nowrap text-right font-semibold sm:order-0">
-            {formatMoney(payment.amount)}
+            {formatPaymentAmount(payment.amount)}
           </div>
         </div>
       ))}
@@ -68,11 +68,11 @@ export function PaymentHistoryTable({ creator }: { creator: Creator }) {
           <div className="text-[12px] font-semibold uppercase tracking-[1px] text-bad">Open</div>
 
           <div className="whitespace-nowrap text-right font-semibold text-bad sm:order-last sm:text-right">
-            {formatMoney(getOutstandingBalance(creator))}
+            {formatPaymentAmount(getOutstandingBalance(creator))}
           </div>
 
           <div className="col-span-2 text-ink-muted sm:col-span-3">
-            Remaining balance on {formatMoney(creator.contractedAmount)} agreement
+            Remaining balance on {formatPaymentAmount(creator.contractedAmount)} agreement
           </div>
         </div>
       )}

@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import type { CreatorLifecycleStatus } from '../../../data/types'
+import type { CreatorLifecycleStatus } from '@/data/types'
 import {
   EVERY_CAMPAIGN,
   EVERY_STATUS,
   type CampaignFilter,
   type CreatorFilterSelection,
   type LifecycleStatusFilter,
-} from '../../../domain/creatorFiltering'
+} from '@/domain/creatorFiltering'
 
 /**
  * Holds which campaign and which lifecycle status the dashboard is filtered
@@ -38,4 +38,9 @@ export function useCreatorFilterSelection() {
   }
 }
 
-export type { CampaignFilter, CreatorFilterSelection, CreatorLifecycleStatus, LifecycleStatusFilter }
+export type {
+  CampaignFilter,
+  CreatorFilterSelection,
+  CreatorLifecycleStatus,
+  LifecycleStatusFilter,
+}

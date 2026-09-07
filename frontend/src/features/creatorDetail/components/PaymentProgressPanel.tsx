@@ -1,14 +1,14 @@
-import type { Creator } from '../../../data/types'
+import type { Creator } from '@/data/types'
 import {
   getAmountPaid,
   getOutstandingBalance,
   getPaymentProgressPercent,
   hasOutstandingBalance,
-} from '../../../domain/creatorCalculations'
-import { countPayments } from '../../../domain/paymentHistory'
-import { joinClassNames } from '../../../lib/classNames'
-import { formatMoney } from '../../../lib/format'
-import { ProgressBar } from '../../../ui'
+} from '@/domain/creatorCalculations'
+import { countPayments } from '@/domain/paymentHistory'
+import { joinClassNames } from '@/lib/classNames'
+import { formatPaymentAmount } from '@/lib/format'
+import { ProgressBar } from '@/ui'
 
 /**
  * Where this creator's deal stands: paid against agreed, and what is left.
@@ -26,8 +26,8 @@ export function PaymentProgressPanel({ creator }: { creator: Creator }) {
     <div className="border border-hair bg-panel px-5 py-4.5">
       <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-2">
         <div className="text-[13px] text-ink-muted">
-          {formatMoney(amountPaid)} of {formatMoney(creator.contractedAmount)} paid across{' '}
-          {paymentCount} {paymentCount === 1 ? 'payment' : 'payments'}
+          {formatPaymentAmount(amountPaid)} of {formatPaymentAmount(creator.contractedAmount)} paid
+          across {paymentCount} {paymentCount === 1 ? 'payment' : 'payments'}
         </div>
 
         <div
@@ -37,7 +37,7 @@ export function PaymentProgressPanel({ creator }: { creator: Creator }) {
           )}
         >
           {hasOutstandingBalance(creator)
-            ? `${formatMoney(outstandingBalance)} open`
+            ? `${formatPaymentAmount(outstandingBalance)} open`
             : 'Fully settled'}
         </div>
       </div>

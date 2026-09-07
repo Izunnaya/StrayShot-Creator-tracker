@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { creators as fixtureCreators, streams as fixtureStreams } from '../data/fixtures'
-import type { Stream } from '../data/types'
+import { creators as fixtureCreators, streams as fixtureStreams } from '@/data/fixtures'
+import type { Stream } from '@/data/types'
 import {
   getStreamHistoryForCreator,
   getStreamsForCreator,

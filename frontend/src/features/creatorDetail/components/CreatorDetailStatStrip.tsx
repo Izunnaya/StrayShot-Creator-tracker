@@ -1,8 +1,8 @@
-import type { Creator } from '../../../data/types'
-import { rateCostPerInstall, type CostPerInstallRating } from '../../../domain/costPerInstallRating'
-import { getAmountPaid, getCostPerInstall } from '../../../domain/creatorCalculations'
-import { formatCostPerInstall, formatMoney, formatNumber } from '../../../lib/format'
-import { StatStrip, StatTile, type StatTileTone } from '../../../ui'
+import type { Creator } from '@/data/types'
+import { rateCostPerInstall, type CostPerInstallRating } from '@/domain/costPerInstallRating'
+import { getAmountPaid, getCostPerInstall } from '@/domain/creatorCalculations'
+import { formatCostPerInstall, formatMoney, formatNumber } from '@/lib/format'
+import { StatStrip, StatTile, type StatTileTone } from '@/ui'
 
 /**
  * How this one creator is performing: reach, spend, and what that spend

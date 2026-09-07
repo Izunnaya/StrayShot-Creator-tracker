@@ -3,11 +3,15 @@ import { Button } from "../../ui";
 /* Static masthead — task 0.14. The tabs render their selected state but do not
    switch views yet; that is Phase 3.
 
-   Layout: one row from md up, exactly as the design was reviewed. Below that
-   the three groups stack instead of competing for a single 64px row —
-   wordmark, then the actions, then the tabs. Nothing is hidden on a phone:
-   the whole masthead is four controls, and dropping any of them to save
-   vertical space would cost more than the row it saved. */
+   Layout: one row from md up, exactly as the design was reviewed. On a phone
+   it becomes two rows — wordmark and the primary action, then the tabs with
+   the public page link opposite them — rather than three stacked bands.
+
+   The actions wrapper is `display: contents` below md, so the link and the
+   button leave the group and become items of the masthead's own flex row,
+   free to sit on different lines. From md up the wrapper becomes a real flex
+   box again and the two sit together at the far right, which is what keeps
+   the desktop masthead identical to the design. */
 
 const tabs = [
   { id: "overview", label: "Overview" },
@@ -17,7 +21,7 @@ const tabs = [
 export function AppMasthead({ activeTab = "overview" }: { activeTab?: string }) {
   return (
     <header className="grain-masthead border-b border-amber px-4 md:px-8">
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 py-3 md:h-16 md:flex-nowrap md:justify-between md:gap-6 md:py-0">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2.5 md:h-16 md:flex-nowrap md:justify-between md:gap-6 md:py-0">
         <div className="order-1 flex cursor-pointer items-baseline gap-2.5 md:gap-3.5">
           <div className="font-display text-[22px] uppercase tracking-[1px] text-amber text-shadow-stencil whitespace-nowrap md:text-[25px]">
             Stray Shot
@@ -27,17 +31,23 @@ export function AppMasthead({ activeTab = "overview" }: { activeTab?: string }) 
           </div>
         </div>
 
-        <div className="order-2 flex w-full items-center justify-between gap-4 md:order-3 md:w-auto md:justify-end md:gap-5">
+        <div className="contents md:order-3 md:flex md:items-center md:gap-5">
           <a
             href="#"
-            className="overflow-hidden text-ellipsis whitespace-nowrap text-[13px] uppercase tracking-[1px] text-ink-muted hover:text-amber"
+            className="order-5 ml-auto overflow-hidden text-ellipsis whitespace-nowrap text-[12px] uppercase tracking-[1px] text-ink-muted hover:text-amber md:order-0 md:ml-0 md:text-[13px]"
           >
             Public page ↗
           </a>
-          <Button variant="primary">+ Add creator</Button>
+          <Button variant="primary" className="order-2 ml-auto md:order-0 md:ml-0">
+            + Add creator
+          </Button>
         </div>
 
-        <nav className="order-3 flex w-full gap-6.5 border-t border-hair pt-2 md:order-2 md:w-auto md:border-0 md:pt-0">
+        {/* Forces the tabs onto their own line on a phone. Removed from the
+            layout entirely from md up, where everything shares one row. */}
+        <div aria-hidden="true" className="order-3 w-full md:hidden" />
+
+        <nav className="order-4 flex gap-6 md:order-2 md:gap-6.5">
           {tabs.map((tab) => (
             <button
               key={tab.id}

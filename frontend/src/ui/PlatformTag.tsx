@@ -1,5 +1,5 @@
-import type { StreamingPlatform } from '../data/types'
-import { joinClassNames } from '../lib/classNames'
+import type { StreamingPlatform } from '@/data/types'
+import { joinClassNames } from '@/lib/classNames'
 
 /** Which platform a creator streams on. Twitch carries its own purple. */
 export function PlatformTag({ platform }: { platform: StreamingPlatform }) {

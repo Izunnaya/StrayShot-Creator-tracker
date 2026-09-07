@@ -1,4 +1,4 @@
-import type { Campaign, Creator, Payment } from '../data/types'
+import type { Campaign, Creator, Payment } from '@/data/types'
 
 /**
  * Builders for tests.

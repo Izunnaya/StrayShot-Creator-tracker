@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createTestCreator, createTestPayment } from '../testing/createTestCreator'
+import { createTestCreator, createTestPayment } from '@/testing/createTestCreator'
 import {
   getAmountPaid,
   getCostPerInstall,

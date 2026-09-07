@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { creators as fixtureCreators } from '../data/fixtures'
-import { createTestCreator, createTestPayment } from '../testing/createTestCreator'
+import { creators as fixtureCreators } from '@/data/fixtures'
+import { createTestCreator, createTestPayment } from '@/testing/createTestCreator'
 import {
   countCreatorsByLifecycleStatus,
   EVERY_CAMPAIGN,

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { joinClassNames } from '../lib/classNames'
+import { joinClassNames } from '@/lib/classNames'
 
 /**
  * A panel or section heading in the house style: condensed uppercase, where

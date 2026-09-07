@@ -1,4 +1,4 @@
-import { Button } from "../../ui";
+import { Button } from '@/ui'
 
 /* Static masthead — task 0.14. The tabs render their selected state but do not
    switch views yet; that is Phase 3.
@@ -14,11 +14,11 @@ import { Button } from "../../ui";
    the desktop masthead identical to the design. */
 
 const tabs = [
-  { id: "overview", label: "Overview" },
-  { id: "payments", label: "Payments" },
-];
+  { id: 'overview', label: 'Overview' },
+  { id: 'payments', label: 'Payments' },
+]
 
-export function AppMasthead({ activeTab = "overview" }: { activeTab?: string }) {
+export function AppMasthead({ activeTab = 'overview' }: { activeTab?: string }) {
   return (
     <header className="grain-masthead border-b border-amber px-4 md:px-8">
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2.5 md:h-16 md:flex-nowrap md:justify-between md:gap-6 md:py-0">
@@ -52,10 +52,10 @@ export function AppMasthead({ activeTab = "overview" }: { activeTab?: string }) 
             <button
               key={tab.id}
               className={
-                "cursor-pointer border-none bg-transparent px-0.5 pb-1 pt-1.5 font-head text-[13px] uppercase tracking-[2px] " +
+                'cursor-pointer border-none bg-transparent px-0.5 pb-1 pt-1.5 font-head text-[13px] uppercase tracking-[2px] ' +
                 (tab.id === activeTab
-                  ? "border-b-2 border-amber text-amber"
-                  : "border-b-2 border-transparent text-ink-muted hover:text-ink")
+                  ? 'border-b-2 border-amber text-amber'
+                  : 'border-b-2 border-transparent text-ink-muted hover:text-ink')
               }
             >
               {tab.label}
@@ -64,5 +64,5 @@ export function AppMasthead({ activeTab = "overview" }: { activeTab?: string }) 
         </nav>
       </div>
     </header>
-  );
+  )
 }

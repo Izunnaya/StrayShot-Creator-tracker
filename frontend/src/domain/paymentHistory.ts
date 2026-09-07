@@ -1,4 +1,4 @@
-import type { Payment } from '../data/types'
+import type { Payment } from '@/data/types'
 
 /**
  * Ordering rules for a creator's payment records.

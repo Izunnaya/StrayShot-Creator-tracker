@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useCreatorFilterSelection } from './features/dashboard/hooks/useCreatorFilterSelection'
+import { useCreatorSortSelection } from './features/dashboard/hooks/useCreatorSortSelection'
 import { AppMasthead } from './components/layout/AppMasthead'
 import type { Creator } from './data/types'
 import { CreatorDetailScreen } from './features/creatorDetail/CreatorDetailScreen'
@@ -17,17 +19,21 @@ import { CampaignOverviewScreen } from './features/dashboard/CampaignOverviewScr
 export default function App() {
   const [creatorInDetail, setCreatorInDetail] = useState<Creator | null>(null)
 
+  const filterState = useCreatorFilterSelection()
+  const sortState = useCreatorSortSelection()
+
   return (
     <div className="grain min-h-screen">
       <AppMasthead activeTab="overview" />
 
       {creatorInDetail ? (
-        <CreatorDetailScreen
-          creator={creatorInDetail}
-          onBack={() => setCreatorInDetail(null)}
-        />
+        <CreatorDetailScreen creator={creatorInDetail} onBack={() => setCreatorInDetail(null)} />
       ) : (
-        <CampaignOverviewScreen onSelectCreator={setCreatorInDetail} />
+        <CampaignOverviewScreen
+          onSelectCreator={setCreatorInDetail}
+          filterState={filterState}
+          sortState={sortState}
+        />
       )}
     </div>
   )

@@ -1,4 +1,4 @@
-import { joinClassNames } from '../lib/classNames'
+import { joinClassNames } from '@/lib/classNames'
 
 /**
  * Progress against an agreed amount.

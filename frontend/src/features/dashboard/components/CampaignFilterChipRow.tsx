@@ -1,6 +1,6 @@
-import type { Campaign } from '../../../data/types'
-import { EVERY_CAMPAIGN, type CampaignFilter } from '../../../domain/creatorFiltering'
-import { Button, FilterChip, Label } from '../../../ui'
+import type { Campaign } from '@/data/types'
+import { EVERY_CAMPAIGN, type CampaignFilter } from '@/domain/creatorFiltering'
+import { Button, FilterChip, Label } from '@/ui'
 
 /**
  * Which campaign the dashboard is showing. Everything below this row — the

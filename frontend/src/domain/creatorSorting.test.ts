@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { creators as fixtureCreators } from '../data/fixtures'
-import { createTestCreator, createTestPayment } from '../testing/createTestCreator'
+import { creators as fixtureCreators } from '@/data/fixtures'
+import { createTestCreator, createTestPayment } from '@/testing/createTestCreator'
 import {
   DEFAULT_SORT_SELECTION,
   getInitialDirectionForColumn,
@@ -162,8 +162,20 @@ describe('the fixture data in the table', () => {
     )
 
     expect(codes).toEqual([
-      'NOVA', 'GRIM', 'RAZE', 'MARA', 'TORQ', 'DEE', 'SABLE',
-      'MIRA', 'HOLO', 'LOTUS', 'KODA', 'VEXA', 'BLUNT', 'STORM',
+      'NOVA',
+      'GRIM',
+      'RAZE',
+      'MARA',
+      'TORQ',
+      'DEE',
+      'SABLE',
+      'MIRA',
+      'HOLO',
+      'LOTUS',
+      'KODA',
+      'VEXA',
+      'BLUNT',
+      'STORM',
     ])
   })
 })

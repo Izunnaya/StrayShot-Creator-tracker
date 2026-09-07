@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ---------------------------------------------------------------------------
    Stray Shot Creator Tracker — design tokens
@@ -50,9 +50,9 @@
 
   /* Faces */
   --font-display: Anton, Impact, sans-serif;
-  --font-head: Oswald, "Arial Narrow", sans-serif;
-  --font-body: Barlow, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-head: Oswald, 'Arial Narrow', sans-serif;
+  --font-body: Barlow, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
 @layer base {
@@ -103,8 +103,12 @@
     background-image:
       radial-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1.4px),
       radial-gradient(rgba(0, 0, 0, 0.6) 1px, transparent 1.3px);
-    background-size: 6px 6px, 9px 9px;
-    background-position: 0 0, 3px 5px;
+    background-size:
+      6px 6px,
+      9px 9px;
+    background-position:
+      0 0,
+      3px 5px;
   }
 
   /* Heavier grain plus a vertical fall-off, for the masthead */
@@ -114,8 +118,14 @@
       radial-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1.5px),
       radial-gradient(rgba(0, 0, 0, 0.5) 1px, transparent 1.4px),
       linear-gradient(180deg, #17140f 0%, #0e0d0a 100%);
-    background-size: 7px 7px, 11px 11px, 100% 100%;
-    background-position: 0 0, 4px 6px, 0 0;
+    background-size:
+      7px 7px,
+      11px 11px,
+      100% 100%;
+    background-position:
+      0 0,
+      4px 6px,
+      0 0;
   }
 
   /* Stencil cut on the modal shells */

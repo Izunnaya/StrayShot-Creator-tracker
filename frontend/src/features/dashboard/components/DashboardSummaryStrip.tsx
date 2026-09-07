@@ -1,11 +1,6 @@
-import type { CampaignSummaryTotals } from '../../../domain/campaignSummary'
-import {
-  formatCostPerInstall,
-  formatMoney,
-  formatNumber,
-  formatViewsCompact,
-} from '../../../lib/format'
-import { StatStrip, StatTile } from '../../../ui'
+import type { CampaignSummaryTotals } from '@/domain/campaignSummary'
+import { formatCostPerInstall, formatMoney, formatNumber, formatViewsCompact } from '@/lib/format'
+import { StatStrip, StatTile } from '@/ui'
 
 /**
  * The four headline figures at the top of the campaign overview.

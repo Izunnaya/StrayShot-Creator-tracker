@@ -1,6 +1,6 @@
-import type { CreatorLifecycleStatus } from '../../../data/types'
-import { EVERY_STATUS, type LifecycleStatusFilter } from '../../../domain/creatorFiltering'
-import { FilterChip, Label } from '../../../ui'
+import type { CreatorLifecycleStatus } from '@/data/types'
+import { EVERY_STATUS, type LifecycleStatusFilter } from '@/domain/creatorFiltering'
+import { FilterChip, Label } from '@/ui'
 
 /**
  * Narrows the creator table to one point in the lifecycle.

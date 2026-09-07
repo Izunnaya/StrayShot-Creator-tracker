@@ -1,5 +1,5 @@
-import type { Creator } from '../../../data/types'
-import { Button, Label, PlatformTag } from '../../../ui'
+import type { Creator } from '@/data/types'
+import { Button, Label, PlatformTag } from '@/ui'
 
 /**
  * Who this creator is, and the code everything about them is tracked by.

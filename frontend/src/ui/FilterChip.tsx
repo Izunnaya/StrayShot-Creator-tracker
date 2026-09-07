@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes } from 'react'
-import { joinClassNames } from '../lib/classNames'
+import { joinClassNames } from '@/lib/classNames'
 
 /**
  * A toggle in a filter row. Selected chips fill amber; the optional count

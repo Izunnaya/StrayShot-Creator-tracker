@@ -4,7 +4,7 @@ import {
   selectionAfterColumnClick,
   type CreatorSortSelection,
   type CreatorTableColumnKey,
-} from '../../../domain/creatorSorting'
+} from '@/domain/creatorSorting'
 
 /**
  * Holds which column the creator table is sorted by, and in which direction.

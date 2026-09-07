@@ -1,188 +1,100 @@
 # Stray Shot Creator Tracker — Web
 
-The frontend half of the creator tracker. Separate repo from the API.
+React, Vite, TypeScript, and Tailwind CSS frontend. Data is currently synthetic;
+the backend and external integrations are not implemented.
 
-**Stack:** React 19 + Vite 8 + TypeScript, Tailwind CSS v4.
+## Development
 
-```bash
-npm install
-npm run dev     # http://localhost:5173
-npm run build   # typecheck + production build
-npx oxlint src  # lint
-```
+Use Node 22.12+ (or a supported Node 20 release at least 20.19).
 
-> **Node 22.12+ (or 20.19+) required.** On older Node, npm silently skips the
-> native rolldown and oxlint bindings and both the build and the dev server die
-> with `Cannot find native binding`. As a stopgap on Node 22.11 the two Windows
-> bindings are pinned as devDependencies — remove
-> `@rolldown/binding-win32-x64-msvc` and `@oxlint/binding-win32-x64-msvc` once
-> Node is upgraded, since they are platform-specific.
+    npm install
+    npm run dev
+    npm test
+    npm run lint
+    npm run build
+    npm run format
+    npm run format:check
 
----
+On Node 22.11, npm can skip the native Rolldown and Oxlint bindings. Use a
+supported Node version when installing dependencies. The explicit Windows
+bindings are optional dependencies so they do not prevent installation on
+other platforms.
 
-## How the code is arranged
+## Structure
 
-Five layers, each with one job. Dependencies only ever point downward: a screen
-may use the domain, the domain never imports a component.
+- features/: screens and their components.
+- ui/: shared presentation components.
+- domain/: pure calculations, filtering, sorting, and chart aggregation.
+- data/types.ts: shared data contracts, including daily installs and stream markers.
+- data/fixtures.ts: demo records and synthetic fixture generation.
+- lib/: display formatting and small helpers.
 
-```
-src/
-├── features/     Screens and the components that belong to one screen
-├── ui/           Shared primitives — know nothing about creators or campaigns
-├── domain/       Business rules and calculations — no React, no formatting
-├── data/         The data itself, and the types describing it
-└── lib/          Small helpers: class names, display formatting
-```
+Use @/ for imports across source directories and relative imports for siblings.
+The alias is configured in both TypeScript and Vite; Vitest uses Vite's resolver.
+Both TypeScript projects enable strict checking.
 
-| Layer | Holds | Never holds |
-| --- | --- | --- |
-| `features/` | Screen state, layout, composition | Business rules |
-| `ui/` | Presentation, variants, hover and focus states | Anything domain-specific |
-| `domain/` | Calculations, filtering, sorting, thresholds | JSX, colours, formatting |
-| `data/` | Fixtures and type definitions | Logic of any kind |
-| `lib/` | Formatting and string helpers | Calculations |
+Prettier defines single quotes, no semicolons, a 100-character print width,
+and LF line endings. EditorConfig supplies editor defaults; .gitattributes
+keeps text files using LF across platforms.
 
-### Why the split matters
+## Current behavior
 
-**`domain/` is where money and status are decided.** `getCostPerInstall` returns
-`Infinity` when a creator has been paid nothing, so they render as "—" and sort
-last rather than appearing as the cheapest creator on the campaign. Amounts paid
-and owed are always derived from the payment list, never stored, so a progress
-bar cannot disagree with the payment history behind it.
+The overview filters creators by campaign and lifecycle status. The summary and
+installs chart follow both filters; status-chip counts and follow-up panels
+follow the campaign only. The app shell preserves filtering and sorting when
+opening a creator and returning to the overview.
 
-**Rules and appearance are kept apart.** `domain/costPerInstallRating.ts` decides
-whether a figure is `under-target`, `acceptable`, `over-target` or
-`not-measurable`. `features/dashboard/costPerInstallAppearance.ts` decides what
-each of those looks like. Thresholds can be argued about without opening a
-component, and the palette can change without touching a business rule.
+A creator with no committed streams, agreed amount, delivered streams, or payment
+records is a prospect. A zero-dollar deal with committed streams is contracted
+until delivery is complete. This convention should be replaced by an explicit
+deal record when the API is introduced.
 
-**`data/fixtures.ts` is the seam.** Every screen reads its data from that one
-module, so Phase 5 replaces it with API calls without touching anything else.
+Balances derive from payment records. Unmeasurable cost per install displays as
+an em dash and sorts last in both directions. The blended figure is also
+unmeasurable when nothing has been paid. Payment history and its balance summary
+show cents; dashboard summaries retain whole-dollar formatting.
 
-### Naming
+The performance table uses native table, column-header, and row-header semantics.
+Creator names are keyboard-operable buttons, and the active column header
+exposes its sorting direction.
 
-Names are written to be readable without prior knowledge of the domain:
-`streamsCommitted` and `streamsDelivered` rather than `agreed` and `streams`,
-`peakConcurrentViewers` rather than `peak`, `getOutstandingBalance` rather than
-`remainingOf`. Booleans read as questions (`isSelected`, `hasOutstandingBalance`)
-and units live in the name (`heightInPixels`, `percentComplete`).
+## Chart data
 
-UI primitives are named for their role rather than their appearance —
-`Button variant="addNew"`, not `variant="dashed"` — so choosing one does not
-require knowing the palette.
+The fixture reporting window starts July 19, 2026 and covers 42 days.
+Daily attribution is **synthetic**, not observed campaign performance. Weighted
+daily records reconcile exactly to each creator's install total and assign
+nothing before their campaign starts. Campaigns and lifecycle selections are
+aggregated from those creator records. Stream markers come from stream history
+and are deduplicated per creator and day.
 
----
+The vertical scale adjusts to the selected data, includes numeric tick labels,
+and accommodates counts above 1,000. Empty and all-zero series show an empty
+state; a single day renders a point. Expand the chart's daily-values disclosure
+to read the counts and stream-day creator codes as a table.
 
-## The design system
+## Validation
 
-All tokens live in [`src/index.css`](src/index.css) as a Tailwind `@theme`. No
-component hardcodes a colour.
+The suite contains 89 tests: 84 covering the domain layer, and 5 interaction
+tests in src/features/dashboard/dashboardInteraction.test.tsx that drive the
+rendered dashboard through React Testing Library and user-event — campaign and
+status filtering, sorting by a column heading in both directions, and returning
+from a creator with filters and sort intact. Vitest runs in the node environment
+by default; the interaction file opts into jsdom with a @vitest-environment
+docblock, so the domain suite keeps its speed.
 
-- **Ground and panels** — `ground`, `panel`, `panel-head`, `sunk`, six hairline
-  weights from `hair` to `hair-6`
-- **Accent** — `amber` `#FFC20A`, plus `amber-deep`, `amber-mid`, `amber-dim`
-- **State, kept separate from the accent** — `good` (settled), `bad` (open)
-- **Faces by role** — `display` (Anton), `head` (Oswald), `body` (Barlow),
-  `mono` (IBM Plex Mono)
-- **Utilities** — `grain` and `grain-masthead` for the concrete noise texture,
-  `clip-corner` for the stencil cut on modals, `bar-partial` for the angled
-  amber progress fill
+## Remaining work
 
----
+Campaign and creator editing, recording payments, the payments ledger, public
+and creator portal routes, persistence, authentication, and platform integrations
+remain unimplemented. Loading and network-error states will be needed when the
+screens consume API data. Navigation currently uses component state rather than
+shareable URLs.
 
-## Tests
+Product decisions still open include whether status should filter headline
+figures, the CPI target when all campaigns are selected (currently $3.50), and
+how overpayments should be represented (currently outstanding balance is
+clamped to zero).
 
-```bash
-npm test        # run once
-npm run test:watch
-```
-
-**71 tests over the domain layer** (Vitest), covering every calculation, rule
-and threshold. The domain is plain TypeScript with no React, so the tests need
-no browser environment and run in well under a second.
-
-Each module has a test file beside it, and [`src/testing/createTestCreator.ts`](src/testing/createTestCreator.ts)
-builds creators with neutral defaults so a test states only the fields it is
-actually about.
-
-What is covered:
-
-| File | Guards |
-| --- | --- |
-| `creatorCalculations.test.ts` | Amounts paid and owed, payment progress, cost per install, delivery counts, lifecycle status, and which creators land in each status panel |
-| `costPerInstallRating.test.ts` | The rating bands, including both boundaries — exactly on target, and exactly at the top of the tolerance band |
-| `campaignSummary.test.ts` | The four headline figures, blending rather than averaging, and empty input |
-| `creatorFiltering.test.ts` | Both filters alone and together, and the chip counts ignoring the status filter |
-| `creatorSorting.test.ts` | Direction per column type, click-to-toggle behaviour, non-mutation, and unmeasurable figures sorting last |
-
-Edge cases are pinned deliberately, so a change in behaviour shows up as a
-failing test rather than a silent shift: overpayment clamping to a zero balance
-(open question Q5), a zero contracted amount not causing a division error, and
-an unpaid creator being unmeasurable rather than free — the last one being the
-bug the design prototype originally shipped, where creators with nothing paid
-sorted to the top of the table as the cheapest on the campaign.
-
-Several tests also assert against the real fixture data, so the reference
-figures below cannot drift unnoticed.
-
----
-
-## Build status
-
-Following the phased plan in the master checklist: planning → static screens →
-frontend → backend → integration.
-
-### Done
-
-**Module 0 — foundation.** Tailwind theme from the design tokens (0.8), the
-shared primitive inventory (0.9), the app shell (0.14).
-
-**Module 2 — campaign overview, static and frontend (2.9–2.21).** The screen is
-built and interactive:
-
-- Campaign chips filter every figure, the table and the status panels
-- Status chips filter the table; counts follow the campaign filter but not the
-  status filter, so each chip shows what it would reveal
-- All ten column headings sort, reverse on a second click, and open in a
-  sensible direction for their type — names A→Z, figures largest first, cost per
-  install cheapest first
-- Cost-per-install colour bands follow the selected campaign's own target
-- Empty states appear wherever a filter empties a table or panel
-
-### Not wired yet
-
-Each of these waits on a module whose own screens do not exist:
-
-| Control | Waits on |
-| --- | --- |
-| Row click → creator detail | Module 3 (task 2.22) |
-| Record payment | Module 6 (task 6.14) |
-| New / Edit campaign | Module 1 (tasks 1.12–1.15) |
-| Payments tab in the masthead | Module 7 |
-
-Components already accept the handlers — a table row only becomes clickable when
-it is given an `onSelectCreator`, so nothing shows an affordance that does
-nothing.
-
-### Also outstanding
-
-- **2.14** — loading, empty and error variants for the overview. Its planning
-  task (2.8) sits in the phase that was skipped, so the states have not been
-  defined.
-- **Open questions carried in the code.** Three decisions currently follow the
-  prototype and are commented where they are made: whether the status filter
-  should move the summary figures (Q20), which cost-per-install target applies
-  when all campaigns are in view (Q21), and whether the status panels should
-  obey the campaign filter (Q22). Each is a few lines in one file today and a
-  schema decision once the backend lands.
-
----
-
-## Data
-
-Fixture data mirrors the design prototype: 2 campaigns, 14 creators, 18
-payments. With no filters applied the dashboard shows **$47,000 paid of $55,200
-committed, $8,200 outstanding across 5 creators, 25,545 installs from 2.27M
-views, and a blended $1.84 per install** — 8 active creators and 6 completed.
-Those figures are the reference for checking that a change has not disturbed
-anything.
+Unfiltered reference totals remain $47,000 paid of $55,200 committed,
+$8,200 outstanding across five creators, and 25,545 installs from 2,275,000 views.
+There are eight active creators and six completed creators.

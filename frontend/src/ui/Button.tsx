@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes } from 'react'
-import { joinClassNames } from '../lib/classNames'
+import { joinClassNames } from '@/lib/classNames'
 
 /**
  * Every button in the application, by role rather than by appearance — so a

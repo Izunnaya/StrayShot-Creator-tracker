@@ -1,4 +1,4 @@
-import type { Creator } from '../data/types'
+import type { Creator } from '@/data/types'
 import { getAmountPaid, getOutstandingBalance, hasOutstandingBalance } from './creatorCalculations'
 
 /**
@@ -34,7 +34,8 @@ export function calculateCampaignSummary(creators: Creator[]): CampaignSummaryTo
     creatorsWithOutstandingBalanceCount: creators.filter(hasOutstandingBalance).length,
     totalInstalls,
     totalViews: sumBy(creators, (creator) => creator.totalViews),
-    blendedCostPerInstall: totalInstalls === 0 ? Infinity : totalAmountPaid / totalInstalls,
+    blendedCostPerInstall:
+      totalInstalls === 0 || totalAmountPaid === 0 ? Infinity : totalAmountPaid / totalInstalls,
   }
 }
 

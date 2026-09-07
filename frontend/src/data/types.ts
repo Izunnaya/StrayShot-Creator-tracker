@@ -104,3 +104,22 @@ export interface Stream {
   /** Installs credited to this individual stream. */
   installsAttributed: number
 }
+
+/** Daily install attribution supplied by the reporting API. */
+export interface DailyInstall {
+  creatorId: number
+  installedOn: string
+  installs: number
+}
+
+/** A stream day positioned in a chart's reporting window. */
+export interface StreamDayMarker {
+  dayIndex: number
+  creatorCode: string
+}
+
+export interface InstallChartData {
+  dailyInstallCounts: number[]
+  streamDayMarkers: StreamDayMarker[]
+  weekLabels: string[]
+}

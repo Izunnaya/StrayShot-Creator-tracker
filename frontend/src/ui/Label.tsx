@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { joinClassNames } from '../lib/classNames'
+import { joinClassNames } from '@/lib/classNames'
 
 /**
  * The small uppercase caption that sits above a figure or a form field.
@@ -7,7 +7,9 @@ import { joinClassNames } from '../lib/classNames'
  */
 export function Label({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={joinClassNames('text-[11px] uppercase tracking-[2px] text-ink-muted', className)}>
+    <div
+      className={joinClassNames('text-[11px] uppercase tracking-[2px] text-ink-muted', className)}
+    >
       {children}
     </div>
   )

@@ -1,4 +1,4 @@
-import type { Creator } from '../data/types'
+import type { Creator } from '@/data/types'
 import { getAmountPaid, getCostPerInstall, getLifecycleStatus } from './creatorCalculations'
 
 /**
@@ -87,6 +87,15 @@ export function sortCreators(creators: Creator[], selection: CreatorSortSelectio
   return [...creators].sort((firstCreator, secondCreator) => {
     const firstValue = getSortValue(firstCreator, selection.column)
     const secondValue = getSortValue(secondCreator, selection.column)
+
+    // Missing measurements stay last in either direction.
+    if (selection.column === 'costPerInstall') {
+      const firstMeasurable = Number.isFinite(firstValue)
+      const secondMeasurable = Number.isFinite(secondValue)
+      if (!firstMeasurable || !secondMeasurable) {
+        return firstMeasurable ? -1 : secondMeasurable ? 1 : 0
+      }
+    }
 
     const comparison =
       typeof firstValue === 'string' && typeof secondValue === 'string'

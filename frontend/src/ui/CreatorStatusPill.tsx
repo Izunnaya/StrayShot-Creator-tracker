@@ -1,5 +1,5 @@
-import type { CreatorLifecycleStatus } from '../data/types'
-import { joinClassNames } from '../lib/classNames'
+import type { CreatorLifecycleStatus } from '@/data/types'
+import { joinClassNames } from '@/lib/classNames'
 
 /**
  * Where a creator sits in the working relationship. Each status gets its own

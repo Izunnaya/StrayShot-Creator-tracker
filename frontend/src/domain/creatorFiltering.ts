@@ -1,4 +1,4 @@
-import type { Creator, CreatorLifecycleStatus } from '../data/types'
+import type { Creator, CreatorLifecycleStatus } from '@/data/types'
 import { getLifecycleStatus } from './creatorCalculations'
 
 /**
@@ -34,10 +34,7 @@ export function filterCreatorsByLifecycleStatus(
   return creators.filter((creator) => getLifecycleStatus(creator) === lifecycleStatus)
 }
 
-export function filterCreators(
-  creators: Creator[],
-  selection: CreatorFilterSelection,
-): Creator[] {
+export function filterCreators(creators: Creator[], selection: CreatorFilterSelection): Creator[] {
   const withinCampaign = filterCreatorsByCampaign(creators, selection.campaign)
   return filterCreatorsByLifecycleStatus(withinCampaign, selection.lifecycleStatus)
 }

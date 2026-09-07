@@ -11,6 +11,16 @@ export function formatMoney(amount: number): string {
   return '$' + Math.round(amount).toLocaleString('en-US')
 }
 
+/** Exact USD amounts for payment records and reconciliation. */
+export function formatPaymentAmount(amount: number): string {
+  return amount.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
 /** 25545 -> "25,545" */
 export function formatNumber(value: number): string {
   return value.toLocaleString('en-US')

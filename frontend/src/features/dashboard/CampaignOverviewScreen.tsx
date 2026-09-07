@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { Creator } from "../../data/types";
 import {
   campaigns,
   chartWeekLabels,
@@ -41,7 +42,12 @@ import { useCreatorSortSelection } from "./hooks/useCreatorSortSelection";
  * Data still comes from the fixture module. Replacing those imports with API
  * calls is the whole of this screen's Phase 5 work.
  */
-export function CampaignOverviewScreen() {
+export function CampaignOverviewScreen({
+  onSelectCreator,
+}: {
+  /** Opens the creator detail screen for the row that was clicked. */
+  onSelectCreator?: (creator: Creator) => void;
+} = {}) {
   const {
     selection: filterSelection,
     selectCampaign,
@@ -127,6 +133,7 @@ export function CampaignOverviewScreen() {
         sortSelection={sortSelection}
         onColumnHeadingClick={handleColumnClick}
         targetCostPerInstall={targetCostPerInstall}
+        onSelectCreator={onSelectCreator}
       />
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1.55fr_1fr]">

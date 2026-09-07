@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Creator } from '../../../data/types'
 import { rateCostPerInstall } from '../../../domain/costPerInstallRating'
 import {
@@ -59,57 +60,123 @@ export function CreatorPerformanceTableRow({
           : undefined
       }
       className={joinClassNames(
-        'grid items-center border-t border-hair-4 py-3.25 text-[14px]',
-        CREATOR_TABLE_COLUMN_WIDTHS,
-        CREATOR_TABLE_HORIZONTAL_PADDING,
+        'border-t border-hair-4 text-[14px]',
         isSelectable && 'cursor-pointer hover:bg-row-hover focus-visible:outline-2 focus-visible:outline-amber',
       )}
-      style={{ minWidth: CREATOR_TABLE_MINIMUM_WIDTH_PX }}
     >
-      <div className="font-semibold text-ink">{creator.name}</div>
-
-      <div>
-        <CreatorStatusPill status={getLifecycleStatus(creator)} />
-      </div>
-
-      <div>
-        <PlatformTag platform={creator.platform} />
-      </div>
-
-      <div className="font-semibold tracking-[1px] text-amber">{creator.creatorCode}</div>
-
-      <div className="text-ink-muted">
-        {creator.streamsDelivered} / {creator.streamsCommitted}
-      </div>
-
-      <div>{formatNumber(creator.totalViews)}</div>
-
-      <div className="text-ink-muted">{formatNumber(creator.peakConcurrentViewers)}</div>
-
-      <div className="font-semibold">{formatNumber(creator.installsAttributed)}</div>
-
-      <div className="pr-5.5">
-        <div className="mb-1.25 flex justify-between gap-2.5 text-[13px]">
-          <span className="whitespace-nowrap">
-            {formatMoney(amountPaid)} / {formatMoney(creator.contractedAmount)}
-          </span>
-          <span className="whitespace-nowrap text-ink-muted">
-            {outstandingBalance > 0 ? `${formatMoney(outstandingBalance)} open` : 'Settled'}
+      {/* Stacked card, up to the width where all ten columns can be read.
+          Everything is on screen: no column is parked behind a horizontal
+          scrollbar the way it was when this row was a table at every size. */}
+      <div className="flex flex-col gap-2.5 px-4 py-3.5 lg:hidden">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
+          <span className="font-semibold text-ink">{creator.name}</span>
+          <span className="font-semibold tracking-[1px] text-amber">{creator.creatorCode}</span>
+          <span className="ml-auto flex items-center gap-2">
+            <PlatformTag platform={creator.platform} />
+            <CreatorStatusPill status={getLifecycleStatus(creator)} />
           </span>
         </div>
-        <ProgressBar percentComplete={getPaymentProgressPercent(creator)} />
+
+        <div className="grid grid-cols-4 gap-x-3 text-[13px]">
+          <StackedFigure label="Streams">
+            {creator.streamsDelivered} / {creator.streamsCommitted}
+          </StackedFigure>
+          <StackedFigure label="Views">{formatNumber(creator.totalViews)}</StackedFigure>
+          <StackedFigure label="Peak">
+            {formatNumber(creator.peakConcurrentViewers)}
+          </StackedFigure>
+          <StackedFigure label="Installs">
+            <span className="font-semibold text-ink">
+              {formatNumber(creator.installsAttributed)}
+            </span>
+          </StackedFigure>
+        </div>
+
+        <div>
+          <div className="mb-1.25 flex flex-wrap justify-between gap-x-2.5 text-[13px]">
+            <span className="whitespace-nowrap">
+              {formatMoney(amountPaid)} / {formatMoney(creator.contractedAmount)}
+              <span className="ml-2 text-ink-muted">
+                {outstandingBalance > 0 ? `${formatMoney(outstandingBalance)} open` : 'Settled'}
+              </span>
+            </span>
+            <span
+              className={joinClassNames(
+                'whitespace-nowrap px-2.25 py-0.75 font-semibold',
+                costPerInstallClasses[costPerInstallRating],
+              )}
+            >
+              {formatCostPerInstall(costPerInstall)} / install
+            </span>
+          </div>
+          <ProgressBar percentComplete={getPaymentProgressPercent(creator)} />
+        </div>
       </div>
 
-      <div>
-        <span
-          className={joinClassNames(
-            'px-2.25 py-0.75 font-semibold',
-            costPerInstallClasses[costPerInstallRating],
-          )}
-        >
-          {formatCostPerInstall(costPerInstall)}
-        </span>
+      {/* The ten-column table, from the width where it fits. */}
+      <div
+        className={joinClassNames(
+          'hidden items-center py-3.25 lg:grid',
+          CREATOR_TABLE_COLUMN_WIDTHS,
+          CREATOR_TABLE_HORIZONTAL_PADDING,
+        )}
+        style={{ minWidth: CREATOR_TABLE_MINIMUM_WIDTH_PX }}
+      >
+        <div className="font-semibold text-ink">{creator.name}</div>
+
+        <div>
+          <CreatorStatusPill status={getLifecycleStatus(creator)} />
+        </div>
+
+        <div>
+          <PlatformTag platform={creator.platform} />
+        </div>
+
+        <div className="font-semibold tracking-[1px] text-amber">{creator.creatorCode}</div>
+
+        <div className="text-ink-muted">
+          {creator.streamsDelivered} / {creator.streamsCommitted}
+        </div>
+
+        <div>{formatNumber(creator.totalViews)}</div>
+
+        <div className="text-ink-muted">{formatNumber(creator.peakConcurrentViewers)}</div>
+
+        <div className="font-semibold">{formatNumber(creator.installsAttributed)}</div>
+
+        <div className="pr-5.5">
+          <div className="mb-1.25 flex justify-between gap-2.5 text-[13px]">
+            <span className="whitespace-nowrap">
+              {formatMoney(amountPaid)} / {formatMoney(creator.contractedAmount)}
+            </span>
+            <span className="whitespace-nowrap text-ink-muted">
+              {outstandingBalance > 0 ? `${formatMoney(outstandingBalance)} open` : 'Settled'}
+            </span>
+          </div>
+          <ProgressBar percentComplete={getPaymentProgressPercent(creator)} />
+        </div>
+
+        <div>
+          <span
+            className={joinClassNames(
+              'px-2.25 py-0.75 font-semibold',
+              costPerInstallClasses[costPerInstallRating],
+            )}
+          >
+            {formatCostPerInstall(costPerInstall)}
+          </span>
+        </div>
       </div>
+    </div>
+  )
+}
+
+/** One figure in the stacked card, under the column heading it lost. */
+function StackedFigure({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <span className="block text-[10px] uppercase tracking-[1px] text-ink-faint">{label}</span>
+      {children}
     </div>
   )
 }

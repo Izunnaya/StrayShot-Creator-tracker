@@ -52,11 +52,13 @@ export function CreatorPerformanceTable({
         </div>
       )}
 
-      {/* On a phone most of these ten columns sit off-screen. The table is
-          scrollable rather than reflowed — money columns split mid-number
-          when compressed — so the scroll needs to be discoverable. */}
+      {/* Below lg every creator renders as a stacked card with all ten values
+          on screen, so nothing needs scrolling and the hint would be a lie.
+          From lg up the real columns return — and they stay wider than the
+          1280px page container at every desktop size, so the hint belongs on
+          all of them until that mismatch is settled. */}
       {creators.length > 0 && (
-        <div className="border-t border-hair-4 px-4.5 py-2.5 text-[12px] text-ink-faint lg:hidden">
+        <div className="hidden border-t border-hair-4 px-4.5 py-2.5 text-[12px] text-ink-faint lg:block">
           Scroll sideways for the remaining columns
         </div>
       )}
@@ -78,7 +80,7 @@ function CreatorPerformanceTableHeader({
   return (
     <div
       className={joinClassNames(
-        'grid border-b border-hair bg-panel-head',
+        'hidden border-b border-hair bg-panel-head lg:grid',
         CREATOR_TABLE_COLUMN_WIDTHS,
         CREATOR_TABLE_HORIZONTAL_PADDING,
       )}

@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import type { Creator } from '@/data/types'
 import type { CreatorSortSelection, CreatorTableColumnKey } from '@/domain/creatorSorting'
 import { joinClassNames } from '@/lib/classNames'
@@ -23,6 +24,8 @@ export function CreatorPerformanceTable({
   onSelectCreator?: (creator: Creator) => void
 }) {
   const totalColumnWeight = CREATOR_TABLE_COLUMN_WEIGHTS.reduce((sum, value) => sum + value, 0)
+  const scrollArea = useRef<HTMLDivElement>(null)
+  const canScrollSideways = useHorizontalOverflow(scrollArea)
 
   return (
     <div className="border border-hair bg-panel">
@@ -36,7 +39,7 @@ export function CreatorPerformanceTable({
         />
       </div>
 
-      <div className="hidden overflow-x-auto lg:block">
+      <div ref={scrollArea} className="hidden overflow-x-auto lg:block">
         <table
           className="w-full table-fixed border-collapse text-left"
           style={{ minWidth: CREATOR_TABLE_MINIMUM_WIDTH_PX }}
@@ -99,7 +102,7 @@ export function CreatorPerformanceTable({
             )}
           </tbody>
         </table>
-        {creators.length > 0 && (
+        {creators.length > 0 && canScrollSideways && (
           <p className="border-t border-hair-4 px-4.5 py-2.5 text-[12px] text-ink-faint">
             Scroll sideways for the remaining columns
           </p>
@@ -107,4 +110,36 @@ export function CreatorPerformanceTable({
       </div>
     </div>
   )
+}
+
+/**
+ * Whether an element's content is wider than the room it has.
+ *
+ * Measured rather than reasoned about. The table's minimum width is fixed,
+ * but the width available to it is not: it comes from the page container,
+ * which is capped at 1280px today and is one of the open layout decisions.
+ * A hint derived from today's numbers would start lying the day that cap
+ * moves, and telling someone to scroll a table that already fits is worse
+ * than saying nothing.
+ */
+function useHorizontalOverflow(elementRef: RefObject<HTMLElement | null>): boolean {
+  const [overflows, setOverflows] = useState(false)
+
+  useEffect(() => {
+    const element = elementRef.current
+    if (!element) return
+
+    const measure = () => setOverflows(element.scrollWidth > element.clientWidth + 1)
+    measure()
+
+    // jsdom reports no layout and has no ResizeObserver; one measurement is
+    // all that is available there, and it correctly reports no overflow.
+    if (typeof ResizeObserver === 'undefined') return
+
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [elementRef])
+
+  return overflows
 }

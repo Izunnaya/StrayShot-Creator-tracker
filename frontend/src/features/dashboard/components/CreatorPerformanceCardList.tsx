@@ -74,16 +74,22 @@ function CreatorPerformanceCard({
   return (
     <li
       className={joinClassNames(
-        'flex flex-col gap-2.5 border-t border-hair-4 px-4 py-3.5 text-[14px] first:border-t-0',
-        onSelectCreator && 'hover:bg-row-hover',
+        'relative flex flex-col gap-2.5 border-t border-hair-4 px-4 py-3.5 text-[14px] first:border-t-0',
+        onSelectCreator &&
+          'cursor-pointer hover:bg-row-hover focus-within:outline-2 focus-within:outline-amber focus-within:-outline-offset-2',
       )}
     >
       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
         {onSelectCreator ? (
+          /* The name is the button, but its hit area is the whole card: the
+             overlay below stretches it across the li, which is why the li is
+             positioned. One button rather than a clickable list item keeps
+             the accessible name and keyboard behaviour honest, and nothing
+             else inside the card is interactive for it to cover. */
           <button
             type="button"
             onClick={() => onSelectCreator(creator)}
-            className="cursor-pointer font-semibold text-ink hover:text-amber focus-visible:outline-2 focus-visible:outline-amber"
+            className="cursor-pointer font-semibold text-ink after:absolute after:inset-0 after:content-[''] hover:text-amber focus-visible:outline-none"
           >
             {creator.name}
           </button>

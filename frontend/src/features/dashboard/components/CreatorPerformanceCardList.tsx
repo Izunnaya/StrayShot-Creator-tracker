@@ -44,7 +44,7 @@ export function CreatorPerformanceCardList({
   }
 
   return (
-    <ul className="list-none cus">
+    <ul className="list-none">
       {creators.map((creator) => (
         <CreatorPerformanceCard
           key={creator.id}

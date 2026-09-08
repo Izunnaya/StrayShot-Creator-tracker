@@ -17,18 +17,29 @@ export function InstallsOverTimeChart({
   streamDayMarkers: StreamDayMarker[]
   weekLabels: string[]
 }) {
-  if (dailyInstallCounts.length === 0 || dailyInstallCounts.every((count) => count === 0)) {
+  // Only a missing reporting window leaves nothing to draw. A window with no
+  // installs still has something to say — which days creators streamed — so
+  // it renders as a chart rather than a sentence.
+  if (dailyInstallCounts.length === 0) {
     return (
       <p className="py-8 text-[14px] text-ink-muted" role="status">
-        No installs in this reporting period for the selected creators.
+        No reporting period for the selected creators.
       </p>
     )
   }
 
   const peak = dailyInstallCounts.reduce((max, count) => Math.max(max, count), 0)
-  // Round upward to four readable intervals.
-  const intervalMagnitude = 10 ** Math.floor(Math.log10(peak / 4))
-  const interval = Math.ceil(peak / 4 / intervalMagnitude) * intervalMagnitude
+  const hasInstalls = peak > 0
+  /**
+   * Round upward to four readable intervals, never finer than one install
+   * since installs are whole. An all-zero series takes a 0-4 axis instead:
+   * deriving the scale from a peak of zero would put log10(0) into the
+   * magnitude and leave every coordinate NaN.
+   */
+  const intervalMagnitude = hasInstalls ? 10 ** Math.floor(Math.log10(peak / 4)) : 1
+  const interval = hasInstalls
+    ? Math.max(1, Math.ceil(peak / 4 / intervalMagnitude) * intervalMagnitude)
+    : 1
   const maximum = interval * 4
   const x = (index: number) =>
     dailyInstallCounts.length === 1
@@ -61,6 +72,13 @@ export function InstallsOverTimeChart({
 
   return (
     <div>
+      {!hasInstalls && (
+        <p className="pb-2 text-[13px] text-ink-muted" role="status">
+          {markers.length > 0
+            ? 'No installs in this reporting period. The dashed lines still mark the days creators streamed.'
+            : 'No installs or streams in this reporting period for the selected creators.'}
+        </p>
+      )}
       <svg
         width="100%"
         height={HEIGHT}
@@ -68,11 +86,15 @@ export function InstallsOverTimeChart({
         className="block"
         role="img"
         aria-label={
-          'Daily installs for selected creators. Peak ' +
-          formatNumber(peak) +
-          ' installs; vertical scale zero to ' +
-          formatNumber(maximum) +
-          '.'
+          hasInstalls
+            ? 'Daily installs for selected creators. Peak ' +
+              formatNumber(peak) +
+              ' installs; vertical scale zero to ' +
+              formatNumber(maximum) +
+              '.'
+            : 'No installs for selected creators in this period. ' +
+              markers.length +
+              (markers.length === 1 ? ' stream day marked.' : ' stream days marked.')
         }
       >
         <title>Installs per day; dashed lines mark stream days</title>

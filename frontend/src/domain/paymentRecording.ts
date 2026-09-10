@@ -31,6 +31,7 @@ export type PaymentProblem =
   | 'amount-unreadable'
   | 'amount-not-positive'
   | 'date-missing'
+  | 'date-unreadable'
   | 'date-in-future'
   | 'method-missing'
 
@@ -57,6 +58,31 @@ export interface PaymentDraftReview {
  * than guessing, since a misread amount is worse than a rejected one.
  * Returns null when there is no number in there at all.
  */
+/**
+ * Whether a string is a date that exists.
+ *
+ * Dates are compared as strings elsewhere in this module, which is exact for
+ * ISO dates and nonsense for anything else: "2026-02-30" sorts before
+ * "2026-09-10" perfectly happily while being a day that never happened. The
+ * date input in the modal will not produce one, but this rule also has to
+ * hold for anything the API sends, so the check belongs here rather than
+ * being assumed of the caller.
+ */
+function isCalendarDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+
+  const [year, month, day] = value.split('-').map(Number) as [number, number, number]
+  const asDate = new Date(Date.UTC(year, month - 1, day))
+
+  // A date that rolled over — 30 February becoming 2 March — is not the date
+  // it was written as.
+  return (
+    asDate.getUTCFullYear() === year &&
+    asDate.getUTCMonth() === month - 1 &&
+    asDate.getUTCDate() === day
+  )
+}
+
 export function parseAmountToCents(typedAmount: string): number | null {
   const cleaned = typedAmount.trim().replace(/[$,\s]/g, '')
   if (cleaned === '') return null
@@ -80,8 +106,10 @@ export function reviewPaymentDraft(
   else if (amountInCents === null) problems.push('amount-unreadable')
   else if (amountInCents <= 0) problems.push('amount-not-positive')
 
-  if (draft.paidOn.trim() === '') problems.push('date-missing')
-  else if (draft.paidOn > today) problems.push('date-in-future')
+  const paidOn = draft.paidOn.trim()
+  if (paidOn === '') problems.push('date-missing')
+  else if (!isCalendarDate(paidOn)) problems.push('date-unreadable')
+  else if (paidOn > today) problems.push('date-in-future')
 
   if (draft.method.trim() === '') problems.push('method-missing')
 

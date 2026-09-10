@@ -39,6 +39,7 @@ const problemMessages: Record<PaymentProblem, string> = {
     'That amount cannot be read. Enter it as a number, such as 1500 or 1,500.50.',
   'amount-not-positive': 'A payment has to be more than zero. To undo one, reverse it instead.',
   'date-missing': 'Enter the date the money went out.',
+  'date-unreadable': 'That is not a date that exists. Use the picker, or type it as YYYY-MM-DD.',
   'date-in-future': 'That date is in the future. Record a payment once it has actually gone out.',
   'method-missing': 'Choose how the payment was made.',
 }

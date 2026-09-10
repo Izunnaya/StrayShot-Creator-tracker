@@ -101,6 +101,37 @@ describe('reviewPaymentDraft', () => {
     expect(review.problems).toEqual(['date-in-future'])
   })
 
+  it('rejects a date that never happened, rather than comparing it as a string', () => {
+    // Lexicographically this sits before TODAY and would sail through.
+    const review = reviewPaymentDraft(draft({ paidOn: '2026-02-30' }), partlyPaidCreator, TODAY)
+
+    expect(review.problems).toEqual(['date-unreadable'])
+    expect(review.canSave).toBe(false)
+  })
+
+  it('rejects dates that are not written as YYYY-MM-DD', () => {
+    const problemsFor = (paidOn: string) =>
+      reviewPaymentDraft(draft({ paidOn }), partlyPaidCreator, TODAY).problems
+
+    expect(problemsFor('2026-9-1')).toEqual(['date-unreadable'])
+    expect(problemsFor('01/09/2026')).toEqual(['date-unreadable'])
+    expect(problemsFor('yesterday')).toEqual(['date-unreadable'])
+    expect(problemsFor('2026-13-01')).toEqual(['date-unreadable'])
+    expect(problemsFor('2026-09-00')).toEqual(['date-unreadable'])
+  })
+
+  it('accepts the last day of a real month, including a leap day', () => {
+    expect(
+      reviewPaymentDraft(draft({ paidOn: '2026-02-28' }), partlyPaidCreator, TODAY).canSave,
+    ).toBe(true)
+    expect(
+      reviewPaymentDraft(draft({ paidOn: '2024-02-29' }), partlyPaidCreator, TODAY).canSave,
+    ).toBe(true)
+    expect(
+      reviewPaymentDraft(draft({ paidOn: '2026-02-29' }), partlyPaidCreator, TODAY).problems,
+    ).toEqual(['date-unreadable'])
+  })
+
   it('accepts a payment dated today', () => {
     expect(reviewPaymentDraft(draft({ paidOn: TODAY }), partlyPaidCreator, TODAY).canSave).toBe(
       true,

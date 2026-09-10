@@ -18,6 +18,11 @@ describe('formatMoney', () => {
     expect(formatMoney(0)).toBe('$0')
   })
 
+  it('puts the sign before the currency, for the negative half of a reversal', () => {
+    expect(formatMoney(-160_000)).toBe('-$1,600')
+    expect(formatPaymentAmount(-160_000)).toBe('-$1,600.00')
+  })
+
   it('rounds to the nearest dollar rather than truncating', () => {
     expect(formatMoney(10_049)).toBe('$100')
     expect(formatMoney(10_050)).toBe('$101')

@@ -192,9 +192,15 @@ describe('buildPayment', () => {
   })
 
   it('refuses a draft that never passed review', () => {
-    expect(() =>
-      buildPayment(draft({ amount: 'twelve' }), { id: 1, recordedBy: 'K. Osei' }),
-    ).toThrow()
+    const build = (amount: string) =>
+      buildPayment(draft({ amount }), { id: 1, recordedBy: 'K. Osei' })
+
+    // Everything review rejects, this rejects: reaching it with one of these
+    // means the caller skipped review.
+    expect(() => build('twelve')).toThrow()
+    expect(() => build('')).toThrow()
+    expect(() => build('0')).toThrow()
+    expect(() => build('-50')).toThrow()
   })
 })
 

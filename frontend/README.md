@@ -68,32 +68,55 @@ aggregated from those creator records. Stream markers come from stream history
 and are deduplicated per creator and day.
 
 The vertical scale adjusts to the selected data, includes numeric tick labels,
-and accommodates counts above 1,000. Empty and all-zero series show an empty
-state; a single day renders a point. Expand the chart's daily-values disclosure
+and accommodates counts above 1,000. A missing reporting window shows an empty
+state; an all-zero series still draws the chart with its stream markers and a
+note. A single day renders a point. Expand the chart's daily-values disclosure
 to read the counts and stream-day creator codes as a table.
 
 ## Validation
 
-The suite contains 89 tests: 84 covering the domain layer, and 5 interaction
-tests in src/features/dashboard/dashboardInteraction.test.tsx that drive the
-rendered dashboard through React Testing Library and user-event — campaign and
-status filtering, sorting by a column heading in both directions, and returning
-from a creator with filters and sort intact. Vitest runs in the node environment
-by default; the interaction file opts into jsdom with a @vitest-environment
-docblock, so the domain suite keeps its speed.
+The suite contains 138 tests in 13 files. `npm test` is the source of truth
+for that count; the split below is what each group is for.
+
+**Unit tests, 111, running in node.** Nine files covering the domain layer and
+the formatters: calculations, filtering, sorting, the campaign summary, the
+cost-per-install rating, payment history and the payment recording rules, plus
+src/lib/format.test.ts, which holds money to exact cents.
+
+**Rendered tests, 27, running in jsdom.** Four files, each opting in with a
+`// @vitest-environment jsdom` docblock so the unit suite keeps running in node
+and keeps its speed:
+
+| File                                                         | Tests | What it covers                                                                          |
+| ------------------------------------------------------------ | ----- | --------------------------------------------------------------------------------------- |
+| features/dashboard/dashboardInteraction.test.tsx             | 5     | Filtering and sorting reaching the table, and returning from a creator with both intact |
+| features/dashboard/components/InstallsOverTimeChart.test.tsx | 7     | The chart component, including a zero-install series keeping its stream markers         |
+| features/payments/recordPayment.test.tsx                     | 9     | Recording a payment through the modal, and every reason it refuses to save              |
+| features/payments/reversePayment.test.tsx                    | 6     | Reversing a payment, and that dismissing the confirmation changes nothing               |
+
+Vitest discovers both .test.ts and .test.tsx files.
 
 ## Remaining work
 
-Campaign and creator editing, recording payments, the payments ledger, public
-and creator portal routes, persistence, authentication, and platform integrations
-remain unimplemented. Loading and network-error states will be needed when the
-screens consume API data. Navigation currently uses component state rather than
+Campaign and creator editing, the payments ledger, public and creator portal
+routes, persistence, authentication, and platform integrations remain
+unimplemented. Loading and network-error states will be needed when the screens
+consume API data. Navigation currently uses component state rather than
 shareable URLs.
 
+Recording and reversing a payment are built, against the fixture data the shell
+holds in memory. Sorting the creator table is unavailable below the lg
+breakpoint, where the table becomes cards and the column headings it lives in
+are gone.
+
 Product decisions still open include whether status should filter headline
-figures, the CPI target when all campaigns are selected (currently $3.50), and
-how overpayments should be represented (currently outstanding balance is
-clamped to zero).
+figures, and the cost-per-install target when all campaigns are selected
+(currently 350 cents). The four payment decisions — who is recorded, how
+overpayment behaves, how a mistake is corrected, and the money unit — are
+settled in DECISIONS.md at the repository root. One piece of the overpayment
+decision is still outstanding: the record payment modal warns and allows it,
+but a creator who has been overpaid does not yet show that figure on their own
+screen.
 
 Unfiltered reference totals remain $47,000 paid of $55,200 committed,
 $8,200 outstanding across five creators, and 25,545 installs from 2,275,000 views.

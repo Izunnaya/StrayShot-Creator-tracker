@@ -155,7 +155,7 @@ export function buildPayment(
   details: { id: number; recordedBy: string },
 ): Payment {
   const amountInCents = parseAmountToCents(draft.amount)
-  if (amountInCents === null) {
+  if (amountInCents === null || amountInCents <= 0) {
     throw new Error('buildPayment was given a draft that never passed review')
   }
 

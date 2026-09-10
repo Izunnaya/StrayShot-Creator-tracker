@@ -14,17 +14,17 @@ import { costPerInstallClasses } from '@/features/dashboard/costPerInstallAppear
 
 export function CreatorPerformanceTableRow({
   creator,
-  targetCostPerInstall,
+  targetCostPerInstallInCents,
   onSelectCreator,
 }: {
   creator: Creator
-  targetCostPerInstall: number
+  targetCostPerInstallInCents: number
   onSelectCreator?: (creator: Creator) => void
 }) {
   const amountPaid = getAmountPaid(creator)
   const outstandingBalance = getOutstandingBalance(creator)
   const costPerInstall = getCostPerInstall(creator)
-  const rating = rateCostPerInstall(costPerInstall, targetCostPerInstall)
+  const rating = rateCostPerInstall(costPerInstall, targetCostPerInstallInCents)
   const cell = 'px-2 py-3.25'
   return (
     <tr
@@ -72,7 +72,7 @@ export function CreatorPerformanceTableRow({
       <td className={cell}>
         <div className="mb-1.25 text-[13px]">
           <div className="whitespace-nowrap">
-            {formatMoney(amountPaid)} / {formatMoney(creator.contractedAmount)}
+            {formatMoney(amountPaid)} / {formatMoney(creator.contractedAmountInCents)}
           </div>
           <div className="whitespace-nowrap text-ink-muted">
             {outstandingBalance > 0 ? formatMoney(outstandingBalance) + ' open' : 'Settled'}

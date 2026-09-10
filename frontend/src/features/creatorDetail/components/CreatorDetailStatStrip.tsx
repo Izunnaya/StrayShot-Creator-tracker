@@ -24,14 +24,14 @@ const toneForRating: Record<CostPerInstallRating, StatTileTone> = {
 
 export function CreatorDetailStatStrip({
   creator,
-  targetCostPerInstall,
+  targetCostPerInstallInCents,
 }: {
   creator: Creator
   /** The target from this creator's own campaign, not the dashboard filter. */
-  targetCostPerInstall: number
+  targetCostPerInstallInCents: number
 }) {
   const costPerInstall = getCostPerInstall(creator)
-  const rating = rateCostPerInstall(costPerInstall, targetCostPerInstall)
+  const rating = rateCostPerInstall(costPerInstall, targetCostPerInstallInCents)
 
   return (
     <StatStrip hasAmberFrame={false}>

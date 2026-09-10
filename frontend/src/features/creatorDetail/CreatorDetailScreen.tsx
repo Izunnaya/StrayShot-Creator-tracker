@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { campaigns, streams as allStreams } from '@/data/fixtures'
 import type { Creator } from '@/data/types'
-import { DEFAULT_TARGET_COST_PER_INSTALL } from '@/domain/costPerInstallRating'
+import { DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS } from '@/domain/costPerInstallRating'
 import { getStreamHistoryForCreator } from '@/domain/streamHistory'
 import { Button, SectionTitle } from '@/ui'
 import { CreatorDetailHeader } from './components/CreatorDetailHeader'
@@ -44,15 +44,18 @@ export function CreatorDetailScreen({
    * campaign, not whatever the dashboard was filtered to when they were
    * opened. A creator only belongs to one campaign today — open question Q13.
    */
-  const targetCostPerInstall =
-    campaigns.find((campaign) => campaign.name === creator.campaignName)?.targetCostPerInstall ??
-    DEFAULT_TARGET_COST_PER_INSTALL
+  const targetCostPerInstallInCents =
+    campaigns.find((campaign) => campaign.name === creator.campaignName)
+      ?.targetCostPerInstallInCents ?? DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 pb-10 pt-5 sm:px-6 md:gap-7 md:px-8 md:pb-12 md:pt-7">
       <CreatorDetailHeader creator={creator} onBack={onBack} onEditCreator={onEditCreator} />
 
-      <CreatorDetailStatStrip creator={creator} targetCostPerInstall={targetCostPerInstall} />
+      <CreatorDetailStatStrip
+        creator={creator}
+        targetCostPerInstallInCents={targetCostPerInstallInCents}
+      />
 
       <section className="flex flex-col gap-2.5">
         <SectionTitle>Stream history</SectionTitle>

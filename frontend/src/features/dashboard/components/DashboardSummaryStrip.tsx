@@ -14,12 +14,12 @@ export function DashboardSummaryStrip({ summary }: { summary: CampaignSummaryTot
     <StatStrip>
       <StatTile
         label="Paid to date"
-        value={formatMoney(summary.totalAmountPaid)}
-        supportingText={`of ${formatMoney(summary.totalContractedAmount)} committed`}
+        value={formatMoney(summary.totalAmountPaidInCents)}
+        supportingText={`of ${formatMoney(summary.totalContractedAmountInCents)} committed`}
       />
       <StatTile
         label="Outstanding"
-        value={formatMoney(summary.totalOutstandingBalance)}
+        value={formatMoney(summary.totalOutstandingBalanceInCents)}
         supportingText={`across ${summary.creatorsWithOutstandingBalanceCount} creators`}
         tone="needsAttention"
       />
@@ -30,7 +30,7 @@ export function DashboardSummaryStrip({ summary }: { summary: CampaignSummaryTot
       />
       <StatTile
         label="Blended cost / install"
-        value={formatCostPerInstall(summary.blendedCostPerInstall)}
+        value={formatCostPerInstall(summary.blendedCostPerInstallInCents)}
         supportingText="on money actually paid"
         tone="accent"
       />

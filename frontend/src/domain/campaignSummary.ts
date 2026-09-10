@@ -10,32 +10,34 @@ import { getAmountPaid, getOutstandingBalance, hasOutstandingBalance } from './c
  * the team expects is open question Q20.
  */
 export interface CampaignSummaryTotals {
-  totalAmountPaid: number
-  totalContractedAmount: number
-  totalOutstandingBalance: number
+  totalAmountPaidInCents: number
+  totalContractedAmountInCents: number
+  totalOutstandingBalanceInCents: number
   creatorsWithOutstandingBalanceCount: number
   totalInstalls: number
   totalViews: number
   /**
-   * Total paid divided by total installs. Infinity when no installs have
-   * landed yet, matching getCostPerInstall for a single creator.
+   * Total paid divided by total installs, in cents per install. Infinity when
+   * no installs have landed yet, matching getCostPerInstall for one creator.
    */
-  blendedCostPerInstall: number
+  blendedCostPerInstallInCents: number
 }
 
 export function calculateCampaignSummary(creators: Creator[]): CampaignSummaryTotals {
-  const totalAmountPaid = sumBy(creators, getAmountPaid)
+  const totalAmountPaidInCents = sumBy(creators, getAmountPaid)
   const totalInstalls = sumBy(creators, (creator) => creator.installsAttributed)
 
   return {
-    totalAmountPaid,
-    totalContractedAmount: sumBy(creators, (creator) => creator.contractedAmount),
-    totalOutstandingBalance: sumBy(creators, getOutstandingBalance),
+    totalAmountPaidInCents,
+    totalContractedAmountInCents: sumBy(creators, (creator) => creator.contractedAmountInCents),
+    totalOutstandingBalanceInCents: sumBy(creators, getOutstandingBalance),
     creatorsWithOutstandingBalanceCount: creators.filter(hasOutstandingBalance).length,
     totalInstalls,
     totalViews: sumBy(creators, (creator) => creator.totalViews),
-    blendedCostPerInstall:
-      totalInstalls === 0 || totalAmountPaid === 0 ? Infinity : totalAmountPaid / totalInstalls,
+    blendedCostPerInstallInCents:
+      totalInstalls === 0 || totalAmountPaidInCents === 0
+        ? Infinity
+        : totalAmountPaidInCents / totalInstalls,
   }
 }
 

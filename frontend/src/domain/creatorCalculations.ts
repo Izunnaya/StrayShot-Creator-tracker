@@ -7,18 +7,18 @@ import type { Creator, CreatorLifecycleStatus } from '@/data/types'
  * came from (fixture or API) and they do not know how anything is displayed.
  */
 
-/** Total of every payment recorded against this creator. */
+/** Total of every payment recorded against this creator, in cents. */
 export function getAmountPaid(creator: Creator): number {
-  return creator.payments.reduce((runningTotal, payment) => runningTotal + payment.amount, 0)
+  return creator.payments.reduce((runningTotal, payment) => runningTotal + payment.amountInCents, 0)
 }
 
 /**
- * What is still owed on the agreed contract. Never negative: paying more than
+ * What is still owed on the agreed contract, in cents. Never negative: paying more than
  * the contracted amount currently shows as a zero balance rather than credit,
  * which is open question Q5.
  */
 export function getOutstandingBalance(creator: Creator): number {
-  return Math.max(0, creator.contractedAmount - getAmountPaid(creator))
+  return Math.max(0, creator.contractedAmountInCents - getAmountPaid(creator))
 }
 
 export function hasOutstandingBalance(creator: Creator): boolean {
@@ -27,13 +27,13 @@ export function hasOutstandingBalance(creator: Creator): boolean {
 
 /** How far through the contracted amount we have paid, 0 to 100. */
 export function getPaymentProgressPercent(creator: Creator): number {
-  if (creator.contractedAmount === 0) return 0
-  return (getAmountPaid(creator) / creator.contractedAmount) * 100
+  if (creator.contractedAmountInCents === 0) return 0
+  return (getAmountPaid(creator) / creator.contractedAmountInCents) * 100
 }
 
 /**
- * What each install has cost so far, measured on money actually paid rather
- * than money committed.
+ * What each install has cost so far in cents, measured on money actually paid
+ * rather than money committed.
  *
  * Returns Infinity when nothing has been paid yet. That is deliberate: a
  * creator who has been paid nothing has no measurable cost per install, and
@@ -75,14 +75,14 @@ export function getLifecycleStatus(creator: Creator): CreatorLifecycleStatus {
   // Until deals have their own records, absence of all deal activity means prospect.
   if (
     creator.streamsCommitted === 0 &&
-    creator.contractedAmount === 0 &&
+    creator.contractedAmountInCents === 0 &&
     creator.streamsDelivered === 0 &&
     creator.payments.length === 0
   )
     return 'prospect'
 
   const fullyDelivered = hasDeliveredEveryCommittedStream(creator)
-  const fullyPaid = getAmountPaid(creator) >= creator.contractedAmount
+  const fullyPaid = getAmountPaid(creator) >= creator.contractedAmountInCents
 
   if (fullyDelivered && fullyPaid) return 'completed'
   return creator.streamsDelivered > 0 ? 'active' : 'contracted'

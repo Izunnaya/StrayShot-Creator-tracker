@@ -14,13 +14,13 @@ export function CreatorPerformanceTable({
   creators,
   sortSelection,
   onColumnHeadingClick,
-  targetCostPerInstall,
+  targetCostPerInstallInCents,
   onSelectCreator,
 }: {
   creators: Creator[]
   sortSelection: CreatorSortSelection
   onColumnHeadingClick: (column: CreatorTableColumnKey) => void
-  targetCostPerInstall: number
+  targetCostPerInstallInCents: number
   onSelectCreator?: (creator: Creator) => void
 }) {
   const totalColumnWeight = CREATOR_TABLE_COLUMN_WEIGHTS.reduce((sum, value) => sum + value, 0)
@@ -34,7 +34,7 @@ export function CreatorPerformanceTable({
       <div className="lg:hidden">
         <CreatorPerformanceCardList
           creators={creators}
-          targetCostPerInstall={targetCostPerInstall}
+          targetCostPerInstallInCents={targetCostPerInstallInCents}
           onSelectCreator={onSelectCreator}
         />
       </div>
@@ -86,7 +86,7 @@ export function CreatorPerformanceTable({
               <CreatorPerformanceTableRow
                 key={creator.id}
                 creator={creator}
-                targetCostPerInstall={targetCostPerInstall}
+                targetCostPerInstallInCents={targetCostPerInstallInCents}
                 onSelectCreator={onSelectCreator}
               />
             ))}

@@ -10,7 +10,7 @@ import {
   streams,
 } from '@/data/fixtures'
 import { calculateCampaignSummary } from '@/domain/campaignSummary'
-import { DEFAULT_TARGET_COST_PER_INSTALL } from '@/domain/costPerInstallRating'
+import { DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS } from '@/domain/costPerInstallRating'
 import { isAwaitingPayment, isPaidButUndelivered } from '@/domain/creatorCalculations'
 import {
   countCreatorsByLifecycleStatus,
@@ -120,8 +120,8 @@ export function CampaignOverviewScreen({
    * Q21.
    */
   const selectedCampaign = campaigns.find((campaign) => campaign.name === filterSelection.campaign)
-  const targetCostPerInstall =
-    selectedCampaign?.targetCostPerInstall ?? DEFAULT_TARGET_COST_PER_INSTALL
+  const targetCostPerInstallInCents =
+    selectedCampaign?.targetCostPerInstallInCents ?? DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 pb-10 pt-5 sm:px-6 md:gap-6 md:px-8 md:pb-12 md:pt-7">
@@ -146,7 +146,7 @@ export function CampaignOverviewScreen({
         creators={creatorsInTable}
         sortSelection={sortSelection}
         onColumnHeadingClick={handleColumnClick}
-        targetCostPerInstall={targetCostPerInstall}
+        targetCostPerInstallInCents={targetCostPerInstallInCents}
         onSelectCreator={onSelectCreator}
       />
 
@@ -171,8 +171,8 @@ export function CampaignOverviewScreen({
         <div className="grid gap-6">
           <DeliveredPaymentOpenPanel
             creators={creatorsAwaitingPayment}
-            totalOutstandingBalance={
-              calculateCampaignSummary(creatorsAwaitingPayment).totalOutstandingBalance
+            totalOutstandingBalanceInCents={
+              calculateCampaignSummary(creatorsAwaitingPayment).totalOutstandingBalanceInCents
             }
           />
 

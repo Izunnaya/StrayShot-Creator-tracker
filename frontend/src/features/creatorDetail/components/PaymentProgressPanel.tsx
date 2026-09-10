@@ -26,8 +26,9 @@ export function PaymentProgressPanel({ creator }: { creator: Creator }) {
     <div className="border border-hair bg-panel px-5 py-4.5">
       <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-2">
         <div className="text-[13px] text-ink-muted">
-          {formatPaymentAmount(amountPaid)} of {formatPaymentAmount(creator.contractedAmount)} paid
-          across {paymentCount} {paymentCount === 1 ? 'payment' : 'payments'}
+          {formatPaymentAmount(amountPaid)} of{' '}
+          {formatPaymentAmount(creator.contractedAmountInCents)} paid across {paymentCount}{' '}
+          {paymentCount === 1 ? 'payment' : 'payments'}
         </div>
 
         <div

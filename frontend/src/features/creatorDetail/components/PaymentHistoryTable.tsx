@@ -56,7 +56,7 @@ export function PaymentHistoryTable({ creator }: { creator: Creator }) {
           </div>
 
           <div className="order-2 whitespace-nowrap text-right font-semibold sm:order-0">
-            {formatPaymentAmount(payment.amount)}
+            {formatPaymentAmount(payment.amountInCents)}
           </div>
         </div>
       ))}
@@ -72,7 +72,7 @@ export function PaymentHistoryTable({ creator }: { creator: Creator }) {
           </div>
 
           <div className="col-span-2 text-ink-muted sm:col-span-3">
-            Remaining balance on {formatPaymentAmount(creator.contractedAmount)} agreement
+            Remaining balance on {formatPaymentAmount(creator.contractedAmountInCents)} agreement
           </div>
         </div>
       )}

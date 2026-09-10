@@ -12,7 +12,7 @@ export function createTestPayment(overrides: Partial<Payment> = {}): Payment {
   return {
     id: 1,
     paidOn: '2026-08-01',
-    amount: 1000,
+    amountInCents: 100000,
     method: 'Bank transfer',
     reference: 'TEST-0001',
     recordedBy: 'Test User',
@@ -32,8 +32,8 @@ export function createTestCreator(overrides: Partial<Creator> = {}): Creator {
     totalViews: 0,
     peakConcurrentViewers: 0,
     installsAttributed: 0,
-    contractedAmount: 1000,
-    agreedRatePerStream: 500,
+    contractedAmountInCents: 100000,
+    agreedRatePerStreamInCents: 50000,
     audienceSize: '10K',
     channelUrl: 'youtube.com/@test',
     portalInviteState: 'not sent',
@@ -48,8 +48,8 @@ export function createTestCampaign(overrides: Partial<Campaign> = {}): Campaign 
     name: 'Test Campaign',
     startDate: '2026-07-01',
     endDate: '2026-09-01',
-    totalBudget: 10000,
-    targetCostPerInstall: 3,
+    totalBudgetInCents: 1000000,
+    targetCostPerInstallInCents: 300,
     ...overrides,
   }
 }

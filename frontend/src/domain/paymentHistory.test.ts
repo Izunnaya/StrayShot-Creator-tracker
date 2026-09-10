@@ -3,9 +3,9 @@ import { creators as fixtureCreators } from '@/data/fixtures'
 import { createTestPayment } from '@/testing/createTestCreator'
 import { countPayments, sortPaymentsNewestFirst } from './paymentHistory'
 
-const july = createTestPayment({ id: 1, paidOn: '2026-07-18', amount: 4500 })
-const august = createTestPayment({ id: 2, paidOn: '2026-08-20', amount: 4500 })
-const september = createTestPayment({ id: 3, paidOn: '2026-09-02', amount: 1000 })
+const july = createTestPayment({ id: 1, paidOn: '2026-07-18', amountInCents: 450000 })
+const august = createTestPayment({ id: 2, paidOn: '2026-08-20', amountInCents: 450000 })
+const september = createTestPayment({ id: 3, paidOn: '2026-09-02', amountInCents: 100000 })
 
 describe('sortPaymentsNewestFirst', () => {
   it('puts the most recent payment first', () => {

@@ -98,10 +98,7 @@ export function reviewPaymentDraft(
     amountInCents,
     amountPaidAfterInCents,
     outstandingAfterInCents,
-    overpaymentAfterInCents: Math.max(
-      0,
-      amountPaidAfterInCents - creator.contractedAmountInCents,
-    ),
+    overpaymentAfterInCents: Math.max(0, amountPaidAfterInCents - creator.contractedAmountInCents),
     settlesBalance: paymentTowardsBalance > 0 && outstandingAfterInCents === 0,
   }
 }
@@ -178,7 +175,5 @@ export function canReverse(payment: Payment, payments: Payment[]): boolean {
  * what makes that arithmetic come out right.
  */
 export function getStandingPayments(payments: Payment[]): Payment[] {
-  return payments.filter(
-    (payment) => !isReversal(payment) && !hasBeenReversed(payment, payments),
-  )
+  return payments.filter((payment) => !isReversal(payment) && !hasBeenReversed(payment, payments))
 }

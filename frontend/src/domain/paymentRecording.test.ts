@@ -90,9 +90,9 @@ describe('reviewPaymentDraft', () => {
     expect(reviewPaymentDraft(draft({ amount: '0' }), partlyPaidCreator, TODAY).problems).toEqual([
       'amount-not-positive',
     ])
-    expect(reviewPaymentDraft(draft({ amount: '-50' }), partlyPaidCreator, TODAY).problems).toEqual([
-      'amount-not-positive',
-    ])
+    expect(reviewPaymentDraft(draft({ amount: '-50' }), partlyPaidCreator, TODAY).problems).toEqual(
+      ['amount-not-positive'],
+    )
   })
 
   it('rejects a payment dated in the future, since it has not happened', () => {
@@ -102,7 +102,9 @@ describe('reviewPaymentDraft', () => {
   })
 
   it('accepts a payment dated today', () => {
-    expect(reviewPaymentDraft(draft({ paidOn: TODAY }), partlyPaidCreator, TODAY).canSave).toBe(true)
+    expect(reviewPaymentDraft(draft({ paidOn: TODAY }), partlyPaidCreator, TODAY).canSave).toBe(
+      true,
+    )
   })
 
   it('reports every problem at once rather than one at a time', () => {
@@ -143,7 +145,9 @@ describe('buildPayment', () => {
   })
 
   it('refuses a draft that never passed review', () => {
-    expect(() => buildPayment(draft({ amount: 'twelve' }), { id: 1, recordedBy: 'K. Osei' })).toThrow()
+    expect(() =>
+      buildPayment(draft({ amount: 'twelve' }), { id: 1, recordedBy: 'K. Osei' }),
+    ).toThrow()
   })
 })
 

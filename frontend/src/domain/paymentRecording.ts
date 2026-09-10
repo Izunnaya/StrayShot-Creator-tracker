@@ -51,14 +51,6 @@ export interface PaymentDraftReview {
 }
 
 /**
- * Reads an amount a person typed into cents.
- *
- * Accepts what people actually type — a currency symbol, thousands
- * separators, trailing spaces — and rejects anything it cannot read rather
- * than guessing, since a misread amount is worse than a rejected one.
- * Returns null when there is no number in there at all.
- */
-/**
  * Whether a string is a date that exists.
  *
  * Dates are compared as strings elsewhere in this module, which is exact for
@@ -83,12 +75,34 @@ function isCalendarDate(value: string): boolean {
   )
 }
 
-export function parseAmountToCents(typedAmount: string): number | null {
-  const cleaned = typedAmount.trim().replace(/[$,\s]/g, '')
-  if (cleaned === '') return null
-  if (!/^-?\d*\.?\d*$/.test(cleaned)) return null
+/**
+ * What counts as an amount someone has typed: an optional sign, an optional
+ * currency symbol, then either plain digits or digits grouped in threes by
+ * commas, with an optional decimal part.
+ *
+ * The grouping is checked rather than tolerated. "1,2" is not an amount
+ * anyone means, and stripping its comma first would turn a typo into a
+ * confident $12.
+ */
+const TYPED_AMOUNT = /^-?\$?\s*(?:(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?|\.\d+)$/
 
-  const asNumber = Number(cleaned)
+/**
+ * Reads an amount a person typed into cents.
+ *
+ * Accepts what people actually type — a currency symbol, thousands
+ * separators, surrounding spaces — and refuses anything it cannot read rather
+ * than guessing, since a misread amount is worse than a rejected one. The
+ * syntax is checked before any separator is removed, so a malformed amount
+ * can never be normalised into a different, valid-looking one.
+ *
+ * Returns null when there is no amount in there to read.
+ */
+export function parseAmountToCents(typedAmount: string): number | null {
+  const trimmed = typedAmount.trim()
+  if (!TYPED_AMOUNT.test(trimmed)) return null
+
+  // Safe now: the only separators left are ones the pattern allowed.
+  const asNumber = Number(trimmed.replace(/[$,\s]/g, ''))
   if (!Number.isFinite(asNumber)) return null
 
   return Math.round(asNumber * 100)

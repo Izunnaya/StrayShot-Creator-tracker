@@ -2,7 +2,7 @@ import { currentTeamMember } from '@/data/session'
 import type { Creator, Payment } from '@/data/types'
 import { getAmountPaid } from '@/domain/creatorCalculations'
 import { Button, Modal } from '@/ui'
-import { formatDate, formatMoney, formatPaymentAmount } from '@/lib/format'
+import { formatDate, formatPaymentAmount } from '@/lib/format'
 
 /**
  * Undoing a payment that should not have been recorded.
@@ -79,8 +79,8 @@ export function ReversePaymentModal({
       </p>
 
       <p className="mt-2 text-[13px] text-ink-muted">
-        {creator.name} will show as paid {formatMoney(paidAfterInCents)} of{' '}
-        {formatMoney(creator.contractedAmountInCents)} afterwards.
+        {creator.name} will show as paid {formatPaymentAmount(paidAfterInCents)} of{' '}
+        {formatPaymentAmount(creator.contractedAmountInCents)} afterwards.
       </p>
     </Modal>
   )

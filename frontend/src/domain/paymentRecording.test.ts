@@ -49,6 +49,22 @@ describe('parseAmountToCents', () => {
     expect(parseAmountToCents('1600 USD')).toBeNull()
     expect(parseAmountToCents('1.2.3')).toBeNull()
   })
+
+  it('refuses misgrouped separators instead of normalising them into a number', () => {
+    // Stripping the comma first would read each of these as a real amount.
+    expect(parseAmountToCents('1,2')).toBeNull()
+    expect(parseAmountToCents('12,34')).toBeNull()
+    expect(parseAmountToCents('1,00,000')).toBeNull()
+    expect(parseAmountToCents('1,6000')).toBeNull()
+    expect(parseAmountToCents(',500')).toBeNull()
+    expect(parseAmountToCents('1 600')).toBeNull()
+  })
+
+  it('still accepts properly grouped thousands, at any size', () => {
+    expect(parseAmountToCents('1,600')).toBe(160_000)
+    expect(parseAmountToCents('12,000')).toBe(1_200_000)
+    expect(parseAmountToCents('1,234,567.89')).toBe(123_456_789)
+  })
 })
 
 describe('reviewPaymentDraft', () => {

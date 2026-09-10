@@ -21,6 +21,23 @@ export function getOutstandingBalance(creator: Creator): number {
   return Math.max(0, creator.contractedAmountInCents - getAmountPaid(creator))
 }
 
+/**
+ * Money paid beyond the agreed total, in cents. Zero unless someone has
+ * overpaid.
+ *
+ * Kept separate from the outstanding balance rather than letting that go
+ * negative: nobody owes a negative amount, and the two are different facts
+ * that the team acts on differently. An overpayment is a reconciliation job,
+ * not a debt. See DECISIONS.md, Q5.
+ */
+export function getOverpaymentAmount(creator: Creator): number {
+  return Math.max(0, getAmountPaid(creator) - creator.contractedAmountInCents)
+}
+
+export function isOverpaid(creator: Creator): boolean {
+  return getOverpaymentAmount(creator) > 0
+}
+
 export function hasOutstandingBalance(creator: Creator): boolean {
   return getOutstandingBalance(creator) > 0
 }

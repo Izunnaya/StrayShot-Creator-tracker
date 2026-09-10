@@ -34,8 +34,18 @@ export interface Payment {
   method: string
   /** Transaction ID or bank reference, for reconciling against a statement. */
   reference: string
-  /** Name of the team member who recorded the payment. Open question Q4. */
+  /** The team member who recorded it, stamped from the session — Q4. */
   recordedBy: string
+  /**
+   * Set only on a reversing entry, naming the payment it cancels.
+   *
+   * Payments are append-only: a mistake is never edited or deleted, it is
+   * cancelled by a second record carrying the negative amount. That keeps
+   * every figure derivable by summing and leaves the history intact. Only a
+   * record with this field set may carry a negative amount. See DECISIONS.md,
+   * Q6.
+   */
+  reversesPaymentId?: number
 }
 
 export interface Campaign {

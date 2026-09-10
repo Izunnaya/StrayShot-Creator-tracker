@@ -26,7 +26,7 @@ export function createTestCreator(overrides: Partial<Creator> = {}): Creator {
     name: 'Test Creator',
     platform: 'YouTube',
     creatorCode: 'TEST',
-    campaignName: 'Test Campaign',
+    campaignId: 1,
     streamsCommitted: 2,
     streamsDelivered: 0,
     totalViews: 0,

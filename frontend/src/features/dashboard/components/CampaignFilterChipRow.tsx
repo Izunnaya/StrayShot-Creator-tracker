@@ -6,19 +6,23 @@ import { Button, FilterChip, Label } from '@/ui'
  * Which campaign the dashboard is showing. Everything below this row — the
  * figures, the table, the status panels — is scoped by the selection here.
  *
- * The New campaign and Edit campaign controls are rendered but not yet
- * connected; the campaign modal is Module 1's frontend work (tasks 1.12-1.14).
+ * Editing is offered only when a single campaign is in view, since that is
+ * the only time there is one campaign to mean.
  */
 export function CampaignFilterChipRow({
   campaigns,
   selectedCampaign,
   onSelectCampaign,
   canEditSelectedCampaign,
+  onCreateCampaign,
+  onEditSelectedCampaign,
 }: {
   campaigns: Campaign[]
   selectedCampaign: CampaignFilter
   onSelectCampaign: (campaign: CampaignFilter) => void
   canEditSelectedCampaign: boolean
+  onCreateCampaign?: () => void
+  onEditSelectedCampaign?: () => void
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -34,14 +38,20 @@ export function CampaignFilterChipRow({
         <FilterChip
           key={campaign.id}
           label={campaign.name}
-          isSelected={selectedCampaign === campaign.name}
-          onClick={() => onSelectCampaign(campaign.name)}
+          isSelected={selectedCampaign === campaign.id}
+          onClick={() => onSelectCampaign(campaign.id)}
         />
       ))}
 
-      <Button variant="addNew">+ New campaign</Button>
+      <Button variant="addNew" onClick={onCreateCampaign}>
+        + New campaign
+      </Button>
 
-      {canEditSelectedCampaign && <Button variant="text">Edit campaign</Button>}
+      {canEditSelectedCampaign && (
+        <Button variant="text" onClick={onEditSelectedCampaign}>
+          Edit campaign
+        </Button>
+      )}
     </div>
   )
 }

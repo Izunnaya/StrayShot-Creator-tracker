@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { buildInstallChart } from '@/domain/installChart'
-import type { Creator } from '@/data/types'
-import { campaigns, dailyInstalls, chartStartDate, chartDayCount, streams } from '@/data/fixtures'
+import type { Campaign, Creator } from '@/data/types'
+import { dailyInstalls, chartStartDate, chartDayCount, streams } from '@/data/fixtures'
 import { calculateCampaignSummary } from '@/domain/campaignSummary'
 import { DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS } from '@/domain/costPerInstallRating'
 import { isAwaitingPayment, isPaidButUndelivered } from '@/domain/creatorCalculations'
@@ -35,12 +35,17 @@ import type { useCreatorSortSelection } from './hooks/useCreatorSortSelection'
  * calls is the whole of this screen's Phase 5 work.
  */
 export function CampaignOverviewScreen({
+  campaigns,
   creators: allCreators,
   onSelectCreator,
   onRecordPayment,
+  onCreateCampaign,
+  onEditCampaign,
   filterState,
   sortState,
 }: {
+  /** Every campaign, for the filter chips and the campaign's own target. */
+  campaigns: Campaign[]
   /** Every creator, before either filter narrows them. */
   creators: Creator[]
   filterState: ReturnType<typeof useCreatorFilterSelection>
@@ -49,6 +54,9 @@ export function CampaignOverviewScreen({
   onSelectCreator?: (creator: Creator) => void
   /** Opens the record payment modal for a row in the outstanding panel. */
   onRecordPayment?: (creator: Creator) => void
+  onCreateCampaign?: () => void
+  /** Edits whichever campaign the filter is currently narrowed to. */
+  onEditCampaign?: (campaign: Campaign) => void
 }) {
   const {
     selection: filterSelection,
@@ -118,7 +126,7 @@ export function CampaignOverviewScreen({
    * no single target, so the figures fall back to a default — open question
    * Q21.
    */
-  const selectedCampaign = campaigns.find((campaign) => campaign.name === filterSelection.campaign)
+  const selectedCampaign = campaigns.find((campaign) => campaign.id === filterSelection.campaign)
   const targetCostPerInstallInCents =
     selectedCampaign?.targetCostPerInstallInCents ?? DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS
 
@@ -132,6 +140,10 @@ export function CampaignOverviewScreen({
           selectedCampaign={filterSelection.campaign}
           onSelectCampaign={selectCampaign}
           canEditSelectedCampaign={hasSpecificCampaignSelected}
+          onCreateCampaign={onCreateCampaign}
+          onEditSelectedCampaign={
+            selectedCampaign && onEditCampaign ? () => onEditCampaign(selectedCampaign) : undefined
+          }
         />
 
         <CreatorStatusFilterChipRow

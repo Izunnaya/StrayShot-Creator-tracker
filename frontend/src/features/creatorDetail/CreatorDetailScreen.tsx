@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { campaigns, streams as allStreams } from '@/data/fixtures'
+import { findCampaign } from '@/domain/campaigns'
 import type { Creator, Payment } from '@/data/types'
 import { DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS } from '@/domain/costPerInstallRating'
 import { getStreamHistoryForCreator } from '@/domain/streamHistory'
@@ -23,12 +24,14 @@ import { StreamHistoryTable } from './components/StreamHistoryTable'
  */
 export function CreatorDetailScreen({
   creator,
+  campaignName,
   onBack,
   onEditCreator,
   onRecordPayment,
   onReversePayment,
 }: {
   creator: Creator
+  campaignName: string
   onBack: () => void
   /** Module 4's add/edit modal. Disabled until it exists — task 3.13. */
   onEditCreator?: (creator: Creator) => void
@@ -46,13 +49,18 @@ export function CreatorDetailScreen({
    * campaign, not whatever the dashboard was filtered to when they were
    * opened. A creator only belongs to one campaign today — open question Q13.
    */
+  const campaign = findCampaign(campaigns, creator.campaignId)
   const targetCostPerInstallInCents =
-    campaigns.find((campaign) => campaign.name === creator.campaignName)
-      ?.targetCostPerInstallInCents ?? DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS
+    campaign?.targetCostPerInstallInCents ?? DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 pb-10 pt-5 sm:px-6 md:gap-7 md:px-8 md:pb-12 md:pt-7">
-      <CreatorDetailHeader creator={creator} onBack={onBack} onEditCreator={onEditCreator} />
+      <CreatorDetailHeader
+        creator={creator}
+        campaignName={campaignName}
+        onBack={onBack}
+        onEditCreator={onEditCreator}
+      />
 
       <CreatorDetailStatStrip
         creator={creator}

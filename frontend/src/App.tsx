@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { AppMasthead } from './components/layout/AppMasthead'
-import { creators as seedCreators } from './data/fixtures'
+import { campaigns as seedCampaigns, creators as seedCreators } from './data/fixtures'
 import { currentTeamMember } from './data/session'
-import type { Creator, Payment } from './data/types'
+import type { Campaign, Creator, Payment } from './data/types'
+import { buildCampaign, getCampaignName, type CampaignDraft } from './domain/campaigns'
 import { buildPayment, buildReversal, type PaymentDraft } from './domain/paymentRecording'
 import { CreatorDetailScreen } from './features/creatorDetail/CreatorDetailScreen'
 import { CampaignOverviewScreen } from './features/dashboard/CampaignOverviewScreen'
 import { useCreatorFilterSelection } from './features/dashboard/hooks/useCreatorFilterSelection'
 import { useCreatorSortSelection } from './features/dashboard/hooks/useCreatorSortSelection'
+import { CampaignModal } from './features/campaigns/CampaignModal'
 import { RecordPaymentModal } from './features/payments/RecordPaymentModal'
 import { ReversePaymentModal } from './features/payments/ReversePaymentModal'
 
@@ -27,10 +29,13 @@ import { ReversePaymentModal } from './features/payments/ReversePaymentModal'
  * a stale copy of a creator who was just paid.
  */
 export default function App() {
+  const [campaigns, setCampaigns] = useState<Campaign[]>(seedCampaigns)
   const [creators, setCreators] = useState<Creator[]>(seedCreators)
   const [selectedCreatorId, setSelectedCreatorId] = useState<number | null>(null)
   const [creatorBeingPaidId, setCreatorBeingPaidId] = useState<number | null>(null)
   const [paymentBeingReversed, setPaymentBeingReversed] = useState<Payment | null>(null)
+  /** null while closed; a campaign while editing; 'new' while creating. */
+  const [campaignBeingEdited, setCampaignBeingEdited] = useState<Campaign | 'new' | null>(null)
 
   const filterState = useCreatorFilterSelection()
   const sortState = useCreatorSortSelection()
@@ -64,6 +69,19 @@ export default function App() {
     setPaymentBeingReversed(null)
   }
 
+  function saveCampaign(draft: CampaignDraft) {
+    const editing = campaignBeingEdited !== 'new' ? campaignBeingEdited : null
+
+    setCampaigns((current) =>
+      editing
+        ? current.map((campaign) =>
+            campaign.id === editing.id ? { ...buildCampaign(draft, { id: editing.id }) } : campaign,
+          )
+        : [...current, buildCampaign(draft, { id: nextCampaignId(current) })],
+    )
+    setCampaignBeingEdited(null)
+  }
+
   function addPayment(creatorId: number, payment: Payment) {
     setCreators((current) =>
       current.map((creator) =>
@@ -81,15 +99,19 @@ export default function App() {
       {creatorInDetail ? (
         <CreatorDetailScreen
           creator={creatorInDetail}
+          campaignName={getCampaignName(campaigns, creatorInDetail.campaignId)}
           onBack={() => setSelectedCreatorId(null)}
           onRecordPayment={(creator) => setCreatorBeingPaidId(creator.id)}
           onReversePayment={setPaymentBeingReversed}
         />
       ) : (
         <CampaignOverviewScreen
+          campaigns={campaigns}
           creators={creators}
           onSelectCreator={(creator) => setSelectedCreatorId(creator.id)}
           onRecordPayment={(creator) => setCreatorBeingPaidId(creator.id)}
+          onCreateCampaign={() => setCampaignBeingEdited('new')}
+          onEditCampaign={setCampaignBeingEdited}
           filterState={filterState}
           sortState={sortState}
         />
@@ -98,6 +120,7 @@ export default function App() {
       {creatorBeingPaid && (
         <RecordPaymentModal
           creator={creatorBeingPaid}
+          campaignName={getCampaignName(campaigns, creatorBeingPaid.campaignId)}
           /* Read at the moment the modal opens, never cached: a dashboard
              left open overnight would otherwise call today's date a future
              one and refuse to record a payment made this morning. */
@@ -107,9 +130,19 @@ export default function App() {
         />
       )}
 
+      {campaignBeingEdited && (
+        <CampaignModal
+          campaigns={campaigns}
+          editing={campaignBeingEdited === 'new' ? undefined : campaignBeingEdited}
+          onSave={saveCampaign}
+          onClose={() => setCampaignBeingEdited(null)}
+        />
+      )}
+
       {creatorInDetail && paymentBeingReversed && (
         <ReversePaymentModal
           creator={creatorInDetail}
+          campaignName={getCampaignName(campaigns, creatorInDetail.campaignId)}
           payment={paymentBeingReversed}
           onConfirm={reversePayment}
           onClose={() => setPaymentBeingReversed(null)}
@@ -117,6 +150,10 @@ export default function App() {
       )}
     </div>
   )
+}
+
+function nextCampaignId(campaigns: Campaign[]): number {
+  return campaigns.reduce((highest, campaign) => Math.max(highest, campaign.id), 0) + 1
 }
 
 /**

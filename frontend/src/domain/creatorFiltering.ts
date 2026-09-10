@@ -10,8 +10,8 @@ import { getLifecycleStatus } from './creatorCalculations'
 export const EVERY_CAMPAIGN = 'every-campaign'
 export const EVERY_STATUS = 'every-status'
 
-/** A campaign name, or the sentinel meaning no campaign filter is applied. */
-export type CampaignFilter = typeof EVERY_CAMPAIGN | string
+/** A campaign id, or the sentinel meaning no campaign filter is applied. */
+export type CampaignFilter = typeof EVERY_CAMPAIGN | number
 
 /** A lifecycle status, or the sentinel meaning no status filter is applied. */
 export type LifecycleStatusFilter = typeof EVERY_STATUS | CreatorLifecycleStatus
@@ -23,7 +23,7 @@ export interface CreatorFilterSelection {
 
 export function filterCreatorsByCampaign(creators: Creator[], campaign: CampaignFilter): Creator[] {
   if (campaign === EVERY_CAMPAIGN) return creators
-  return creators.filter((creator) => creator.campaignName === campaign)
+  return creators.filter((creator) => creator.campaignId === campaign)
 }
 
 export function filterCreatorsByLifecycleStatus(

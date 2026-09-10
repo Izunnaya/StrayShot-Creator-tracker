@@ -46,11 +46,14 @@ const problemMessages: Record<PaymentProblem, string> = {
 
 export function RecordPaymentModal({
   creator,
+  campaignName,
   today,
   onSave,
   onClose,
 }: {
   creator: Creator
+  /** Looked up by the shell: a creator holds only the campaign's id. */
+  campaignName: string
   /** Today as an ISO date, so the future-date rule is testable. */
   today: string
   onSave: (draft: PaymentDraft) => void
@@ -82,7 +85,7 @@ export function RecordPaymentModal({
       title="Record payment"
       subtitle={
         <>
-          {creator.name} · {creator.campaignName}
+          {creator.name} · {campaignName}
         </>
       }
       onClose={onClose}

@@ -67,8 +67,14 @@ export interface Creator {
   platform: StreamingPlatform
   /** The code viewers type in to credit this creator. Unique per creator. */
   creatorCode: string
-  /** Campaign this creator's deal belongs to. One campaign each — see Q13. */
-  campaignName: string
+  /**
+   * The campaign this creator's deal belongs to. One campaign each — see Q13.
+   *
+   * Held by id, not by name: a campaign can be renamed, and a name copied
+   * across fourteen creator records would have to be found and rewritten
+   * every time it was. This is also the shape the API will use.
+   */
+  campaignId: number
 
   /** How many streams the deal commits them to. */
   streamsCommitted: number

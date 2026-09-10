@@ -10,11 +10,18 @@ import {
   filterCreatorsByLifecycleStatus,
 } from './creatorFiltering'
 
+/* The fixtures' two campaigns, and two of this file's own. Creators point at
+   a campaign by id, so the names live here only to keep the tests readable. */
+const WINTER_OFFENSIVE = 101
+const SUMMER_PUSH = 102
+const SEASON_2_LAUNCH = 1
+const CLAN_WARS_UPDATE = 2
+
 /** A creator on each campaign, at a different point in the lifecycle. */
 const contractedOnWinter = createTestCreator({
   id: 1,
   name: 'Contracted Winter',
-  campaignName: 'Winter Offensive',
+  campaignId: WINTER_OFFENSIVE,
   streamsCommitted: 2,
   streamsDelivered: 0,
 })
@@ -22,7 +29,7 @@ const contractedOnWinter = createTestCreator({
 const activeOnWinter = createTestCreator({
   id: 2,
   name: 'Active Winter',
-  campaignName: 'Winter Offensive',
+  campaignId: WINTER_OFFENSIVE,
   streamsCommitted: 2,
   streamsDelivered: 1,
 })
@@ -30,7 +37,7 @@ const activeOnWinter = createTestCreator({
 const completedOnSummer = createTestCreator({
   id: 3,
   name: 'Completed Summer',
-  campaignName: 'Summer Push',
+  campaignId: SUMMER_PUSH,
   streamsCommitted: 1,
   streamsDelivered: 1,
   contractedAmountInCents: 100000,
@@ -45,13 +52,13 @@ describe('filterCreatorsByCampaign', () => {
   })
 
   it('keeps only the creators on the named campaign', () => {
-    const winter = filterCreatorsByCampaign(testCreators, 'Winter Offensive')
+    const winter = filterCreatorsByCampaign(testCreators, WINTER_OFFENSIVE)
 
     expect(winter.map((creator) => creator.name)).toEqual(['Contracted Winter', 'Active Winter'])
   })
 
   it('returns nothing for a campaign with no creators on it', () => {
-    expect(filterCreatorsByCampaign(testCreators, 'Campaign That Does Not Exist')).toEqual([])
+    expect(filterCreatorsByCampaign(testCreators, 999)).toEqual([])
   })
 })
 
@@ -77,7 +84,7 @@ describe('filterCreatorsByLifecycleStatus', () => {
 describe('filterCreators', () => {
   it('applies both filters together', () => {
     const result = filterCreators(testCreators, {
-      campaign: 'Winter Offensive',
+      campaign: WINTER_OFFENSIVE,
       lifecycleStatus: 'active',
     })
 
@@ -86,7 +93,7 @@ describe('filterCreators', () => {
 
   it('returns nothing when the two filters have no overlap', () => {
     const result = filterCreators(testCreators, {
-      campaign: 'Summer Push',
+      campaign: SUMMER_PUSH,
       lifecycleStatus: 'contracted',
     })
 
@@ -94,7 +101,7 @@ describe('filterCreators', () => {
   })
 
   it('leaves the original list untouched', () => {
-    filterCreators(testCreators, { campaign: 'Summer Push', lifecycleStatus: EVERY_STATUS })
+    filterCreators(testCreators, { campaign: SUMMER_PUSH, lifecycleStatus: EVERY_STATUS })
 
     expect(testCreators).toHaveLength(3)
   })
@@ -102,7 +109,7 @@ describe('filterCreators', () => {
 
 describe('countCreatorsByLifecycleStatus', () => {
   it('counts every status within the selected campaign', () => {
-    const counts = countCreatorsByLifecycleStatus(testCreators, 'Winter Offensive')
+    const counts = countCreatorsByLifecycleStatus(testCreators, WINTER_OFFENSIVE)
 
     expect(counts).toEqual({
       total: 2,
@@ -134,8 +141,8 @@ describe('countCreatorsByLifecycleStatus', () => {
 
 describe('the fixture data through the filters', () => {
   it('splits 14 creators across the two campaigns', () => {
-    expect(filterCreatorsByCampaign(fixtureCreators, 'Season 2 Launch')).toHaveLength(7)
-    expect(filterCreatorsByCampaign(fixtureCreators, 'Clan Wars Update')).toHaveLength(7)
+    expect(filterCreatorsByCampaign(fixtureCreators, SEASON_2_LAUNCH)).toHaveLength(7)
+    expect(filterCreatorsByCampaign(fixtureCreators, CLAN_WARS_UPDATE)).toHaveLength(7)
     expect(filterCreatorsByCampaign(fixtureCreators, EVERY_CAMPAIGN)).toHaveLength(14)
   })
 
@@ -146,7 +153,7 @@ describe('the fixture data through the filters', () => {
   })
 
   it('counts 3 active and 4 completed within Season 2 Launch', () => {
-    const counts = countCreatorsByLifecycleStatus(fixtureCreators, 'Season 2 Launch')
+    const counts = countCreatorsByLifecycleStatus(fixtureCreators, SEASON_2_LAUNCH)
 
     expect(counts).toEqual({ total: 7, prospect: 0, contracted: 0, active: 3, completed: 4 })
   })

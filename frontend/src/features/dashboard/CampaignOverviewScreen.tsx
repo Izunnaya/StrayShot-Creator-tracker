@@ -1,14 +1,7 @@
 import { useMemo } from 'react'
 import { buildInstallChart } from '@/domain/installChart'
 import type { Creator } from '@/data/types'
-import {
-  campaigns,
-  creators as allCreators,
-  dailyInstalls,
-  chartStartDate,
-  chartDayCount,
-  streams,
-} from '@/data/fixtures'
+import { campaigns, dailyInstalls, chartStartDate, chartDayCount, streams } from '@/data/fixtures'
 import { calculateCampaignSummary } from '@/domain/campaignSummary'
 import { DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS } from '@/domain/costPerInstallRating'
 import { isAwaitingPayment, isPaidButUndelivered } from '@/domain/creatorCalculations'
@@ -42,14 +35,20 @@ import type { useCreatorSortSelection } from './hooks/useCreatorSortSelection'
  * calls is the whole of this screen's Phase 5 work.
  */
 export function CampaignOverviewScreen({
+  creators: allCreators,
   onSelectCreator,
+  onRecordPayment,
   filterState,
   sortState,
 }: {
+  /** Every creator, before either filter narrows them. */
+  creators: Creator[]
   filterState: ReturnType<typeof useCreatorFilterSelection>
   sortState: ReturnType<typeof useCreatorSortSelection>
   /** Opens the creator detail screen for the row that was clicked. */
   onSelectCreator?: (creator: Creator) => void
+  /** Opens the record payment modal for a row in the outstanding panel. */
+  onRecordPayment?: (creator: Creator) => void
 }) {
   const {
     selection: filterSelection,
@@ -65,7 +64,7 @@ export function CampaignOverviewScreen({
    */
   const creatorsInTable = useMemo(
     () => sortCreators(filterCreators(allCreators, filterSelection), sortSelection),
-    [filterSelection, sortSelection],
+    [allCreators, filterSelection, sortSelection],
   )
 
   /**
@@ -82,7 +81,7 @@ export function CampaignOverviewScreen({
         chartStartDate,
         chartDayCount,
       ),
-    [filterSelection],
+    [allCreators, filterSelection],
   )
 
   /**
@@ -92,13 +91,13 @@ export function CampaignOverviewScreen({
    */
   const summary = useMemo(
     () => calculateCampaignSummary(filterCreators(allCreators, filterSelection)),
-    [filterSelection],
+    [allCreators, filterSelection],
   )
 
   /** Chip counts follow the campaign filter but not the status filter. */
   const countsByStatus = useMemo(
     () => countCreatorsByLifecycleStatus(allCreators, filterSelection.campaign),
-    [filterSelection.campaign],
+    [allCreators, filterSelection.campaign],
   )
 
   /**
@@ -109,7 +108,7 @@ export function CampaignOverviewScreen({
    */
   const creatorsInCampaign = useMemo(
     () => filterCreatorsByCampaign(allCreators, filterSelection.campaign),
-    [filterSelection.campaign],
+    [allCreators, filterSelection.campaign],
   )
   const creatorsAwaitingPayment = creatorsInCampaign.filter(isAwaitingPayment)
   const creatorsPaidButUndelivered = creatorsInCampaign.filter(isPaidButUndelivered)
@@ -170,6 +169,7 @@ export function CampaignOverviewScreen({
 
         <div className="grid gap-6">
           <DeliveredPaymentOpenPanel
+            onRecordPayment={onRecordPayment}
             creators={creatorsAwaitingPayment}
             totalOutstandingBalanceInCents={
               calculateCampaignSummary(creatorsAwaitingPayment).totalOutstandingBalanceInCents

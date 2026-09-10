@@ -49,11 +49,25 @@ describe('recording a payment', () => {
   it('keeps exact cents rather than rounding them away', async () => {
     const user = await openTheFirstOutstandingRow()
 
+    // The modal names who is being paid, so the record can be found again.
+    const paidCreator = dialog().getByText(/·/).textContent!.split('·')[0]!.trim()
+
     await user.type(dialog().getByLabelText('Amount paid in dollars'), '100.49')
     await user.click(dialog().getByRole('button', { name: 'Save payment' }))
 
-    // 47,000 + 100.49, shown to the dollar in the summary strip.
+    // The summary strip rounds to the dollar, so on its own it would look
+    // identical if the cents had been dropped.
     expect(screen.getByText('$47,100')).toBeTruthy()
+
+    // The payment history does not round, so this is where the cents show.
+    await user.click(
+      within(screen.getByRole('table', { name: 'Creator performance' })).getByRole('button', {
+        name: paidCreator,
+      }),
+    )
+
+    expect(screen.getByText('$100.49')).toBeTruthy()
+    expect(screen.getByText(/\$3,300\.49 of \$4,800\.00 paid/)).toBeTruthy()
   })
 
   it('says what the balance becomes before anything is saved', async () => {

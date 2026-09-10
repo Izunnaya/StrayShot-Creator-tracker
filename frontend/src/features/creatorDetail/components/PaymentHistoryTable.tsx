@@ -1,6 +1,8 @@
-import type { Creator } from '@/data/types'
+import type { Creator, Payment } from '@/data/types'
 import { getOutstandingBalance, hasOutstandingBalance } from '@/domain/creatorCalculations'
 import { sortPaymentsNewestFirst } from '@/domain/paymentHistory'
+import { canReverse, hasBeenReversed, isReversal } from '@/domain/paymentRecording'
+import { joinClassNames } from '@/lib/classNames'
 import { formatDate, formatPaymentAmount } from '@/lib/format'
 
 /**
@@ -20,10 +22,17 @@ import { formatDate, formatPaymentAmount } from '@/lib/format'
  * its own line where it has the width to stay on one piece.
  */
 
-const PAYMENT_TABLE_COLUMN_WIDTHS = 'sm:grid-cols-[0.9fr_1fr_1.5fr_1.1fr_0.9fr]'
-const PAYMENT_TABLE_MINIMUM_WIDTH = 'sm:min-w-[680px]'
+const PAYMENT_TABLE_COLUMN_WIDTHS = 'sm:grid-cols-[0.9fr_1fr_1.4fr_1fr_0.9fr_0.7fr]'
+const PAYMENT_TABLE_MINIMUM_WIDTH = 'sm:min-w-[760px]'
 
-export function PaymentHistoryTable({ creator }: { creator: Creator }) {
+export function PaymentHistoryTable({
+  creator,
+  onReversePayment,
+}: {
+  creator: Creator
+  /** Offers to undo a payment. Absent where reversing is not available. */
+  onReversePayment?: (payment: Payment) => void
+}) {
   const payments = sortPaymentsNewestFirst(creator.payments)
 
   return (
@@ -36,30 +45,64 @@ export function PaymentHistoryTable({ creator }: { creator: Creator }) {
         <div>Reference</div>
         <div>Recorded by</div>
         <div className="text-right">Amount</div>
+        <div className="sr-only">Actions</div>
       </div>
 
-      {payments.map((payment) => (
-        <div
-          key={payment.id}
-          className={`grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-hair-4 px-4 py-3 text-[14px] sm:items-center sm:gap-0 sm:px-4.5 sm:py-3 ${PAYMENT_TABLE_COLUMN_WIDTHS} ${PAYMENT_TABLE_MINIMUM_WIDTH}`}
-        >
-          <div className="order-1 text-ink sm:order-0">{formatDate(payment.paidOn)}</div>
+      {payments.map((payment) => {
+        const reversal = isReversal(payment)
+        const reversed = hasBeenReversed(payment, creator.payments)
 
-          <div className="order-3 text-ink-muted sm:order-0">{payment.method}</div>
+        return (
+          <div
+            key={payment.id}
+            className={joinClassNames(
+              'grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-hair-4 px-4 py-3 text-[14px] sm:items-center sm:gap-0 sm:px-4.5 sm:py-3',
+              PAYMENT_TABLE_COLUMN_WIDTHS,
+              PAYMENT_TABLE_MINIMUM_WIDTH,
+              /* A cancelled pair stays in the record but recedes: what
+                 matters afterwards is the payment that replaced it. */
+              (reversal || reversed) && 'text-ink-muted',
+            )}
+          >
+            <div className="order-1 text-ink sm:order-0">
+              {formatDate(payment.paidOn)}
+              {reversal && <ReversalTag>Reversal</ReversalTag>}
+              {reversed && <ReversalTag>Reversed</ReversalTag>}
+            </div>
 
-          <div className="order-5 col-span-2 whitespace-nowrap font-mono text-[12px] tracking-[0.5px] text-ink-muted sm:order-0 sm:col-span-1">
-            {payment.reference || '—'}
+            <div className="order-3 text-ink-muted sm:order-0">{payment.method}</div>
+
+            <div className="order-5 col-span-2 whitespace-nowrap font-mono text-[12px] tracking-[0.5px] text-ink-muted sm:order-0 sm:col-span-1">
+              {payment.reference || '—'}
+            </div>
+
+            <div className="order-4 text-right text-ink-muted sm:order-0 sm:text-left">
+              {payment.recordedBy}
+            </div>
+
+            <div
+              className={joinClassNames(
+                'order-2 whitespace-nowrap text-right font-semibold sm:order-0',
+                reversal && 'text-bad',
+              )}
+            >
+              {formatPaymentAmount(payment.amountInCents)}
+            </div>
+
+            <div className="order-6 col-span-2 sm:order-0 sm:col-span-1 sm:text-right">
+              {onReversePayment && canReverse(payment, creator.payments) && (
+                <button
+                  type="button"
+                  onClick={() => onReversePayment(payment)}
+                  className="cursor-pointer text-[12px] uppercase tracking-[1px] text-ink-muted hover:text-amber focus-visible:outline-2 focus-visible:outline-amber"
+                >
+                  Reverse
+                </button>
+              )}
+            </div>
           </div>
-
-          <div className="order-4 text-right text-ink-muted sm:order-0 sm:text-left">
-            {payment.recordedBy}
-          </div>
-
-          <div className="order-2 whitespace-nowrap text-right font-semibold sm:order-0">
-            {formatPaymentAmount(payment.amountInCents)}
-          </div>
-        </div>
-      ))}
+        )
+      })}
 
       {hasOutstandingBalance(creator) && (
         <div
@@ -71,7 +114,7 @@ export function PaymentHistoryTable({ creator }: { creator: Creator }) {
             {formatPaymentAmount(getOutstandingBalance(creator))}
           </div>
 
-          <div className="col-span-2 text-ink-muted sm:col-span-3">
+          <div className="col-span-2 text-ink-muted sm:col-span-4">
             Remaining balance on {formatPaymentAmount(creator.contractedAmountInCents)} agreement
           </div>
         </div>
@@ -83,5 +126,14 @@ export function PaymentHistoryTable({ creator }: { creator: Creator }) {
         </div>
       )}
     </div>
+  )
+}
+
+/** Marks a row as one half of a cancelled pair. */
+function ReversalTag({ children }: { children: string }) {
+  return (
+    <span className="ml-2 border border-hair px-1.5 py-0.5 text-[10px] uppercase tracking-[1px] text-ink-faint">
+      {children}
+    </span>
   )
 }

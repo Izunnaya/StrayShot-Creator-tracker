@@ -3,12 +3,13 @@ import { AppMasthead } from './components/layout/AppMasthead'
 import { creators as seedCreators } from './data/fixtures'
 import { currentTeamMember } from './data/session'
 import type { Creator, Payment } from './data/types'
-import { buildPayment, type PaymentDraft } from './domain/paymentRecording'
+import { buildPayment, buildReversal, type PaymentDraft } from './domain/paymentRecording'
 import { CreatorDetailScreen } from './features/creatorDetail/CreatorDetailScreen'
 import { CampaignOverviewScreen } from './features/dashboard/CampaignOverviewScreen'
 import { useCreatorFilterSelection } from './features/dashboard/hooks/useCreatorFilterSelection'
 import { useCreatorSortSelection } from './features/dashboard/hooks/useCreatorSortSelection'
 import { RecordPaymentModal } from './features/payments/RecordPaymentModal'
+import { ReversePaymentModal } from './features/payments/ReversePaymentModal'
 
 /**
  * The application shell.
@@ -29,6 +30,7 @@ export default function App() {
   const [creators, setCreators] = useState<Creator[]>(seedCreators)
   const [selectedCreatorId, setSelectedCreatorId] = useState<number | null>(null)
   const [creatorBeingPaidId, setCreatorBeingPaidId] = useState<number | null>(null)
+  const [paymentBeingReversed, setPaymentBeingReversed] = useState<Payment | null>(null)
 
   const filterState = useCreatorFilterSelection()
   const sortState = useCreatorSortSelection()
@@ -45,14 +47,32 @@ export default function App() {
       recordedBy: currentTeamMember.name,
     })
 
+    addPayment(creatorBeingPaid.id, payment)
+    setCreatorBeingPaidId(null)
+  }
+
+  function reversePayment() {
+    if (!creatorInDetail || !paymentBeingReversed) return
+
+    addPayment(
+      creatorInDetail.id,
+      buildReversal(paymentBeingReversed, {
+        id: nextPaymentId(creators),
+        reversedOn: today,
+        recordedBy: currentTeamMember.name,
+      }),
+    )
+    setPaymentBeingReversed(null)
+  }
+
+  function addPayment(creatorId: number, payment: Payment) {
     setCreators((current) =>
       current.map((creator) =>
-        creator.id === creatorBeingPaid.id
+        creator.id === creatorId
           ? { ...creator, payments: [...creator.payments, payment] }
           : creator,
       ),
     )
-    setCreatorBeingPaidId(null)
   }
 
   return (
@@ -64,6 +84,7 @@ export default function App() {
           creator={creatorInDetail}
           onBack={() => setSelectedCreatorId(null)}
           onRecordPayment={(creator) => setCreatorBeingPaidId(creator.id)}
+          onReversePayment={setPaymentBeingReversed}
         />
       ) : (
         <CampaignOverviewScreen
@@ -81,6 +102,15 @@ export default function App() {
           today={today}
           onSave={recordPayment}
           onClose={() => setCreatorBeingPaidId(null)}
+        />
+      )}
+
+      {creatorInDetail && paymentBeingReversed && (
+        <ReversePaymentModal
+          creator={creatorInDetail}
+          payment={paymentBeingReversed}
+          onConfirm={reversePayment}
+          onClose={() => setPaymentBeingReversed(null)}
         />
       )}
     </div>

@@ -5,7 +5,7 @@ import {
   getPaymentProgressPercent,
   hasOutstandingBalance,
 } from '@/domain/creatorCalculations'
-import { countPayments } from '@/domain/paymentHistory'
+import { getStandingPayments } from '@/domain/paymentRecording'
 import { joinClassNames } from '@/lib/classNames'
 import { formatPaymentAmount } from '@/lib/format'
 import { ProgressBar } from '@/ui'
@@ -20,7 +20,8 @@ import { ProgressBar } from '@/ui'
 export function PaymentProgressPanel({ creator }: { creator: Creator }) {
   const amountPaid = getAmountPaid(creator)
   const outstandingBalance = getOutstandingBalance(creator)
-  const paymentCount = countPayments(creator.payments)
+  // Reversed pairs are still in the record, but nobody counts them as payments.
+  const paymentCount = getStandingPayments(creator.payments).length
 
   return (
     <div className="border border-hair bg-panel px-5 py-4.5">

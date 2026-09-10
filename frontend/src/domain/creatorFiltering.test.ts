@@ -33,8 +33,8 @@ const completedOnSummer = createTestCreator({
   campaignName: 'Summer Push',
   streamsCommitted: 1,
   streamsDelivered: 1,
-  contractedAmount: 1000,
-  payments: [createTestPayment({ amount: 1000 })],
+  contractedAmountInCents: 100000,
+  payments: [createTestPayment({ amountInCents: 100000 })],
 })
 
 const testCreators = [contractedOnWinter, activeOnWinter, completedOnSummer]

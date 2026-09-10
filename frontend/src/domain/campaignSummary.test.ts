@@ -1,3 +1,4 @@
+import { formatCostPerInstall } from '@/lib/format'
 import { describe, expect, it } from 'vitest'
 import { creators as fixtureCreators } from '@/data/fixtures'
 import { createTestCreator, createTestPayment } from '@/testing/createTestCreator'
@@ -8,22 +9,22 @@ describe('calculateCampaignSummary', () => {
     const summary = calculateCampaignSummary([
       createTestCreator({
         id: 1,
-        contractedAmount: 4000,
+        contractedAmountInCents: 400000,
         installsAttributed: 1000,
         totalViews: 50000,
-        payments: [createTestPayment({ amount: 1000 })],
+        payments: [createTestPayment({ amountInCents: 100000 })],
       }),
       createTestCreator({
         id: 2,
-        contractedAmount: 6000,
+        contractedAmountInCents: 600000,
         installsAttributed: 3000,
         totalViews: 150000,
-        payments: [createTestPayment({ amount: 6000 })],
+        payments: [createTestPayment({ amountInCents: 600000 })],
       }),
     ])
 
-    expect(summary.totalAmountPaid).toBe(7000)
-    expect(summary.totalContractedAmount).toBe(10000)
+    expect(summary.totalAmountPaidInCents).toBe(700_000)
+    expect(summary.totalContractedAmountInCents).toBe(1_000_000)
     expect(summary.totalInstalls).toBe(4000)
     expect(summary.totalViews).toBe(200000)
   })
@@ -32,17 +33,17 @@ describe('calculateCampaignSummary', () => {
     const summary = calculateCampaignSummary([
       createTestCreator({
         id: 1,
-        contractedAmount: 4000,
-        payments: [createTestPayment({ amount: 1000 })],
+        contractedAmountInCents: 400000,
+        payments: [createTestPayment({ amountInCents: 100000 })],
       }),
       createTestCreator({
         id: 2,
-        contractedAmount: 6000,
-        payments: [createTestPayment({ amount: 6000 })],
+        contractedAmountInCents: 600000,
+        payments: [createTestPayment({ amountInCents: 600000 })],
       }),
     ])
 
-    expect(summary.totalOutstandingBalance).toBe(3000)
+    expect(summary.totalOutstandingBalanceInCents).toBe(300_000)
     expect(summary.creatorsWithOutstandingBalanceCount).toBe(1)
   })
 
@@ -53,38 +54,41 @@ describe('calculateCampaignSummary', () => {
       createTestCreator({
         id: 1,
         installsAttributed: 9000,
-        payments: [createTestPayment({ amount: 9000 })],
+        payments: [createTestPayment({ amountInCents: 900000 })],
       }),
       createTestCreator({
         id: 2,
         installsAttributed: 1000,
-        payments: [createTestPayment({ amount: 11000 })],
+        payments: [createTestPayment({ amountInCents: 1100000 })],
       }),
     ])
 
     // 20,000 paid across 10,000 installs, not the mean of $1.00 and $11.00.
-    expect(summary.blendedCostPerInstall).toBe(2)
+    expect(summary.blendedCostPerInstallInCents).toBe(200)
   })
 
   it('reports no blended figure when no installs have landed', () => {
     const summary = calculateCampaignSummary([
-      createTestCreator({ installsAttributed: 0, payments: [createTestPayment({ amount: 500 })] }),
+      createTestCreator({
+        installsAttributed: 0,
+        payments: [createTestPayment({ amountInCents: 50000 })],
+      }),
     ])
 
-    expect(summary.blendedCostPerInstall).toBe(Infinity)
+    expect(summary.blendedCostPerInstallInCents).toBe(Infinity)
   })
 
   it('returns zeros for an empty set rather than failing', () => {
     // Happens as soon as a filter matches nothing.
     const summary = calculateCampaignSummary([])
 
-    expect(summary.totalAmountPaid).toBe(0)
-    expect(summary.totalContractedAmount).toBe(0)
-    expect(summary.totalOutstandingBalance).toBe(0)
+    expect(summary.totalAmountPaidInCents).toBe(0)
+    expect(summary.totalContractedAmountInCents).toBe(0)
+    expect(summary.totalOutstandingBalanceInCents).toBe(0)
     expect(summary.creatorsWithOutstandingBalanceCount).toBe(0)
     expect(summary.totalInstalls).toBe(0)
     expect(summary.totalViews).toBe(0)
-    expect(summary.blendedCostPerInstall).toBe(Infinity)
+    expect(summary.blendedCostPerInstallInCents).toBe(Infinity)
   })
 })
 
@@ -94,12 +98,12 @@ describe('the unfiltered dashboard figures', () => {
   const summary = calculateCampaignSummary(fixtureCreators)
 
   it('shows $47,000 paid of $55,200 committed', () => {
-    expect(summary.totalAmountPaid).toBe(47000)
-    expect(summary.totalContractedAmount).toBe(55200)
+    expect(summary.totalAmountPaidInCents).toBe(4_700_000)
+    expect(summary.totalContractedAmountInCents).toBe(5_520_000)
   })
 
   it('shows $8,200 outstanding across 5 creators', () => {
-    expect(summary.totalOutstandingBalance).toBe(8200)
+    expect(summary.totalOutstandingBalanceInCents).toBe(820_000)
     expect(summary.creatorsWithOutstandingBalanceCount).toBe(5)
   })
 
@@ -109,6 +113,6 @@ describe('the unfiltered dashboard figures', () => {
   })
 
   it('shows a blended cost per install of $1.84', () => {
-    expect(summary.blendedCostPerInstall.toFixed(2)).toBe('1.84')
+    expect(formatCostPerInstall(summary.blendedCostPerInstallInCents)).toBe('$1.84')
   })
 })

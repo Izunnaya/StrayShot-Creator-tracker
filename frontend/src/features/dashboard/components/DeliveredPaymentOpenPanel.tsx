@@ -18,11 +18,11 @@ import { Button, Panel, ProgressBar, SectionTitle } from '@/ui'
  */
 export function DeliveredPaymentOpenPanel({
   creators,
-  totalOutstandingBalance,
+  totalOutstandingBalanceInCents,
   onRecordPayment,
 }: {
   creators: Creator[]
-  totalOutstandingBalance: number
+  totalOutstandingBalanceInCents: number
   /** Opens the record payment modal. Module 6 frontend work, task 6.14. */
   onRecordPayment?: (creator: Creator) => void
 }) {
@@ -33,7 +33,7 @@ export function DeliveredPaymentOpenPanel({
           Delivered, <span className="text-bad">payment open</span>
         </SectionTitle>
         <div className="text-[12px] text-ink-muted">
-          {formatMoney(totalOutstandingBalance)} total
+          {formatMoney(totalOutstandingBalanceInCents)} total
         </div>
       </div>
 
@@ -68,7 +68,7 @@ export function DeliveredPaymentOpenPanel({
 
             <div className="flex flex-wrap items-center justify-between gap-x-2.5 gap-y-2">
               <span className="text-[12px] text-ink-muted">
-                {formatMoney(amountPaid)} of {formatMoney(creator.contractedAmount)} ·{' '}
+                {formatMoney(amountPaid)} of {formatMoney(creator.contractedAmountInCents)} ·{' '}
                 {formatMoney(getOutstandingBalance(creator))} open
               </span>
               <Button variant="outline" onClick={() => onRecordPayment?.(creator)}>

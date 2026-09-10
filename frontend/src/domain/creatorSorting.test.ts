@@ -14,7 +14,7 @@ const bigSpender = createTestCreator({
   creatorCode: 'ZARA',
   installsAttributed: 1000,
   totalViews: 500000,
-  payments: [createTestPayment({ amount: 5000 })],
+  payments: [createTestPayment({ amountInCents: 500000 })],
 })
 
 const bargain = createTestCreator({
@@ -23,7 +23,7 @@ const bargain = createTestCreator({
   creatorCode: 'ALEX',
   installsAttributed: 1000,
   totalViews: 100000,
-  payments: [createTestPayment({ amount: 1000 })],
+  payments: [createTestPayment({ amountInCents: 100000 })],
 })
 
 const neverPaid = createTestCreator({

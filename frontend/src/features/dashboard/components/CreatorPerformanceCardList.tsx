@@ -32,11 +32,11 @@ import { CreatorStatusPill, PlatformTag, ProgressBar } from '@/ui'
  */
 export function CreatorPerformanceCardList({
   creators,
-  targetCostPerInstall,
+  targetCostPerInstallInCents,
   onSelectCreator,
 }: {
   creators: Creator[]
-  targetCostPerInstall: number
+  targetCostPerInstallInCents: number
   onSelectCreator?: (creator: Creator) => void
 }) {
   if (creators.length === 0) {
@@ -49,7 +49,7 @@ export function CreatorPerformanceCardList({
         <CreatorPerformanceCard
           key={creator.id}
           creator={creator}
-          targetCostPerInstall={targetCostPerInstall}
+          targetCostPerInstallInCents={targetCostPerInstallInCents}
           onSelectCreator={onSelectCreator}
         />
       ))}
@@ -59,17 +59,17 @@ export function CreatorPerformanceCardList({
 
 function CreatorPerformanceCard({
   creator,
-  targetCostPerInstall,
+  targetCostPerInstallInCents,
   onSelectCreator,
 }: {
   creator: Creator
-  targetCostPerInstall: number
+  targetCostPerInstallInCents: number
   onSelectCreator?: (creator: Creator) => void
 }) {
   const amountPaid = getAmountPaid(creator)
   const outstandingBalance = getOutstandingBalance(creator)
   const costPerInstall = getCostPerInstall(creator)
-  const rating = rateCostPerInstall(costPerInstall, targetCostPerInstall)
+  const rating = rateCostPerInstall(costPerInstall, targetCostPerInstallInCents)
 
   return (
     <li
@@ -119,7 +119,7 @@ function CreatorPerformanceCard({
       <div>
         <div className="mb-1.25 flex flex-wrap items-baseline justify-between gap-x-2.5 text-[13px]">
           <span className="whitespace-nowrap">
-            {formatMoney(amountPaid)} / {formatMoney(creator.contractedAmount)}
+            {formatMoney(amountPaid)} / {formatMoney(creator.contractedAmountInCents)}
             <span className="ml-2 text-ink-muted">
               {outstandingBalance > 0 ? formatMoney(outstandingBalance) + ' open' : 'Settled'}
             </span>

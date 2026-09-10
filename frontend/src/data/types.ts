@@ -19,18 +19,33 @@ export type CreatorLifecycleStatus = 'prospect' | 'contracted' | 'active' | 'com
 /** Whether the creator has been invited to the portal, and how far they got. */
 export type PortalInviteState = 'not sent' | 'sent' | 'claimed'
 
-/** One payment made to a creator. A creator may be paid in several of these. */
+/**
+ * One payment made to a creator. A creator may be paid in several of these.
+ *
+ * Every money field in this file is in cents. Dollars only exist in
+ * src/lib/format, at the moment a figure is rendered — see DECISIONS.md, Q8.
+ */
 export interface Payment {
   id: number
   /** ISO date the money actually went out, not the date it was recorded. */
   paidOn: string
-  amount: number
+  amountInCents: number
   /** "Bank transfer", "Wise", "PayPal", "USDC". */
   method: string
   /** Transaction ID or bank reference, for reconciling against a statement. */
   reference: string
-  /** Name of the team member who recorded the payment. Open question Q4. */
+  /** The team member who recorded it, stamped from the session — Q4. */
   recordedBy: string
+  /**
+   * Set only on a reversing entry, naming the payment it cancels.
+   *
+   * Payments are append-only: a mistake is never edited or deleted, it is
+   * cancelled by a second record carrying the negative amount. That keeps
+   * every figure derivable by summing and leaves the history intact. Only a
+   * record with this field set may carry a negative amount. See DECISIONS.md,
+   * Q6.
+   */
+  reversesPaymentId?: number
 }
 
 export interface Campaign {
@@ -38,12 +53,12 @@ export interface Campaign {
   name: string
   startDate: string
   endDate: string
-  totalBudget: number
+  totalBudgetInCents: number
   /**
    * What the team is willing to pay per install on this campaign. Drives the
    * green/red treatment on the creator table's cost-per-install column.
    */
-  targetCostPerInstall: number
+  targetCostPerInstallInCents: number
 }
 
 export interface Creator {
@@ -67,9 +82,9 @@ export interface Creator {
   installsAttributed: number
 
   /** The full agreed value of the deal, before any payment is made. */
-  contractedAmount: number
+  contractedAmountInCents: number
   /** The per-stream rate the contracted amount was built from. */
-  agreedRatePerStream: number
+  agreedRatePerStreamInCents: number
 
   /** Follower or subscriber count, shown as text such as "412K". */
   audienceSize: string

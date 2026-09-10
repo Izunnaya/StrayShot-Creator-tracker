@@ -24,17 +24,17 @@ export const OVER_TARGET_MULTIPLIER = 1.6
 
 /**
  * Target used when the dashboard is showing every campaign at once and no
- * single campaign target applies. Open question Q21 — the alternative is to
- * suppress the rating entirely at that level.
+ * single campaign target applies, in cents. Open question Q21 — the
+ * alternative is to suppress the rating entirely at that level.
  */
-export const DEFAULT_TARGET_COST_PER_INSTALL = 3.5
+export const DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS = 350
 
 export function rateCostPerInstall(
   costPerInstall: number,
-  targetCostPerInstall: number,
+  targetCostPerInstallInCents: number,
 ): CostPerInstallRating {
   if (!Number.isFinite(costPerInstall)) return 'not-measurable'
-  if (costPerInstall <= targetCostPerInstall) return 'under-target'
-  if (costPerInstall <= targetCostPerInstall * OVER_TARGET_MULTIPLIER) return 'acceptable'
+  if (costPerInstall <= targetCostPerInstallInCents) return 'under-target'
+  if (costPerInstall <= targetCostPerInstallInCents * OVER_TARGET_MULTIPLIER) return 'acceptable'
   return 'over-target'
 }

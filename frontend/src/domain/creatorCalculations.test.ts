@@ -22,37 +22,37 @@ describe('getAmountPaid', () => {
   it('adds up every payment, so paying in stages accumulates', () => {
     const creator = createTestCreator({
       payments: [
-        createTestPayment({ id: 1, amount: 1600 }),
-        createTestPayment({ id: 2, amount: 1600 }),
-        createTestPayment({ id: 3, amount: 400 }),
+        createTestPayment({ id: 1, amountInCents: 160000 }),
+        createTestPayment({ id: 2, amountInCents: 160000 }),
+        createTestPayment({ id: 3, amountInCents: 40000 }),
       ],
     })
 
-    expect(getAmountPaid(creator)).toBe(3600)
+    expect(getAmountPaid(creator)).toBe(360_000)
   })
 })
 
 describe('getOutstandingBalance', () => {
   it('is the whole contracted amount before anything is paid', () => {
-    const creator = createTestCreator({ contractedAmount: 4800, payments: [] })
+    const creator = createTestCreator({ contractedAmountInCents: 480000, payments: [] })
 
-    expect(getOutstandingBalance(creator)).toBe(4800)
+    expect(getOutstandingBalance(creator)).toBe(480_000)
     expect(hasOutstandingBalance(creator)).toBe(true)
   })
 
   it('falls as partial payments come in', () => {
     const creator = createTestCreator({
-      contractedAmount: 4800,
-      payments: [createTestPayment({ amount: 1600 })],
+      contractedAmountInCents: 480000,
+      payments: [createTestPayment({ amountInCents: 160000 })],
     })
 
-    expect(getOutstandingBalance(creator)).toBe(3200)
+    expect(getOutstandingBalance(creator)).toBe(320_000)
   })
 
   it('is zero once the contract is fully paid', () => {
     const creator = createTestCreator({
-      contractedAmount: 2400,
-      payments: [createTestPayment({ amount: 2400 })],
+      contractedAmountInCents: 240000,
+      payments: [createTestPayment({ amountInCents: 240000 })],
     })
 
     expect(getOutstandingBalance(creator)).toBe(0)
@@ -64,8 +64,8 @@ describe('getOutstandingBalance', () => {
     // credit. This is open question Q5 — if overpayment should be visible,
     // this test is the one that has to change.
     const creator = createTestCreator({
-      contractedAmount: 1000,
-      payments: [createTestPayment({ amount: 1500 })],
+      contractedAmountInCents: 100000,
+      payments: [createTestPayment({ amountInCents: 150000 })],
     })
 
     expect(getOutstandingBalance(creator)).toBe(0)
@@ -75,8 +75,8 @@ describe('getOutstandingBalance', () => {
 describe('getPaymentProgressPercent', () => {
   it('reports how far through the contracted amount we are', () => {
     const creator = createTestCreator({
-      contractedAmount: 4000,
-      payments: [createTestPayment({ amount: 1000 })],
+      contractedAmountInCents: 400000,
+      payments: [createTestPayment({ amountInCents: 100000 })],
     })
 
     expect(getPaymentProgressPercent(creator)).toBe(25)
@@ -84,8 +84,8 @@ describe('getPaymentProgressPercent', () => {
 
   it('is 100 when the balance closes', () => {
     const creator = createTestCreator({
-      contractedAmount: 4000,
-      payments: [createTestPayment({ amount: 4000 })],
+      contractedAmountInCents: 400000,
+      payments: [createTestPayment({ amountInCents: 400000 })],
     })
 
     expect(getPaymentProgressPercent(creator)).toBe(100)
@@ -93,7 +93,7 @@ describe('getPaymentProgressPercent', () => {
 
   it('is zero rather than a division error when nothing is contracted', () => {
     // A prospect with no deal yet has a contracted amount of zero.
-    const creator = createTestCreator({ contractedAmount: 0, payments: [] })
+    const creator = createTestCreator({ contractedAmountInCents: 0, payments: [] })
 
     expect(getPaymentProgressPercent(creator)).toBe(0)
   })
@@ -103,10 +103,10 @@ describe('getCostPerInstall', () => {
   it('divides money actually paid by installs credited', () => {
     const creator = createTestCreator({
       installsAttributed: 4000,
-      payments: [createTestPayment({ amount: 8000 })],
+      payments: [createTestPayment({ amountInCents: 800000 })],
     })
 
-    expect(getCostPerInstall(creator)).toBe(2)
+    expect(getCostPerInstall(creator)).toBe(200)
     expect(hasMeasurableCostPerInstall(creator)).toBe(true)
   })
 
@@ -122,7 +122,7 @@ describe('getCostPerInstall', () => {
   it('is not measurable when no installs have landed yet', () => {
     const creator = createTestCreator({
       installsAttributed: 0,
-      payments: [createTestPayment({ amount: 2000 })],
+      payments: [createTestPayment({ amountInCents: 200000 })],
     })
 
     expect(getCostPerInstall(creator)).toBe(Infinity)
@@ -169,8 +169,8 @@ describe('getLifecycleStatus', () => {
     const creator = createTestCreator({
       streamsCommitted: 2,
       streamsDelivered: 2,
-      contractedAmount: 2000,
-      payments: [createTestPayment({ amount: 500 })],
+      contractedAmountInCents: 200000,
+      payments: [createTestPayment({ amountInCents: 50000 })],
     })
 
     expect(getLifecycleStatus(creator)).toBe('active')
@@ -180,8 +180,8 @@ describe('getLifecycleStatus', () => {
     const creator = createTestCreator({
       streamsCommitted: 4,
       streamsDelivered: 2,
-      contractedAmount: 2000,
-      payments: [createTestPayment({ amount: 2000 })],
+      contractedAmountInCents: 200000,
+      payments: [createTestPayment({ amountInCents: 200000 })],
     })
 
     expect(getLifecycleStatus(creator)).toBe('active')
@@ -191,8 +191,8 @@ describe('getLifecycleStatus', () => {
     const creator = createTestCreator({
       streamsCommitted: 2,
       streamsDelivered: 2,
-      contractedAmount: 2000,
-      payments: [createTestPayment({ amount: 2000 })],
+      contractedAmountInCents: 200000,
+      payments: [createTestPayment({ amountInCents: 200000 })],
     })
 
     expect(getLifecycleStatus(creator)).toBe('completed')
@@ -204,8 +204,8 @@ describe('the two status panels', () => {
     const creator = createTestCreator({
       streamsCommitted: 2,
       streamsDelivered: 2,
-      contractedAmount: 3000,
-      payments: [createTestPayment({ amount: 1000 })],
+      contractedAmountInCents: 300000,
+      payments: [createTestPayment({ amountInCents: 100000 })],
     })
 
     expect(isAwaitingPayment(creator)).toBe(true)
@@ -216,8 +216,8 @@ describe('the two status panels', () => {
     const creator = createTestCreator({
       streamsCommitted: 4,
       streamsDelivered: 1,
-      contractedAmount: 3000,
-      payments: [createTestPayment({ amount: 1000 })],
+      contractedAmountInCents: 300000,
+      payments: [createTestPayment({ amountInCents: 100000 })],
     })
 
     expect(isPaidButUndelivered(creator)).toBe(true)
@@ -228,8 +228,8 @@ describe('the two status panels', () => {
     const creator = createTestCreator({
       streamsCommitted: 2,
       streamsDelivered: 2,
-      contractedAmount: 2000,
-      payments: [createTestPayment({ amount: 2000 })],
+      contractedAmountInCents: 200000,
+      payments: [createTestPayment({ amountInCents: 200000 })],
     })
 
     expect(isAwaitingPayment(creator)).toBe(false)

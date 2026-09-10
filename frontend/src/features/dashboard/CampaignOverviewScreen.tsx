@@ -1,16 +1,9 @@
 import { useMemo } from 'react'
 import { buildInstallChart } from '@/domain/installChart'
 import type { Creator } from '@/data/types'
-import {
-  campaigns,
-  creators as allCreators,
-  dailyInstalls,
-  chartStartDate,
-  chartDayCount,
-  streams,
-} from '@/data/fixtures'
+import { campaigns, dailyInstalls, chartStartDate, chartDayCount, streams } from '@/data/fixtures'
 import { calculateCampaignSummary } from '@/domain/campaignSummary'
-import { DEFAULT_TARGET_COST_PER_INSTALL } from '@/domain/costPerInstallRating'
+import { DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS } from '@/domain/costPerInstallRating'
 import { isAwaitingPayment, isPaidButUndelivered } from '@/domain/creatorCalculations'
 import {
   countCreatorsByLifecycleStatus,
@@ -42,14 +35,20 @@ import type { useCreatorSortSelection } from './hooks/useCreatorSortSelection'
  * calls is the whole of this screen's Phase 5 work.
  */
 export function CampaignOverviewScreen({
+  creators: allCreators,
   onSelectCreator,
+  onRecordPayment,
   filterState,
   sortState,
 }: {
+  /** Every creator, before either filter narrows them. */
+  creators: Creator[]
   filterState: ReturnType<typeof useCreatorFilterSelection>
   sortState: ReturnType<typeof useCreatorSortSelection>
   /** Opens the creator detail screen for the row that was clicked. */
   onSelectCreator?: (creator: Creator) => void
+  /** Opens the record payment modal for a row in the outstanding panel. */
+  onRecordPayment?: (creator: Creator) => void
 }) {
   const {
     selection: filterSelection,
@@ -65,7 +64,7 @@ export function CampaignOverviewScreen({
    */
   const creatorsInTable = useMemo(
     () => sortCreators(filterCreators(allCreators, filterSelection), sortSelection),
-    [filterSelection, sortSelection],
+    [allCreators, filterSelection, sortSelection],
   )
 
   /**
@@ -82,7 +81,7 @@ export function CampaignOverviewScreen({
         chartStartDate,
         chartDayCount,
       ),
-    [filterSelection],
+    [allCreators, filterSelection],
   )
 
   /**
@@ -92,13 +91,13 @@ export function CampaignOverviewScreen({
    */
   const summary = useMemo(
     () => calculateCampaignSummary(filterCreators(allCreators, filterSelection)),
-    [filterSelection],
+    [allCreators, filterSelection],
   )
 
   /** Chip counts follow the campaign filter but not the status filter. */
   const countsByStatus = useMemo(
     () => countCreatorsByLifecycleStatus(allCreators, filterSelection.campaign),
-    [filterSelection.campaign],
+    [allCreators, filterSelection.campaign],
   )
 
   /**
@@ -109,7 +108,7 @@ export function CampaignOverviewScreen({
    */
   const creatorsInCampaign = useMemo(
     () => filterCreatorsByCampaign(allCreators, filterSelection.campaign),
-    [filterSelection.campaign],
+    [allCreators, filterSelection.campaign],
   )
   const creatorsAwaitingPayment = creatorsInCampaign.filter(isAwaitingPayment)
   const creatorsPaidButUndelivered = creatorsInCampaign.filter(isPaidButUndelivered)
@@ -120,8 +119,8 @@ export function CampaignOverviewScreen({
    * Q21.
    */
   const selectedCampaign = campaigns.find((campaign) => campaign.name === filterSelection.campaign)
-  const targetCostPerInstall =
-    selectedCampaign?.targetCostPerInstall ?? DEFAULT_TARGET_COST_PER_INSTALL
+  const targetCostPerInstallInCents =
+    selectedCampaign?.targetCostPerInstallInCents ?? DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 pb-10 pt-5 sm:px-6 md:gap-6 md:px-8 md:pb-12 md:pt-7">
@@ -146,7 +145,7 @@ export function CampaignOverviewScreen({
         creators={creatorsInTable}
         sortSelection={sortSelection}
         onColumnHeadingClick={handleColumnClick}
-        targetCostPerInstall={targetCostPerInstall}
+        targetCostPerInstallInCents={targetCostPerInstallInCents}
         onSelectCreator={onSelectCreator}
       />
 
@@ -170,9 +169,10 @@ export function CampaignOverviewScreen({
 
         <div className="grid gap-6">
           <DeliveredPaymentOpenPanel
+            onRecordPayment={onRecordPayment}
             creators={creatorsAwaitingPayment}
-            totalOutstandingBalance={
-              calculateCampaignSummary(creatorsAwaitingPayment).totalOutstandingBalance
+            totalOutstandingBalanceInCents={
+              calculateCampaignSummary(creatorsAwaitingPayment).totalOutstandingBalanceInCents
             }
           />
 

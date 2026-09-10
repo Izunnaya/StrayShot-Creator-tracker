@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from '@/App'
 
 /**
@@ -101,6 +101,26 @@ describe('recording a payment', () => {
     await user.click(dialog().getByRole('button', { name: /Pay full balance/ }))
 
     expect(dialog().getByRole('status').textContent).toMatch(/balance closed/)
+  })
+
+  it('dates the payment when the modal opens, not when the app started', () => {
+    // A dashboard left open overnight: yesterday when it rendered, today by
+    // the time someone records a payment on it. fireEvent rather than
+    // user-event here, because user-event waits on timers that are faked.
+    vi.useFakeTimers()
+    try {
+      vi.setSystemTime(new Date(2026, 8, 10, 23, 55))
+      render(<App />)
+
+      vi.setSystemTime(new Date(2026, 8, 11, 0, 5))
+      fireEvent.click(screen.getAllByRole('button', { name: /Record payment/ })[0]!)
+
+      const datePaid = dialog().getByLabelText('Date paid') as HTMLInputElement
+      expect(datePaid.value).toBe('2026-09-11')
+      expect(datePaid.max).toBe('2026-09-11')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('closes on Escape without recording anything', async () => {

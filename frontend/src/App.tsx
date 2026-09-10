@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { AppMasthead } from './components/layout/AppMasthead'
 import { creators as seedCreators } from './data/fixtures'
 import { currentTeamMember } from './data/session'
@@ -34,7 +34,6 @@ export default function App() {
 
   const filterState = useCreatorFilterSelection()
   const sortState = useCreatorSortSelection()
-  const today = useMemo(() => todayAsIsoDate(), [])
 
   const creatorInDetail = creators.find((creator) => creator.id === selectedCreatorId) ?? null
   const creatorBeingPaid = creators.find((creator) => creator.id === creatorBeingPaidId) ?? null
@@ -58,7 +57,7 @@ export default function App() {
       creatorInDetail.id,
       buildReversal(paymentBeingReversed, {
         id: nextPaymentId(creators),
-        reversedOn: today,
+        reversedOn: todayAsIsoDate(),
         recordedBy: currentTeamMember.name,
       }),
     )
@@ -99,7 +98,10 @@ export default function App() {
       {creatorBeingPaid && (
         <RecordPaymentModal
           creator={creatorBeingPaid}
-          today={today}
+          /* Read at the moment the modal opens, never cached: a dashboard
+             left open overnight would otherwise call today's date a future
+             one and refuse to record a payment made this morning. */
+          today={todayAsIsoDate()}
           onSave={recordPayment}
           onClose={() => setCreatorBeingPaidId(null)}
         />
@@ -126,7 +128,13 @@ function nextPaymentId(creators: Creator[]): number {
   return everyPayment.reduce((highest, payment) => Math.max(highest, payment.id), 0) + 1
 }
 
-/** Today in the viewer's own timezone, which is the one they paid in. */
+/**
+ * Today in the viewer's own timezone, which is the one they paid in.
+ *
+ * Called where it is needed rather than held in state or a memo. This screen
+ * is the kind that stays open for days, and a date captured at mount goes
+ * quietly wrong at midnight.
+ */
 function todayAsIsoDate(): string {
   const now = new Date()
   const month = String(now.getMonth() + 1).padStart(2, '0')

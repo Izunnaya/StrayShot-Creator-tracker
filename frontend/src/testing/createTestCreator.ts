@@ -24,6 +24,8 @@ export function createTestCreator(overrides: Partial<Creator> = {}): Creator {
   return {
     id: 1,
     name: 'Test Creator',
+    email: 'test@creators.gg',
+    rateModel: 'per-stream',
     platform: 'YouTube',
     creatorCode: 'TEST',
     campaignId: 1,
@@ -33,7 +35,7 @@ export function createTestCreator(overrides: Partial<Creator> = {}): Creator {
     peakConcurrentViewers: 0,
     installsAttributed: 0,
     contractedAmountInCents: 100000,
-    agreedRatePerStreamInCents: 50000,
+    agreedRateInCents: 50000,
     audienceSize: '10K',
     channelUrl: 'youtube.com/@test',
     portalInviteState: 'not sent',

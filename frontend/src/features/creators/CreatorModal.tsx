@@ -111,29 +111,38 @@ export function CreatorModal({
       labelId="creator-modal-title"
       onClose={onClose}
       footer={
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Button variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <div className="flex items-center gap-3">
+        <div className="grid gap-2 sm:flex sm:flex-row-reverse sm:items-center sm:justify-between sm:gap-3">
+          <div className="flex gap-2 sm:gap-3">
             {step !== 'identity' && (
-              <Button variant="secondary" onClick={() => setStep(previousStep(step))}>
+              <Button
+                variant="secondary"
+                onClick={() => setStep(previousStep(step))}
+                className="flex-1 sm:flex-none"
+              >
                 ← Back
               </Button>
             )}
             {step !== 'payment' && (
-              <Button variant="outline" onClick={() => setStep(nextStep(step))}>
+              <Button
+                variant="outline"
+                onClick={() => setStep(nextStep(step))}
+                className="flex-1 sm:flex-none"
+              >
                 {STEPS[STEPS.findIndex((entry) => entry.id === step) + 1]!.label} →
               </Button>
             )}
-            <Button variant="primary" onClick={handleSave}>
+            <Button variant="primary" onClick={handleSave} className="flex-1 sm:flex-none">
               {saveLabel}
             </Button>
           </div>
+
+          <Button variant="secondary" onClick={onClose} className="sm:order-first">
+            Cancel
+          </Button>
         </div>
       }
     >
-      <div className="mb-5 grid gap-px border border-hair bg-hair sm:grid-cols-3">
+      <div className="mb-5 grid grid-cols-3 gap-px border border-hair bg-hair">
         {STEPS.map((entry, index) => (
           <button
             key={entry.id}
@@ -144,11 +153,11 @@ export function CreatorModal({
                control that moves to the same step. */
             aria-label={`Step ${index + 1}: ${entry.label}`}
             className={joinClassNames(
-              'cursor-pointer border-none px-3.5 py-3 text-left focus-visible:outline-2 focus-visible:outline-amber',
+              'cursor-pointer border-none px-2 py-2.5 text-left focus-visible:outline-2 focus-visible:outline-amber sm:px-3.5 sm:py-3',
               step === entry.id ? 'bg-row-hover' : 'bg-panel-head hover:bg-row-hover',
             )}
           >
-            <span className="flex items-center gap-2">
+            <span className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <StepMark
                 complete={review.completeByStep[entry.id]}
                 active={step === entry.id}
@@ -163,7 +172,9 @@ export function CreatorModal({
                 {entry.label}
               </span>
             </span>
-            <span className="mt-1 block text-[11px] text-ink-soft">{entry.hint}</span>
+            {/* The hint is guidance, not information: on a phone the three
+                labels already fill the row. */}
+            <span className="mt-1 hidden text-[11px] text-ink-soft sm:block">{entry.hint}</span>
           </button>
         ))}
       </div>

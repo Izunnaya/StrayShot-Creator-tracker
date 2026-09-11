@@ -70,6 +70,12 @@ export interface CreatorDraftReview {
   /** A step is complete when it holds everything that step is for. */
   completeByStep: Record<CreatorFormStep, boolean>
   canSave: boolean
+  /**
+   * Whether anyone has touched step two. Drives what the save button
+   * promises: a form with a half-filled deal is not being saved as a
+   * prospect, it is a creator whose deal is not finished.
+   */
+  dealStarted: boolean
   /** What the deal is worth, once there is enough of one to say. */
   contractedAmountInCents: number
   agreedRateInCents: number | null
@@ -198,6 +204,7 @@ export function reviewCreatorDraft(
       payment: draft.paymentMethod.trim() !== '' && draft.paymentDetails.trim() !== '',
     },
     canSave: problems.length === 0 && name !== '' && EMAIL.test(email),
+    dealStarted,
     contractedAmountInCents,
     agreedRateInCents,
     streamsCommitted,

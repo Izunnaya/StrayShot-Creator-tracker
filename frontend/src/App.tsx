@@ -4,12 +4,14 @@ import { campaigns as seedCampaigns, creators as seedCreators } from './data/fix
 import { currentTeamMember } from './data/session'
 import type { Campaign, Creator, Payment } from './data/types'
 import { buildCampaign, getCampaignName, type CampaignDraft } from './domain/campaigns'
+import { applyDraftToCreator, buildCreator, type CreatorDraft } from './domain/creatorRecording'
 import { buildPayment, buildReversal, type PaymentDraft } from './domain/paymentRecording'
 import { CreatorDetailScreen } from './features/creatorDetail/CreatorDetailScreen'
 import { CampaignOverviewScreen } from './features/dashboard/CampaignOverviewScreen'
 import { useCreatorFilterSelection } from './features/dashboard/hooks/useCreatorFilterSelection'
 import { useCreatorSortSelection } from './features/dashboard/hooks/useCreatorSortSelection'
 import { CampaignModal } from './features/campaigns/CampaignModal'
+import { CreatorModal } from './features/creators/CreatorModal'
 import { RecordPaymentModal } from './features/payments/RecordPaymentModal'
 import { ReversePaymentModal } from './features/payments/ReversePaymentModal'
 
@@ -36,6 +38,8 @@ export default function App() {
   const [paymentBeingReversed, setPaymentBeingReversed] = useState<Payment | null>(null)
   /** null while closed; a campaign while editing; 'new' while creating. */
   const [campaignBeingEdited, setCampaignBeingEdited] = useState<Campaign | 'new' | null>(null)
+  /** null while closed; a creator while editing; 'new' while adding. */
+  const [creatorBeingEdited, setCreatorBeingEdited] = useState<Creator | 'new' | null>(null)
 
   const filterState = useCreatorFilterSelection()
   const sortState = useCreatorSortSelection()
@@ -82,6 +86,28 @@ export default function App() {
     setCampaignBeingEdited(null)
   }
 
+  function saveCreator(draft: CreatorDraft) {
+    const editing = creatorBeingEdited !== 'new' ? creatorBeingEdited : null
+
+    setCreators((current) =>
+      editing
+        ? current.map((creator) =>
+            creator.id === editing.id ? applyDraftToCreator(creator, draft) : creator,
+          )
+        : [...current, buildCreator(draft, { id: nextCreatorId(current), campaigns })],
+    )
+    setCreatorBeingEdited(null)
+  }
+
+  /** Sending is Module 8's work; this records that it went. */
+  function sendInvite(creator: Creator) {
+    setCreators((current) =>
+      current.map((entry) =>
+        entry.id === creator.id ? { ...entry, portalInviteState: 'sent' } : entry,
+      ),
+    )
+  }
+
   function addPayment(creatorId: number, payment: Payment) {
     setCreators((current) =>
       current.map((creator) =>
@@ -94,13 +120,14 @@ export default function App() {
 
   return (
     <div className="grain min-h-screen">
-      <AppMasthead activeTab="overview" />
+      <AppMasthead activeTab="overview" onAddCreator={() => setCreatorBeingEdited('new')} />
 
       {creatorInDetail ? (
         <CreatorDetailScreen
           creator={creatorInDetail}
           campaignName={getCampaignName(campaigns, creatorInDetail.campaignId)}
           onBack={() => setSelectedCreatorId(null)}
+          onEditCreator={setCreatorBeingEdited}
           onRecordPayment={(creator) => setCreatorBeingPaidId(creator.id)}
           onReversePayment={setPaymentBeingReversed}
         />
@@ -130,6 +157,17 @@ export default function App() {
         />
       )}
 
+      {creatorBeingEdited && (
+        <CreatorModal
+          campaigns={campaigns}
+          creators={creators}
+          editing={creatorBeingEdited === 'new' ? undefined : creatorBeingEdited}
+          onSave={saveCreator}
+          onSendInvite={sendInvite}
+          onClose={() => setCreatorBeingEdited(null)}
+        />
+      )}
+
       {campaignBeingEdited && (
         <CampaignModal
           campaigns={campaigns}
@@ -150,6 +188,10 @@ export default function App() {
       )}
     </div>
   )
+}
+
+function nextCreatorId(creators: Creator[]): number {
+  return creators.reduce((highest, creator) => Math.max(highest, creator.id), 0) + 1
 }
 
 function nextCampaignId(campaigns: Campaign[]): number {

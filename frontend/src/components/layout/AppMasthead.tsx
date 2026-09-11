@@ -18,7 +18,13 @@ const tabs = [
   { id: 'payments', label: 'Payments' },
 ]
 
-export function AppMasthead({ activeTab = 'overview' }: { activeTab?: string }) {
+export function AppMasthead({
+  activeTab = 'overview',
+  onAddCreator,
+}: {
+  activeTab?: string
+  onAddCreator?: () => void
+}) {
   return (
     <header className="grain-masthead border-b border-amber px-4 md:px-8">
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2.5 md:h-16 md:flex-nowrap md:justify-between md:gap-6 md:py-0">
@@ -38,7 +44,11 @@ export function AppMasthead({ activeTab = 'overview' }: { activeTab?: string }) 
           >
             Public page ↗
           </a>
-          <Button variant="primary" className="order-2 ml-auto md:order-0 md:ml-0">
+          <Button
+            variant="primary"
+            onClick={onAddCreator}
+            className="order-2 ml-auto md:order-0 md:ml-0"
+          >
             + Add creator
           </Button>
         </div>

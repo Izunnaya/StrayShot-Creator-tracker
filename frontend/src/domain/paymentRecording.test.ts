@@ -49,6 +49,22 @@ describe('parseAmountToCents', () => {
     expect(parseAmountToCents('1600 USD')).toBeNull()
     expect(parseAmountToCents('1.2.3')).toBeNull()
   })
+
+  it('refuses misgrouped separators instead of normalising them into a number', () => {
+    // Stripping the comma first would read each of these as a real amount.
+    expect(parseAmountToCents('1,2')).toBeNull()
+    expect(parseAmountToCents('12,34')).toBeNull()
+    expect(parseAmountToCents('1,00,000')).toBeNull()
+    expect(parseAmountToCents('1,6000')).toBeNull()
+    expect(parseAmountToCents(',500')).toBeNull()
+    expect(parseAmountToCents('1 600')).toBeNull()
+  })
+
+  it('still accepts properly grouped thousands, at any size', () => {
+    expect(parseAmountToCents('1,600')).toBe(160_000)
+    expect(parseAmountToCents('12,000')).toBe(1_200_000)
+    expect(parseAmountToCents('1,234,567.89')).toBe(123_456_789)
+  })
 })
 
 describe('reviewPaymentDraft', () => {
@@ -101,6 +117,37 @@ describe('reviewPaymentDraft', () => {
     expect(review.problems).toEqual(['date-in-future'])
   })
 
+  it('rejects a date that never happened, rather than comparing it as a string', () => {
+    // Lexicographically this sits before TODAY and would sail through.
+    const review = reviewPaymentDraft(draft({ paidOn: '2026-02-30' }), partlyPaidCreator, TODAY)
+
+    expect(review.problems).toEqual(['date-unreadable'])
+    expect(review.canSave).toBe(false)
+  })
+
+  it('rejects dates that are not written as YYYY-MM-DD', () => {
+    const problemsFor = (paidOn: string) =>
+      reviewPaymentDraft(draft({ paidOn }), partlyPaidCreator, TODAY).problems
+
+    expect(problemsFor('2026-9-1')).toEqual(['date-unreadable'])
+    expect(problemsFor('01/09/2026')).toEqual(['date-unreadable'])
+    expect(problemsFor('yesterday')).toEqual(['date-unreadable'])
+    expect(problemsFor('2026-13-01')).toEqual(['date-unreadable'])
+    expect(problemsFor('2026-09-00')).toEqual(['date-unreadable'])
+  })
+
+  it('accepts the last day of a real month, including a leap day', () => {
+    expect(
+      reviewPaymentDraft(draft({ paidOn: '2026-02-28' }), partlyPaidCreator, TODAY).canSave,
+    ).toBe(true)
+    expect(
+      reviewPaymentDraft(draft({ paidOn: '2024-02-29' }), partlyPaidCreator, TODAY).canSave,
+    ).toBe(true)
+    expect(
+      reviewPaymentDraft(draft({ paidOn: '2026-02-29' }), partlyPaidCreator, TODAY).problems,
+    ).toEqual(['date-unreadable'])
+  })
+
   it('accepts a payment dated today', () => {
     expect(reviewPaymentDraft(draft({ paidOn: TODAY }), partlyPaidCreator, TODAY).canSave).toBe(
       true,
@@ -145,9 +192,15 @@ describe('buildPayment', () => {
   })
 
   it('refuses a draft that never passed review', () => {
-    expect(() =>
-      buildPayment(draft({ amount: 'twelve' }), { id: 1, recordedBy: 'K. Osei' }),
-    ).toThrow()
+    const build = (amount: string) =>
+      buildPayment(draft({ amount }), { id: 1, recordedBy: 'K. Osei' })
+
+    // Everything review rejects, this rejects: reaching it with one of these
+    // means the caller skipped review.
+    expect(() => build('twelve')).toThrow()
+    expect(() => build('')).toThrow()
+    expect(() => build('0')).toThrow()
+    expect(() => build('-50')).toThrow()
   })
 })
 

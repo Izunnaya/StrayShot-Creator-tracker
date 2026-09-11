@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { campaigns, streams as allStreams } from '@/data/fixtures'
-import type { Creator } from '@/data/types'
+import type { Creator, Payment } from '@/data/types'
 import { DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS } from '@/domain/costPerInstallRating'
 import { getStreamHistoryForCreator } from '@/domain/streamHistory'
 import { Button, SectionTitle } from '@/ui'
@@ -26,13 +26,15 @@ export function CreatorDetailScreen({
   onBack,
   onEditCreator,
   onRecordPayment,
+  onReversePayment,
 }: {
   creator: Creator
   onBack: () => void
   /** Module 4's add/edit modal. Disabled until it exists — task 3.13. */
   onEditCreator?: (creator: Creator) => void
-  /** Module 6's record payment modal. Disabled until it exists — task 3.14. */
   onRecordPayment?: (creator: Creator) => void
+  /** Offers to undo one of this creator's payments. */
+  onReversePayment?: (payment: Payment) => void
 }) {
   const streamHistory = useMemo(
     () => getStreamHistoryForCreator(allStreams, creator.id),
@@ -77,7 +79,7 @@ export function CreatorDetailScreen({
 
         <div>
           <PaymentProgressPanel creator={creator} />
-          <PaymentHistoryTable creator={creator} />
+          <PaymentHistoryTable creator={creator} onReversePayment={onReversePayment} />
         </div>
       </section>
     </div>

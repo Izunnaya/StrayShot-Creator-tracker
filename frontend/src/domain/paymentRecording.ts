@@ -31,6 +31,7 @@ export type PaymentProblem =
   | 'amount-unreadable'
   | 'amount-not-positive'
   | 'date-missing'
+  | 'date-unreadable'
   | 'date-in-future'
   | 'method-missing'
 
@@ -50,19 +51,58 @@ export interface PaymentDraftReview {
 }
 
 /**
+ * Whether a string is a date that exists.
+ *
+ * Dates are compared as strings elsewhere in this module, which is exact for
+ * ISO dates and nonsense for anything else: "2026-02-30" sorts before
+ * "2026-09-10" perfectly happily while being a day that never happened. The
+ * date input in the modal will not produce one, but this rule also has to
+ * hold for anything the API sends, so the check belongs here rather than
+ * being assumed of the caller.
+ */
+function isCalendarDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+
+  const [year, month, day] = value.split('-').map(Number) as [number, number, number]
+  const asDate = new Date(Date.UTC(year, month - 1, day))
+
+  // A date that rolled over — 30 February becoming 2 March — is not the date
+  // it was written as.
+  return (
+    asDate.getUTCFullYear() === year &&
+    asDate.getUTCMonth() === month - 1 &&
+    asDate.getUTCDate() === day
+  )
+}
+
+/**
+ * What counts as an amount someone has typed: an optional sign, an optional
+ * currency symbol, then either plain digits or digits grouped in threes by
+ * commas, with an optional decimal part.
+ *
+ * The grouping is checked rather than tolerated. "1,2" is not an amount
+ * anyone means, and stripping its comma first would turn a typo into a
+ * confident $12.
+ */
+const TYPED_AMOUNT = /^-?\$?\s*(?:(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?|\.\d+)$/
+
+/**
  * Reads an amount a person typed into cents.
  *
  * Accepts what people actually type — a currency symbol, thousands
- * separators, trailing spaces — and rejects anything it cannot read rather
- * than guessing, since a misread amount is worse than a rejected one.
- * Returns null when there is no number in there at all.
+ * separators, surrounding spaces — and refuses anything it cannot read rather
+ * than guessing, since a misread amount is worse than a rejected one. The
+ * syntax is checked before any separator is removed, so a malformed amount
+ * can never be normalised into a different, valid-looking one.
+ *
+ * Returns null when there is no amount in there to read.
  */
 export function parseAmountToCents(typedAmount: string): number | null {
-  const cleaned = typedAmount.trim().replace(/[$,\s]/g, '')
-  if (cleaned === '') return null
-  if (!/^-?\d*\.?\d*$/.test(cleaned)) return null
+  const trimmed = typedAmount.trim()
+  if (!TYPED_AMOUNT.test(trimmed)) return null
 
-  const asNumber = Number(cleaned)
+  // Safe now: the only separators left are ones the pattern allowed.
+  const asNumber = Number(trimmed.replace(/[$,\s]/g, ''))
   if (!Number.isFinite(asNumber)) return null
 
   return Math.round(asNumber * 100)
@@ -80,8 +120,10 @@ export function reviewPaymentDraft(
   else if (amountInCents === null) problems.push('amount-unreadable')
   else if (amountInCents <= 0) problems.push('amount-not-positive')
 
-  if (draft.paidOn.trim() === '') problems.push('date-missing')
-  else if (draft.paidOn > today) problems.push('date-in-future')
+  const paidOn = draft.paidOn.trim()
+  if (paidOn === '') problems.push('date-missing')
+  else if (!isCalendarDate(paidOn)) problems.push('date-unreadable')
+  else if (paidOn > today) problems.push('date-in-future')
 
   if (draft.method.trim() === '') problems.push('method-missing')
 
@@ -113,7 +155,7 @@ export function buildPayment(
   details: { id: number; recordedBy: string },
 ): Payment {
   const amountInCents = parseAmountToCents(draft.amount)
-  if (amountInCents === null) {
+  if (amountInCents === null || amountInCents <= 0) {
     throw new Error('buildPayment was given a draft that never passed review')
   }
 

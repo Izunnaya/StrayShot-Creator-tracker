@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from '@/App'
 
 /**
@@ -49,11 +49,25 @@ describe('recording a payment', () => {
   it('keeps exact cents rather than rounding them away', async () => {
     const user = await openTheFirstOutstandingRow()
 
+    // The modal names who is being paid, so the record can be found again.
+    const paidCreator = dialog().getByText(/·/).textContent!.split('·')[0]!.trim()
+
     await user.type(dialog().getByLabelText('Amount paid in dollars'), '100.49')
     await user.click(dialog().getByRole('button', { name: 'Save payment' }))
 
-    // 47,000 + 100.49, shown to the dollar in the summary strip.
+    // The summary strip rounds to the dollar, so on its own it would look
+    // identical if the cents had been dropped.
     expect(screen.getByText('$47,100')).toBeTruthy()
+
+    // The payment history does not round, so this is where the cents show.
+    await user.click(
+      within(screen.getByRole('table', { name: 'Creator performance' })).getByRole('button', {
+        name: paidCreator,
+      }),
+    )
+
+    expect(screen.getByText('$100.49')).toBeTruthy()
+    expect(screen.getByText(/\$3,300\.49 of \$4,800\.00 paid/)).toBeTruthy()
   })
 
   it('says what the balance becomes before anything is saved', async () => {
@@ -101,6 +115,26 @@ describe('recording a payment', () => {
     await user.click(dialog().getByRole('button', { name: /Pay full balance/ }))
 
     expect(dialog().getByRole('status').textContent).toMatch(/balance closed/)
+  })
+
+  it('dates the payment when the modal opens, not when the app started', () => {
+    // A dashboard left open overnight: yesterday when it rendered, today by
+    // the time someone records a payment on it. fireEvent rather than
+    // user-event here, because user-event waits on timers that are faked.
+    vi.useFakeTimers()
+    try {
+      vi.setSystemTime(new Date(2026, 8, 10, 23, 55))
+      render(<App />)
+
+      vi.setSystemTime(new Date(2026, 8, 11, 0, 5))
+      fireEvent.click(screen.getAllByRole('button', { name: /Record payment/ })[0]!)
+
+      const datePaid = dialog().getByLabelText('Date paid') as HTMLInputElement
+      expect(datePaid.value).toBe('2026-09-11')
+      expect(datePaid.max).toBe('2026-09-11')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('closes on Escape without recording anything', async () => {

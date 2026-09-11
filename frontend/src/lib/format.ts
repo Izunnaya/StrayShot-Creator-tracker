@@ -15,7 +15,12 @@ const CENTS_PER_DOLLAR = 100
 
 /** 480000 -> "$4,800". Whole dollars; the design never shows cents on totals. */
 export function formatMoney(amountInCents: number): string {
-  return '$' + Math.round(amountInCents / CENTS_PER_DOLLAR).toLocaleString('en-US')
+  return (amountInCents / CENTS_PER_DOLLAR).toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })
 }
 
 /** 10049 -> "$100.49". Exact amounts, for records read against a statement. */

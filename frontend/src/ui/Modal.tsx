@@ -32,6 +32,9 @@ export function Modal({
 }) {
   const panel = useRef<HTMLDivElement>(null)
 
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null
     const { overflow } = document.body.style
@@ -45,7 +48,7 @@ export function Modal({
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        onClose()
+        onCloseRef.current()
         return
       }
       if (event.key !== 'Tab') return
@@ -83,7 +86,7 @@ export function Modal({
       document.body.style.overflow = overflow
       previouslyFocused?.focus()
     }
-  }, [onClose])
+  }, [])
 
   return (
     <div
@@ -136,11 +139,9 @@ export function Modal({
  */
 function focusableWithin(container: HTMLElement | null): HTMLElement[] {
   if (!container) return []
-  return [
-    ...container.querySelectorAll<HTMLElement>(
-      'a[href], button, input, select, textarea, [tabindex]',
-    ),
-  ].filter(isTabReachable)
+  return Array.from(
+    container.querySelectorAll<HTMLElement>('a[href], button, input, select, textarea, [tabindex]'),
+  ).filter(isTabReachable)
 }
 
 function isTabReachable(element: HTMLElement): boolean {

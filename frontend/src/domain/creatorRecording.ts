@@ -250,7 +250,9 @@ export function buildCreator(
     throw new Error('buildCreator was given a draft that never passed review')
   }
 
-  const fallbackCampaignId = details.campaigns[0]?.id ?? 0
+    /* A prospect has no deal yet, so it has no campaign. Zero is the id no
++     campaign has, and getCampaignName renders it as "No campaign". */
+  const unattachedCampaignId = 0
 
   return {
     id: details.id,
@@ -258,7 +260,7 @@ export function buildCreator(
     email: draft.email.trim(),
     platform: draft.platform,
     creatorCode: draft.creatorCode.trim().toUpperCase(),
-    campaignId: parseWholeNumber(draft.campaignId) ?? fallbackCampaignId,
+    campaignId: parseWholeNumber(draft.campaignId) ?? unattachedCampaignId,
 
     streamsCommitted: review.streamsCommitted ?? 0,
     streamsDelivered: 0,

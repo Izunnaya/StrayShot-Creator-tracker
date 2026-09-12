@@ -107,3 +107,62 @@ describe('returning from a creator', () => {
     ).toBe('true')
   })
 })
+
+describe('what the headline figures answer', () => {
+  /* Campaign is a scope and status is a lens: the figures say which campaign
+     they are for, and the table below says which creators are being looked
+     at. Q20. */
+
+  it('follows the campaign the figures are for', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    expect(screen.getByText('$47,000')).toBeTruthy()
+
+    await user.click(screen.getByRole('button', { name: /Season 2 Launch/ }))
+
+    expect(screen.getByText('$28,700')).toBeTruthy()
+  })
+
+  it('stays put while the status filter narrows the table under it', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /^Prospect/ }))
+
+    /* Every prospect has nothing agreed and nothing paid, so following the
+       status filter here read "$0 paid of $0 committed" -- a campaign that
+       looks broken rather than a slice that happens to be empty. */
+    expect(screen.getByText('$47,000')).toBeTruthy()
+    expect(screen.queryByText('$0')).toBeNull()
+  })
+})
+
+describe('a campaign against its budget', () => {
+  it('shows what is committed once a single campaign is in view', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /Clan Wars Update/ }))
+
+    expect(screen.getByText(/\$20,900 committed of \$22,000 budget/)).toBeTruthy()
+    expect(screen.getByText('$1,100 left to commit')).toBeTruthy()
+  })
+
+  it('says when a campaign has committed past it', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /Season 2 Launch/ }))
+
+    // $34,300 of deals against a $30,000 budget, which nothing on screen
+    // reported until this panel existed.
+    expect(screen.getByText('$4,300 over budget')).toBeTruthy()
+  })
+
+  it('is absent with every campaign at once, where there is no one budget', () => {
+    render(<App />)
+
+    expect(screen.queryByText(/committed of/)).toBeNull()
+  })
+})

@@ -4,8 +4,9 @@ Answers to open questions from the master checklist, with the reasoning behind
 them. Each entry says what was ruled out as well as what was chosen, so a later
 reader can tell a deliberate trade-off from an oversight.
 
-These four were delegated rather than answered directly. Any of them can be
-overruled — the cost of doing so is noted in each.
+The first five were delegated rather than answered directly; Q7 and Q20 were
+answered by the team. Any of them can be overruled — the cost of doing so is
+noted in each.
 
 ---
 
@@ -68,6 +69,53 @@ ledger that must show reversals rather than quietly netting them out.
 **Ruled out:** edit in place; soft delete or void flags.
 **Reversible:** expensive after the ledger and any real data exist.
 
+## Q7 — Committing past a campaign budget is allowed, and shown
+
+**Decided:** a campaign whose agreed deals exceed its budget saves, and says
+so. The dashboard shows committed against budget whenever a single campaign is
+in view, and the campaign form says what is already committed while the budget
+is being typed. Nothing refuses a deal or an edit for being over.
+
+This follows Q5, and for the same reason. A signed deal is a fact; refusing to
+record it does not unsign it, it only means the tracker disagrees with what the
+team has actually agreed. The escape hatch from a hard block is typing a larger
+budget, which corrupts the very figure the block was protecting.
+
+A block would also be unescapable in practice. A budget is a campaign-level
+total but deals are saved one creator at a time, so the rule would have to fire
+in the creator form on the strength of other creators' records — and lowering a
+budget below what is already committed would then leave every creator on that
+campaign unsaveable, down to correcting an email address.
+
+The budget was collected and displayed nowhere before this, so going over was
+silent rather than permitted. The fixture data has been over on Season 2 Launch
+all along — $34,300 committed against $30,000 — and nothing on screen said so.
+
+**Ruled out:** refusing to save a deal that takes a campaign over budget, and
+refusing to lower a budget below what is committed.
+**Reversible:** yes. `getCampaignBudgetPosition` already computes the overage,
+so a block would be a guard at a save site rather than new arithmetic.
+
+## Q20 — The headline figures follow the campaign, not the status filter
+
+**Decided:** the dashboard's four summary figures are scoped by the campaign
+chips and unaffected by the status chips.
+
+Campaign is a scope and status is a lens: the figures say which campaign they
+describe, and the table below says which of its creators are being looked at.
+The application already worked this way everywhere else — the status chip
+counts and both follow-up panels were scoped to the campaign only — so the
+summary strip was the one place where status changed what the numbers meant.
+
+Selecting Prospects made the strip read "$0 paid of $0 committed", which looks
+like a broken campaign rather than an empty slice, and took away the
+denominator the filtered table is being read against.
+
+**Ruled out:** totals that follow both filters, on the argument that what is
+shown should be what is totalled.
+**Reversible:** yes, one call site — `filterCreatorsByCampaign` back to
+`filterCreators`.
+
 ## Q8 — One settlement currency, money stored in minor units
 
 **Decided:** contracts and payments are all in USD for now. Money is stored as
@@ -120,12 +168,14 @@ would need to change.
 
 ## What these cost to implement
 
-| Change                                                         | Where                                          |
-| -------------------------------------------------------------- | ---------------------------------------------- |
-| `currentTeamMember` stub, read-only in the modal               | Module 6                                       |
-| `getOverpaymentAmount`, warning copy, balance display          | `creatorCalculations`, Module 6                |
-| `reversesPaymentId` on `Payment`, negative-amount validation   | `data/types`, Module 6, Module 7               |
-| Money as integer cents through fixtures, domain and formatters | `data/fixtures`, `lib/format`, all money tests |
+| Change                                                           | Where                                          |
+| ---------------------------------------------------------------- | ---------------------------------------------- |
+| `currentTeamMember` stub, read-only in the modal                 | Module 6                                       |
+| `getOverpaymentAmount`, warning copy, balance display            | `creatorCalculations`, Module 6                |
+| `reversesPaymentId` on `Payment`, negative-amount validation     | `data/types`, Module 6, Module 7               |
+| `getCampaignBudgetPosition`, budget panel, live line in the form | `campaignBudget`, Module 1, dashboard          |
+| Summary scoped by campaign alone                                 | `CampaignOverviewScreen`                       |
+| Money as integer cents through fixtures, domain and formatters   | `data/fixtures`, `lib/format`, all money tests |
 
 The cents change touches the most files and is worth doing before the record
 payment form exists, so the first thing that writes money writes it correctly.

@@ -221,6 +221,7 @@ export default function App() {
       {campaignBeingEdited && (
         <CampaignModal
           campaigns={campaigns}
+          creators={creators}
           editing={campaignBeingEdited === 'new' ? undefined : campaignBeingEdited}
           onSave={saveCampaign}
           onClose={() => setCampaignBeingEdited(null)}

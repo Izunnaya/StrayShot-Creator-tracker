@@ -162,14 +162,35 @@ describe('editing a creator', () => {
     expect(screen.getByText('4,210')).toBeTruthy()
   })
 
-  it('records that an invite was sent', async () => {
+  it('shows the invite state a creator already has', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    // QuietStorm has never been invited.
     await user.click(creatorTable().getByRole('button', { name: 'QuietStorm' }))
     await user.click(screen.getByRole('button', { name: 'Edit' }))
 
     expect(dialog().getByText('claimed')).toBeTruthy()
+  })
+
+  it('updates the form itself when an invite is sent from inside it', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    // A creator added here starts with no invite sent, unlike the fixtures.
+    await user.click(screen.getByRole('button', { name: '+ Add creator' }))
+    await fillIdentity(user)
+    await user.click(dialog().getByRole('button', { name: 'Save as prospect' }))
+
+    await user.click(creatorTable().getByRole('button', { name: 'AshFall' }))
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+    expect(dialog().getByText('not sent')).toBeTruthy()
+
+    await user.click(dialog().getByRole('button', { name: 'Send invite' }))
+
+    // The form is looking at the list, not at a copy taken when it opened.
+    expect(dialog().getByText('sent')).toBeTruthy()
+    expect(dialog().getByRole('button', { name: 'Resend' })).toBeTruthy()
+    expect(dialog().queryByRole('button', { name: 'Send invite' })).toBeNull()
   })
 })

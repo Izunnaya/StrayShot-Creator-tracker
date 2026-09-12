@@ -38,14 +38,25 @@ export default function App() {
   const [paymentBeingReversed, setPaymentBeingReversed] = useState<Payment | null>(null)
   /** null while closed; a campaign while editing; 'new' while creating. */
   const [campaignBeingEdited, setCampaignBeingEdited] = useState<Campaign | 'new' | null>(null)
-  /** null while closed; a creator while editing; 'new' while adding. */
-  const [creatorBeingEdited, setCreatorBeingEdited] = useState<Creator | 'new' | null>(null)
+  /** null while closed; a creator's id while editing; 'new' while adding. */
+  const [creatorBeingEditedId, setCreatorBeingEditedId] = useState<number | 'new' | null>(null)
 
   const filterState = useCreatorFilterSelection()
   const sortState = useCreatorSortSelection()
 
   const creatorInDetail = creators.find((creator) => creator.id === selectedCreatorId) ?? null
   const creatorBeingPaid = creators.find((creator) => creator.id === creatorBeingPaidId) ?? null
+
+  /**
+   * Held by id, like every other open record, and looked up on each render.
+   * Keeping the object would mean the form showing the creator as they were
+   * when it opened — sending an invite from inside it would update the list
+   * underneath and leave the form still offering to send it.
+   */
+  const creatorBeingEdited =
+    creatorBeingEditedId === 'new'
+      ? 'new'
+      : (creators.find((creator) => creator.id === creatorBeingEditedId) ?? null)
 
   function recordPayment(draft: PaymentDraft) {
     if (!creatorBeingPaid) return
@@ -96,7 +107,7 @@ export default function App() {
           )
         : [...current, buildCreator(draft, { id: nextCreatorId(current), campaigns })],
     )
-    setCreatorBeingEdited(null)
+    setCreatorBeingEditedId(null)
   }
 
   /** Sending is Module 8's work; this records that it went. */
@@ -120,14 +131,14 @@ export default function App() {
 
   return (
     <div className="grain min-h-screen">
-      <AppMasthead activeTab="overview" onAddCreator={() => setCreatorBeingEdited('new')} />
+      <AppMasthead activeTab="overview" onAddCreator={() => setCreatorBeingEditedId('new')} />
 
       {creatorInDetail ? (
         <CreatorDetailScreen
           creator={creatorInDetail}
           campaignName={getCampaignName(campaigns, creatorInDetail.campaignId)}
           onBack={() => setSelectedCreatorId(null)}
-          onEditCreator={setCreatorBeingEdited}
+          onEditCreator={(creator) => setCreatorBeingEditedId(creator.id)}
           onRecordPayment={(creator) => setCreatorBeingPaidId(creator.id)}
           onReversePayment={setPaymentBeingReversed}
         />
@@ -164,7 +175,7 @@ export default function App() {
           editing={creatorBeingEdited === 'new' ? undefined : creatorBeingEdited}
           onSave={saveCreator}
           onSendInvite={sendInvite}
-          onClose={() => setCreatorBeingEdited(null)}
+          onClose={() => setCreatorBeingEditedId(null)}
         />
       )}
 

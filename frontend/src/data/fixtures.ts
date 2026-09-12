@@ -104,7 +104,10 @@ export const creators: Creator[] = [
     id: 3,
     name: 'PixelMara',
     email: 'pixelmara@creators.gg',
-    rateModel: 'per-stream',
+    /* A flat fee for the whole deal, not a rate per stream: $3,200 does not
+       divide into three whole-cent streams, which is why the per-stream
+       figure here used to be $1,067 and the total a dollar short of it. */
+    rateModel: 'flat-fee',
     platform: 'Twitch',
     creatorCode: 'MARA',
     campaignId: 2,
@@ -114,7 +117,7 @@ export const creators: Creator[] = [
     peakConcurrentViewers: 3900,
     installsAttributed: 2140,
     contractedAmountInCents: 320000,
-    agreedRateInCents: 106700,
+    agreedRateInCents: 320000,
     audienceSize: '188K',
     channelUrl: 'twitch.tv/pixelmara',
     portalInviteState: 'claimed',

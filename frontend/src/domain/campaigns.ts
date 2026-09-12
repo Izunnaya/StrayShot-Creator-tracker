@@ -105,8 +105,14 @@ export function reviewCampaignDraft(
 }
 
 export function buildCampaign(draft: CampaignDraft, details: { id: number }): Campaign {
-  const review = reviewCampaignDraft(draft, [])
-  if (review.totalBudgetInCents === null || review.targetCostPerInstallInCents === null) {
+  const { canSave, totalBudgetInCents, targetCostPerInstallInCents } = reviewCampaignDraft(
+    draft,
+    [],
+  )
+
+  /* canSave covers both money fields already; naming them is what lets the
+     compiler see they are not null below. */
+  if (!canSave || totalBudgetInCents === null || targetCostPerInstallInCents === null) {
     throw new Error('buildCampaign was given a draft that never passed review')
   }
 
@@ -115,8 +121,8 @@ export function buildCampaign(draft: CampaignDraft, details: { id: number }): Ca
     name: draft.name.trim(),
     startDate: draft.startDate.trim(),
     endDate: draft.endDate.trim(),
-    totalBudgetInCents: review.totalBudgetInCents,
-    targetCostPerInstallInCents: review.targetCostPerInstallInCents,
+    totalBudgetInCents,
+    targetCostPerInstallInCents,
   }
 }
 

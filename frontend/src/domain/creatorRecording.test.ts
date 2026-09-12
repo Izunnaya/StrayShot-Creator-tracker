@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { creators as fixtureCreators } from '@/data/fixtures'
 import { createTestCampaign, createTestCreator } from '@/testing/createTestCreator'
 import { getLifecycleStatus } from './creatorCalculations'
 import {
@@ -229,5 +230,27 @@ describe('editing an existing creator', () => {
 describe('the tracking link', () => {
   it('is the code, lowercased, on the public page', () => {
     expect(getTrackingLink({ creatorCode: 'VEXA' })).toBe('strayshot.game/r/vexa')
+  })
+})
+
+describe('the fixture creators', () => {
+  it('agree with their own rate model about what the deal is worth', () => {
+    /* Editing a creator recomputes the contracted amount from the rate, so a
+       fixture where the two disagree changes the money the moment anyone
+       opens and saves that record. PixelMara used to: $1,067 a stream across
+       three streams is $3,201, stored as $3,200. */
+    for (const creator of fixtureCreators) {
+      expect({
+        creator: creator.name,
+        contracted: creator.contractedAmountInCents,
+      }).toEqual({
+        creator: creator.name,
+        contracted: getContractedAmountInCents(
+          creator.rateModel ?? 'per-stream',
+          creator.agreedRateInCents,
+          creator.streamsCommitted,
+        ),
+      })
+    }
   })
 })

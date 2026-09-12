@@ -9,6 +9,7 @@ import {
   emptyCreatorDraft,
   getContractedAmountInCents,
   getTrackingLink,
+  NO_CAMPAIGN_ID,
   reviewCreatorDraft,
   type CreatorDraft,
 } from './creatorRecording'
@@ -38,7 +39,7 @@ const complete = (overrides: Partial<CreatorDraft> = {}): CreatorDraft => ({
 
 describe('step one, who they are', () => {
   it('is enough on its own: a name and an email make a prospect', () => {
-    const review = reviewCreatorDraft(identityOnly(), { creators: existingCreators })
+    const review = reviewCreatorDraft(identityOnly(), { creators: existingCreators, campaigns })
 
     expect(review.canSave).toBe(true)
     expect(review.completeByStep).toEqual({ identity: true, deal: false, payment: false })
@@ -46,7 +47,8 @@ describe('step one, who they are', () => {
 
   it('will not save without a name or a readable email', () => {
     const problemsFor = (overrides: Partial<CreatorDraft>) =>
-      reviewCreatorDraft(identityOnly(overrides), { creators: existingCreators }).problems
+      reviewCreatorDraft(identityOnly(overrides), { creators: existingCreators, campaigns })
+        .problems
 
     expect(problemsFor({ name: '  ' })).toContain('name-missing')
     expect(problemsFor({ email: '' })).toContain('email-missing')
@@ -57,7 +59,7 @@ describe('step one, who they are', () => {
 
 describe('step two, the deal', () => {
   it('is complete when the campaign, code, rate and commitment are all there', () => {
-    const review = reviewCreatorDraft(complete(), { creators: existingCreators })
+    const review = reviewCreatorDraft(complete(), { creators: existingCreators, campaigns })
 
     expect(review.canSave).toBe(true)
     expect(review.completeByStep.deal).toBe(true)
@@ -67,6 +69,7 @@ describe('step two, the deal', () => {
     // Someone typed a code and stopped. The rest of the deal is now required.
     const review = reviewCreatorDraft(identityOnly({ creatorCode: 'VEXA' }), {
       creators: existingCreators,
+      campaigns,
     })
 
     expect(review.problems).toEqual(['campaign-missing', 'rate-missing', 'streams-missing'])
@@ -76,6 +79,7 @@ describe('step two, the deal', () => {
   it('refuses a code another creator already has', () => {
     const review = reviewCreatorDraft(complete({ creatorCode: 'nova' }), {
       creators: existingCreators,
+      campaigns,
     })
 
     expect(review.problems).toEqual(['code-taken'])
@@ -84,6 +88,7 @@ describe('step two, the deal', () => {
   it('lets a creator keep their own code while being edited', () => {
     const review = reviewCreatorDraft(complete({ creatorCode: 'NOVA' }), {
       creators: existingCreators,
+      campaigns,
       editingId: 9,
     })
 
@@ -92,7 +97,8 @@ describe('step two, the deal', () => {
 
   it('refuses a code that would not survive being read off a stream', () => {
     const problemsFor = (creatorCode: string) =>
-      reviewCreatorDraft(complete({ creatorCode }), { creators: existingCreators }).problems
+      reviewCreatorDraft(complete({ creatorCode }), { creators: existingCreators, campaigns })
+        .problems
 
     expect(problemsFor('V')).toContain('code-unreadable')
     expect(problemsFor('VEXARUNNER')).toContain('code-unreadable')
@@ -103,7 +109,7 @@ describe('step two, the deal', () => {
   it('refuses a delivery window that ends before it starts', () => {
     const review = reviewCreatorDraft(
       complete({ deliveryWindowStart: '2026-09-01', deliveryWindowEnd: '2026-08-01' }),
-      { creators: existingCreators },
+      { creators: existingCreators, campaigns },
     )
 
     expect(review.problems).toEqual(['window-backwards'])
@@ -112,6 +118,7 @@ describe('step two, the deal', () => {
   it('refuses window dates that never happened', () => {
     const review = reviewCreatorDraft(complete({ deliveryWindowEnd: '2026-02-30' }), {
       creators: existingCreators,
+      campaigns,
     })
 
     expect(review.problems).toEqual(['window-unreadable'])
@@ -120,10 +127,63 @@ describe('step two, the deal', () => {
   it('sorts problems by the step they belong to', () => {
     const review = reviewCreatorDraft(complete({ name: '', creatorCode: 'nova' }), {
       creators: existingCreators,
+      campaigns,
     })
 
     expect(review.problemsByStep.identity).toEqual(['name-missing'])
     expect(review.problemsByStep.deal).toEqual(['code-taken'])
+  })
+})
+
+describe('the campaign a deal belongs to', () => {
+  /* The field is a select, so these do not come from someone choosing badly.
+     They come from a campaign being removed under a saved deal, or from a
+     caller of this module -- and a creator pointing at a campaign that is not
+     there is judged, filtered and totalled against nothing. */
+  const reviewWith = (campaignId: string) =>
+    reviewCreatorDraft(complete({ campaignId }), { creators: existingCreators, campaigns })
+
+  it('refuses an id that no campaign answers to', () => {
+    expect(reviewWith('999').problems).toEqual(['campaign-unknown'])
+    expect(reviewWith('999').canSave).toBe(false)
+  })
+
+  it('refuses text that is not an id, rather than reading it as no campaign', () => {
+    expect(reviewWith('abc').problems).toEqual(['campaign-unknown'])
+    expect(reviewWith('0').problems).toEqual(['campaign-unknown'])
+  })
+
+  it('accepts the one campaign that does exist', () => {
+    expect(reviewWith('1').canSave).toBe(true)
+    expect(reviewWith('1').campaignId).toBe(1)
+  })
+
+  it('will not save a creator against a campaign that is not there', () => {
+    expect(() => buildCreator(complete({ campaignId: '999' }), { id: 20, campaigns })).toThrow()
+    expect(() => buildCreator(complete({ campaignId: 'abc' }), { id: 20, campaigns })).toThrow()
+  })
+
+  it('leaves an edited creator where they were rather than following a dangling id', () => {
+    const existing = createTestCreator({ id: 5, campaignId: 1 })
+
+    const updated = applyDraftToCreator(
+      existing,
+      { ...draftFromCreator(existing), campaignId: '999' },
+      { campaigns },
+    )
+
+    expect(updated.campaignId).toBe(1)
+  })
+
+  it('reopens a prospect with no campaign chosen, and saves them again', () => {
+    // The sentinel is not an id anything answers to, so a form showing it
+    // would refuse to save a prospect nobody had touched.
+    const prospect = buildCreator(identityOnly(), { id: 20, campaigns })
+    expect(prospect.campaignId).toBe(NO_CAMPAIGN_ID)
+
+    const draft = draftFromCreator(prospect)
+    expect(draft.campaignId).toBe('')
+    expect(reviewCreatorDraft(draft, { creators: [], campaigns }).canSave).toBe(true)
   })
 })
 
@@ -211,14 +271,20 @@ describe('editing an existing creator', () => {
   it('survives a round trip back through review', () => {
     const draft = draftFromCreator(existing)
 
-    expect(reviewCreatorDraft(draft, { creators: [existing], editingId: 5 }).canSave).toBe(true)
+    expect(
+      reviewCreatorDraft(draft, { creators: [existing], campaigns, editingId: 5 }).canSave,
+    ).toBe(true)
   })
 
   it('never touches what was measured rather than agreed', () => {
-    const updated = applyDraftToCreator(existing, {
-      ...draftFromCreator(existing),
-      name: 'Vexa Run',
-    })
+    const updated = applyDraftToCreator(
+      existing,
+      {
+        ...draftFromCreator(existing),
+        name: 'Vexa Run',
+      },
+      { campaigns },
+    )
 
     expect(updated.name).toBe('Vexa Run')
     expect(updated.streamsDelivered).toBe(2)

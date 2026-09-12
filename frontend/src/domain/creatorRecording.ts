@@ -47,11 +47,19 @@ export interface CreatorDraft {
 
 export type CreatorFormStep = 'identity' | 'deal' | 'payment'
 
+/**
+ * The campaign id a creator carries while they have no campaign: a prospect
+ * before the deal, or a deal whose campaign has gone. No campaign has it, and
+ * the screens read it as "No campaign".
+ */
+export const NO_CAMPAIGN_ID = 0
+
 export type CreatorProblem =
   | 'name-missing'
   | 'email-missing'
   | 'email-unreadable'
   | 'campaign-missing'
+  | 'campaign-unknown'
   | 'code-missing'
   | 'code-unreadable'
   | 'code-taken'
@@ -76,6 +84,12 @@ export interface CreatorDraftReview {
    * prospect, it is a creator whose deal is not finished.
    */
   dealStarted: boolean
+  /**
+   * The campaign this deal belongs to, once the draft names one that exists.
+   * null covers all three ways it can fail to: nothing typed, something that
+   * is not an id, and an id no campaign answers to.
+   */
+  campaignId: number | null
   /** What the deal is worth, once there is enough of one to say. */
   contractedAmountInCents: number
   agreedRateInCents: number | null
@@ -87,6 +101,7 @@ const PROBLEM_STEPS: Record<CreatorProblem, CreatorFormStep> = {
   'email-missing': 'identity',
   'email-unreadable': 'identity',
   'campaign-missing': 'deal',
+  'campaign-unknown': 'deal',
   'code-missing': 'deal',
   'code-unreadable': 'deal',
   'code-taken': 'deal',
@@ -113,7 +128,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function reviewCreatorDraft(
   draft: CreatorDraft,
-  context: { creators: Creator[]; editingId?: number },
+  context: { creators: Creator[]; campaigns: Campaign[]; editingId?: number },
 ): CreatorDraftReview {
   const problems: CreatorProblem[] = []
 
@@ -127,6 +142,7 @@ export function reviewCreatorDraft(
 
   // --- Step 2, the deal -----------------------------------------------------
   const code = draft.creatorCode.trim()
+  const campaignId = identifyCampaign(draft.campaignId, context.campaigns)
   const agreedRateInCents = parseDollarsToCents(draft.agreedRate)
   const streamsCommitted = parseWholeNumber(draft.streamsCommitted)
 
@@ -145,7 +161,12 @@ export function reviewCreatorDraft(
   ].some((field) => field.trim() !== '')
 
   if (dealStarted) {
+    /* The field is a select, so a value that names no campaign did not come
+       from someone choosing badly -- it came from a campaign being removed
+       under a saved deal, or from a caller of this module. Either way the
+       record must not be written pointing at a campaign that is not there. */
     if (draft.campaignId.trim() === '') problems.push('campaign-missing')
+    else if (campaignId === null) problems.push('campaign-unknown')
     if (code === '') problems.push('code-missing')
     if (draft.agreedRate.trim() === '') problems.push('rate-missing')
     if (draft.streamsCommitted.trim() === '') problems.push('streams-missing')
@@ -197,7 +218,7 @@ export function reviewCreatorDraft(
       identity: name !== '' && EMAIL.test(email),
       deal:
         problemsByStep.deal.length === 0 &&
-        draft.campaignId.trim() !== '' &&
+        campaignId !== null &&
         code !== '' &&
         agreedRateInCents !== null &&
         streamsCommitted !== null,
@@ -205,6 +226,7 @@ export function reviewCreatorDraft(
     },
     canSave: problems.length === 0 && name !== '' && EMAIL.test(email),
     dealStarted,
+    campaignId,
     contractedAmountInCents,
     agreedRateInCents,
     streamsCommitted,
@@ -229,6 +251,18 @@ export function getContractedAmountInCents(
   return streamsCommitted === null ? 0 : agreedRateInCents * streamsCommitted
 }
 
+/**
+ * The campaign a typed id names, or null if it names none.
+ *
+ * Existence is the whole test: a positive whole number is necessary and not
+ * sufficient, and NO_CAMPAIGN_ID belongs to no campaign by construction.
+ */
+function identifyCampaign(typed: string, campaigns: Campaign[]): number | null {
+  const id = parseWholeNumber(typed)
+  if (id === null || id === NO_CAMPAIGN_ID) return null
+  return campaigns.some((campaign) => campaign.id === id) ? id : null
+}
+
 function isCodeTaken(code: string, creators: Creator[], editingId?: number): boolean {
   return creators.some(
     (creator) =>
@@ -245,14 +279,10 @@ export function buildCreator(
   draft: CreatorDraft,
   details: { id: number; campaigns: Campaign[] },
 ): Creator {
-  const review = reviewCreatorDraft(draft, { creators: [] })
+  const review = reviewCreatorDraft(draft, { creators: [], campaigns: details.campaigns })
   if (!review.canSave) {
     throw new Error('buildCreator was given a draft that never passed review')
   }
-
-    /* A prospect has no deal yet, so it has no campaign. Zero is the id no
-+     campaign has, and getCampaignName renders it as "No campaign". */
-  const unattachedCampaignId = 0
 
   return {
     id: details.id,
@@ -260,7 +290,7 @@ export function buildCreator(
     email: draft.email.trim(),
     platform: draft.platform,
     creatorCode: draft.creatorCode.trim().toUpperCase(),
-    campaignId: parseWholeNumber(draft.campaignId) ?? unattachedCampaignId,
+    campaignId: review.campaignId ?? NO_CAMPAIGN_ID,
 
     streamsCommitted: review.streamsCommitted ?? 0,
     streamsDelivered: 0,
@@ -282,8 +312,12 @@ export function buildCreator(
 }
 
 /** Applies an edited draft to a creator, leaving everything measured alone. */
-export function applyDraftToCreator(creator: Creator, draft: CreatorDraft): Creator {
-  const review = reviewCreatorDraft(draft, { creators: [] })
+export function applyDraftToCreator(
+  creator: Creator,
+  draft: CreatorDraft,
+  details: { campaigns: Campaign[] },
+): Creator {
+  const review = reviewCreatorDraft(draft, { creators: [], campaigns: details.campaigns })
 
   return {
     ...creator,
@@ -291,7 +325,7 @@ export function applyDraftToCreator(creator: Creator, draft: CreatorDraft): Crea
     email: draft.email.trim(),
     platform: draft.platform,
     creatorCode: draft.creatorCode.trim().toUpperCase() || creator.creatorCode,
-    campaignId: parseWholeNumber(draft.campaignId) ?? creator.campaignId,
+    campaignId: review.campaignId ?? creator.campaignId,
     streamsCommitted: review.streamsCommitted ?? creator.streamsCommitted,
     contractedAmountInCents:
       review.agreedRateInCents === null
@@ -317,7 +351,9 @@ export function draftFromCreator(creator: Creator): CreatorDraft {
     contentLanguage: creator.contentLanguage ?? '',
     region: creator.region ?? '',
 
-    campaignId: String(creator.campaignId),
+    /* A prospect reopens with the campaign field empty, not with the
+       sentinel showing as an id nothing answers to. */
+    campaignId: creator.campaignId === NO_CAMPAIGN_ID ? '' : String(creator.campaignId),
     creatorCode: creator.creatorCode,
     rateModel: creator.rateModel ?? 'per-stream',
     agreedRate: creator.agreedRateInCents ? String(creator.agreedRateInCents / 100) : '',

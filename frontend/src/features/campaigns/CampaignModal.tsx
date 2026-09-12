@@ -29,8 +29,9 @@ const problemMessages: Record<CampaignProblem, string> = {
   'end-missing': 'Choose the date the campaign ends.',
   'dates-unreadable': 'Those dates cannot be read. Use the pickers, or type them as YYYY-MM-DD.',
   'end-before-start': 'The end date is before the start date.',
-  'budget-unreadable': 'Enter the budget as a number, such as 30000 or 30,000.',
-  'target-unreadable': 'Enter the target as a number, such as 3.50.',
+  'budget-unreadable': 'Enter the budget in dollars and cents, such as 30000 or 30,000.50.',
+  'target-unreadable':
+    'Enter the target in dollars and cents, such as 3.50. No fractions of a cent.',
 }
 
 const emptyDraft: CampaignDraft = {

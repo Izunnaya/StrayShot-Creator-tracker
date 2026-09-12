@@ -42,7 +42,8 @@ const problemMessages: Record<CreatorProblem, string> = {
   'code-unreadable': 'Codes are 2 to 8 letters or digits, with nothing in between.',
   'code-taken': 'Another creator already has that code.',
   'rate-missing': 'Enter the agreed rate.',
-  'rate-unreadable': 'Enter the rate as a number, such as 1800 or 1,800.50.',
+  'rate-unreadable':
+    'Enter the rate in dollars and cents, such as 1800 or 1,800.50. No fractions of a cent.',
   'streams-missing': 'Enter how many streams they have committed to.',
   'streams-unreadable': 'Streams committed has to be a whole number.',
   'hours-unreadable': 'Minimum duration has to be a number of hours, such as 2 or 1.5.',

@@ -202,6 +202,23 @@ describe('what the deal is worth', () => {
   })
 })
 
+describe('a rate typed to more than two decimal places', () => {
+  const reviewRate = (agreedRate: string) =>
+    reviewCreatorDraft(complete({ agreedRate }), { creators: existingCreators, campaigns })
+
+  it('is refused rather than rounded into a different rate', () => {
+    // $1,800.005 a stream, rounded up and multiplied by the commitment, is
+    // a dollar of contracted money nobody agreed to.
+    expect(reviewRate('1800.005').problems).toEqual(['rate-unreadable'])
+    expect(reviewRate('.005').problems).toEqual(['rate-unreadable'])
+  })
+
+  it('still reads everything anyone would actually type', () => {
+    expect(reviewRate('$1,800.50').agreedRateInCents).toBe(180_050)
+    expect(reviewRate('.5').agreedRateInCents).toBe(50)
+  })
+})
+
 describe('buildCreator', () => {
   it('saves a prospect with nothing but step one, and no money agreed', () => {
     const creator = buildCreator(identityOnly(), { id: 20, campaigns })

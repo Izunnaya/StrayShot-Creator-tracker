@@ -157,3 +157,26 @@ describe('draftFromCampaign', () => {
     expect(reviewCampaignDraft(draftFromCampaign(campaign), [campaign], 3).canSave).toBe(true)
   })
 })
+
+describe('money typed to more than two decimal places', () => {
+  /* Rounding it stores a figure nobody typed: a $3.505 target becomes $3.51
+     on the record, and the person who typed it is never told. */
+  it('is refused rather than rounded', () => {
+    expect(
+      reviewCampaignDraft(draft({ targetCostPerInstall: '3.505' }), existing).problems,
+    ).toEqual(['target-unreadable'])
+    expect(reviewCampaignDraft(draft({ totalBudget: '30000.001' }), existing).problems).toEqual([
+      'budget-unreadable',
+    ])
+  })
+
+  it('still reads everything anyone would actually type', () => {
+    const review = reviewCampaignDraft(
+      draft({ totalBudget: '$30,000.50', targetCostPerInstall: '.5' }),
+      existing,
+    )
+
+    expect(review.totalBudgetInCents).toBe(3_000_050)
+    expect(review.targetCostPerInstallInCents).toBe(50)
+  })
+})

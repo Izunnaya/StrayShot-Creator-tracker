@@ -141,9 +141,18 @@ export function draftFromCampaign(campaign: Campaign): CampaignDraft {
  * Money typed into a campaign field, in cents. Zero is allowed here — an
  * unfunded campaign is a real thing to set up — but nothing unreadable is.
  */
+/**
+ * Reads a typed dollar amount into cents, or null if it cannot be read.
+ *
+ * Two decimal places at most. A third is not a rounding problem to solve
+ * quietly -- $1.005 is not an amount anyone can be paid, and storing $1.01
+ * against it puts a figure on the record that nobody typed or agreed. The
+ * rounding left is only for binary floating point, where 10.29 * 100 does
+ * not land exactly on 1029.
+ */
 function parseDollarsToCents(typedAmount: string): number | null {
   const trimmed = typedAmount.trim()
-  if (!/^\$?\s*(?:(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?|\.\d+)$/.test(trimmed)) return null
+  if (!/^\$?\s*(?:(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?|\.\d{1,2})$/.test(trimmed)) return null
 
   const asNumber = Number(trimmed.replace(/[$,\s]/g, ''))
   return Number.isFinite(asNumber) ? Math.round(asNumber * 100) : null

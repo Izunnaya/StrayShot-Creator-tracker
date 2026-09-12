@@ -114,12 +114,44 @@ export function Modal({
   )
 }
 
-/** Everything inside the panel a person can Tab to, in document order. */
+/**
+ * Everything inside the panel a person can reach with Tab, in document order.
+ *
+ * A selector is only the first half of the question. Whether the browser will
+ * actually put focus somewhere depends on things CSS cannot ask about, and an
+ * element that refuses focus must not become the edge the cycle turns on --
+ * Tab there lands on nothing, and the trap has a hole in exactly the place it
+ * was supposed to be closed.
+ *
+ * Known limit: within a radio group only the checked radio is tab-reachable,
+ * and this does not model that. The consequence is a cycle that turns one
+ * control early, not focus escaping, which is not worth the machinery until
+ * something here uses radios.
+ */
 function focusableWithin(container: HTMLElement | null): HTMLElement[] {
   if (!container) return []
   return [
     ...container.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      'a[href], button, input, select, textarea, [tabindex]',
     ),
-  ]
+  ].filter(isTabReachable)
+}
+
+function isTabReachable(element: HTMLElement): boolean {
+  /* Taken out of the tab order deliberately, however focusable it stays to
+     script -- the panel itself is the reason that pattern exists here. */
+  if (element.tabIndex < 0) return false
+  if ('disabled' in element && element.disabled === true) return false
+  // A hidden input is a value being carried, not a control to land on.
+  if (element instanceof HTMLInputElement && element.type === 'hidden') return false
+  if (element.closest('[hidden], [inert]')) return false
+  return isRendered(element)
+}
+
+function isRendered(element: HTMLElement): boolean {
+  /* checkVisibility answers this properly in a browser: ancestors, collapsed
+     content, the lot. jsdom has no layout and no such method, so tests fall
+     back to what is legible without one. */
+  if (typeof element.checkVisibility === 'function') return element.checkVisibility()
+  return getComputedStyle(element).display !== 'none'
 }

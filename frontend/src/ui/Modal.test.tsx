@@ -78,6 +78,65 @@ describe('a dialog with nothing focusable in it', () => {
   })
 })
 
+describe('controls the browser will not focus', () => {
+  /* Each of these is matched by a plain "is it a control" selector but is not
+     in the tab order. Treating one as the first or last control puts the edge
+     of the cycle on something Tab cannot land on. */
+  const unreachable = (
+    <>
+      <button type="button" disabled>
+        Saving
+      </button>
+      <button type="button" tabIndex={-1}>
+        Roving
+      </button>
+      <input type="hidden" name="campaignId" value="1" />
+      <input aria-label="Reference" style={{ display: 'none' }} />
+      <div hidden>
+        <button type="button">Inside a hidden branch</button>
+      </div>
+    </>
+  )
+
+  it('skips them and focuses the one control that is really there', () => {
+    renderModal(
+      <>
+        {unreachable}
+        <input aria-label="Amount" />
+      </>,
+    )
+
+    expect(document.activeElement).toBe(screen.getByLabelText('Amount'))
+  })
+
+  it('turns the cycle on the real controls, not on them', async () => {
+    const user = userEvent.setup()
+    renderModal(
+      <>
+        {unreachable}
+        <input aria-label="Amount" />
+      </>,
+      <button type="button">Save</button>,
+    )
+
+    await user.tab()
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Save' }))
+
+    await user.tab()
+    expect(document.activeElement).toBe(screen.getByLabelText('Amount'))
+  })
+
+  it('leaves a dialog holding nothing else as good as empty', async () => {
+    const user = userEvent.setup()
+    const { panel } = renderModal(unreachable)
+
+    expect(document.activeElement).toBe(panel)
+
+    await user.tab()
+    expect(document.activeElement).toBe(panel)
+  })
+})
+
 describe('closing', () => {
   it('closes on Escape', async () => {
     const user = userEvent.setup()

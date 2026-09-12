@@ -37,7 +37,11 @@ export function Modal({
     const { overflow } = document.body.style
     document.body.style.overflow = 'hidden'
 
-    focusableWithin(panel.current)[0]?.focus()
+    /* The panel itself is the fallback: a dialog whose body happens to hold
+       nothing focusable would otherwise leave focus on whatever opened it,
+       out on the page behind. */
+    const initialFocus = focusableWithin(panel.current)[0] ?? panel.current
+    initialFocus?.focus()
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
@@ -47,7 +51,12 @@ export function Modal({
       if (event.key !== 'Tab') return
 
       const focusable = focusableWithin(panel.current)
-      if (focusable.length === 0) return
+      if (focusable.length === 0) {
+        // Nothing to move between, so Tab must not walk out to the page.
+        event.preventDefault()
+        panel.current?.focus()
+        return
+      }
 
       const first = focusable[0]!
       const last = focusable[focusable.length - 1]!
@@ -77,6 +86,7 @@ export function Modal({
     >
       <div
         ref={panel}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelId}

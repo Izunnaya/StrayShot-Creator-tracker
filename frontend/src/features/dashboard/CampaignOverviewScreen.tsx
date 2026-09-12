@@ -58,12 +58,7 @@ export function CampaignOverviewScreen({
   /** Edits whichever campaign the filter is currently narrowed to. */
   onEditCampaign?: (campaign: Campaign) => void
 }) {
-  const {
-    selection: filterSelection,
-    selectCampaign,
-    selectLifecycleStatus,
-    hasSpecificCampaignSelected,
-  } = filterState
+  const { selection: filterSelection, selectCampaign, selectLifecycleStatus } = filterState
   const { selection: sortSelection, handleColumnClick } = sortState
 
   /**
@@ -139,7 +134,7 @@ export function CampaignOverviewScreen({
           campaigns={campaigns}
           selectedCampaign={filterSelection.campaign}
           onSelectCampaign={selectCampaign}
-          canEditSelectedCampaign={hasSpecificCampaignSelected}
+          canEditSelectedCampaign={Boolean(selectedCampaign && onEditCampaign)}
           onCreateCampaign={onCreateCampaign}
           onEditSelectedCampaign={
             selectedCampaign && onEditCampaign ? () => onEditCampaign(selectedCampaign) : undefined

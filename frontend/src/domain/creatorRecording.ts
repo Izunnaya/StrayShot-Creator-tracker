@@ -291,7 +291,10 @@ export function applyDraftToCreator(creator: Creator, draft: CreatorDraft): Crea
     creatorCode: draft.creatorCode.trim().toUpperCase() || creator.creatorCode,
     campaignId: parseWholeNumber(draft.campaignId) ?? creator.campaignId,
     streamsCommitted: review.streamsCommitted ?? creator.streamsCommitted,
-    contractedAmountInCents: review.contractedAmountInCents || creator.contractedAmountInCents,
+    contractedAmountInCents:
+      review.agreedRateInCents === null
+        ? creator.contractedAmountInCents
+        : review.contractedAmountInCents,
     rateModel: draft.rateModel,
     agreedRateInCents: review.agreedRateInCents ?? creator.agreedRateInCents,
     audienceSize: draft.audienceSize.trim() || creator.audienceSize,

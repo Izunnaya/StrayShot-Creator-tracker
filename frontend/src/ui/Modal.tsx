@@ -32,8 +32,13 @@ export function Modal({
 }) {
   const panel = useRef<HTMLDivElement>(null)
 
+  /* Held in a ref so the effect below can run once. A dialog that tore down
+     and set itself up again every time its parent re-rendered with a new
+     onClose would pull focus back to its first control mid-typing. */
   const onCloseRef = useRef(onClose)
-  onCloseRef.current = onClose
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
 
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null

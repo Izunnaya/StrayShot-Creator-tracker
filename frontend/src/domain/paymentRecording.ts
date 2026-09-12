@@ -102,10 +102,33 @@ export function parseAmountToCents(typedAmount: string): number | null {
   if (!TYPED_AMOUNT.test(trimmed)) return null
 
   // Safe now: the only separators left are ones the pattern allowed.
-  const asNumber = Number(trimmed.replace(/[$,\s]/g, ''))
-  if (!Number.isFinite(asNumber)) return null
+  return readDecimalAsCents(trimmed.replace(/[$,\s]/g, ''))
+}
 
-  return Math.round(asNumber * 100)
+/**
+ * Reads a plain decimal string as whole cents, without it ever being a float.
+ *
+ * Multiplying by 100 and rounding looks equivalent and is not. 1.005 is held
+ * as a fraction under itself, so 1.005 * 100 lands below 100.5 and rounds
+ * down to 100 -- while 10.005 lands above 1000.5 and rounds up to 1001. The
+ * same half cent goes either way depending on where the binary value happens
+ * to fall, which is no rule at all. Reading the digits settles it once.
+ */
+function readDecimalAsCents(decimal: string): number | null {
+  const isNegative = decimal.startsWith('-')
+  const [whole = '', fraction = ''] = decimal.replace('-', '').split('.')
+
+  const cents = Number(whole || '0') * 100 + Number(fraction.slice(0, 2).padEnd(2, '0'))
+  // Beyond this, cents cannot be counted exactly, and a payment that cannot
+  // be counted is one to refuse rather than approximate.
+  if (!Number.isSafeInteger(cents)) return null
+
+  /* Half a cent or more rounds away from zero, so that a reversal is the
+     exact mirror of the payment it undoes rather than a cent off it. */
+  const roundsUp = (fraction[2] ?? '0') >= '5'
+  const magnitude = roundsUp ? cents + 1 : cents
+
+  return isNegative ? -magnitude : magnitude
 }
 
 export function reviewPaymentDraft(
@@ -161,9 +184,9 @@ export function buildPayment(
 
   return {
     id: details.id,
-    paidOn: draft.paidOn,
+    paidOn: draft.paidOn.trim(),
     amountInCents,
-    method: draft.method,
+    method: draft.method.trim(),
     reference: draft.reference.trim(),
     recordedBy: details.recordedBy,
   }

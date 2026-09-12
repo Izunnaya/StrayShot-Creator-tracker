@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { streams as allStreams } from '@/data/fixtures'
 import type { Campaign, Creator, Payment } from '@/data/types'
-import { DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS } from '@/domain/costPerInstallRating'
 import { getStreamHistoryForCreator } from '@/domain/streamHistory'
 import { Button, SectionTitle } from '@/ui'
 import { CreatorDetailHeader } from './components/CreatorDetailHeader'
@@ -56,9 +55,13 @@ export function CreatorDetailScreen({
    * The cost-per-install verdict is measured against this creator's own
    * campaign, not whatever the dashboard was filtered to when they were
    * opened. A creator only belongs to one campaign today — open question Q13.
+   *
+   * With no campaign there is no target, and no default stands in for one:
+   * the dashboard may fall back to one when it is deliberately showing every
+   * campaign at once (Q21), but a creator showing "No campaign" would be
+   * called good or bad against a figure that is not theirs.
    */
-  const targetCostPerInstallInCents =
-    campaign?.targetCostPerInstallInCents ?? DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS
+  const targetCostPerInstallInCents = campaign?.targetCostPerInstallInCents ?? null
   const campaignName = campaign?.name ?? 'No campaign'
 
   return (

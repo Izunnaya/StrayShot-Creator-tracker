@@ -27,8 +27,12 @@ export function CreatorDetailStatStrip({
   targetCostPerInstallInCents,
 }: {
   creator: Creator
-  /** The target from this creator's own campaign, not the dashboard filter. */
-  targetCostPerInstallInCents: number
+  /**
+   * The target from this creator's own campaign, not the dashboard filter,
+   * and null when they have no campaign: the figure still shows, the verdict
+   * does not.
+   */
+  targetCostPerInstallInCents: number | null
 }) {
   const costPerInstall = getCostPerInstall(creator)
   const rating = rateCostPerInstall(costPerInstall, targetCostPerInstallInCents)

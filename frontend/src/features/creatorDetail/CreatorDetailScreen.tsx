@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
-import { campaigns, streams as allStreams } from '@/data/fixtures'
-import { findCampaign } from '@/domain/campaigns'
-import type { Creator, Payment } from '@/data/types'
+import { streams as allStreams } from '@/data/fixtures'
+import type { Campaign, Creator, Payment } from '@/data/types'
 import { DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS } from '@/domain/costPerInstallRating'
 import { getStreamHistoryForCreator } from '@/domain/streamHistory'
 import { Button, SectionTitle } from '@/ui'
@@ -24,14 +23,23 @@ import { StreamHistoryTable } from './components/StreamHistoryTable'
  */
 export function CreatorDetailScreen({
   creator,
-  campaignName,
+  campaign,
   onBack,
   onEditCreator,
   onRecordPayment,
   onReversePayment,
 }: {
   creator: Creator
-  campaignName: string
+  /**
+   * The creator's campaign as it stands now, or undefined if it has gone.
+   *
+   * Passed in rather than looked up here: the shell holds the campaign list,
+   * and reading a static copy would show this creator's campaign name from
+   * one source and its cost-per-install target from another — so editing a
+   * target would rename the campaign on screen while judging the creator
+   * against the old figure.
+   */
+  campaign?: Campaign
   onBack: () => void
   /** Module 4's add/edit modal. Disabled until it exists — task 3.13. */
   onEditCreator?: (creator: Creator) => void
@@ -49,9 +57,9 @@ export function CreatorDetailScreen({
    * campaign, not whatever the dashboard was filtered to when they were
    * opened. A creator only belongs to one campaign today — open question Q13.
    */
-  const campaign = findCampaign(campaigns, creator.campaignId)
   const targetCostPerInstallInCents =
     campaign?.targetCostPerInstallInCents ?? DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS
+  const campaignName = campaign?.name ?? 'No campaign'
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 pb-10 pt-5 sm:px-6 md:gap-7 md:px-8 md:pb-12 md:pt-7">

@@ -170,6 +170,24 @@ describe('editing a campaign', () => {
     expect(screen.getByText('Season Two Relaunch')).toBeTruthy()
   })
 
+  it('judges a creator on their own screen against the edited target too', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await openTheEditFormForSeason2(user)
+
+    const target = dialog().getByLabelText('Target cost per install in dollars')
+    await user.clear(target)
+    await user.type(target, '0.40')
+    await user.click(dialog().getByRole('button', { name: 'Save changes' }))
+
+    await user.click(creatorTable().getByRole('button', { name: 'NovaKess' }))
+
+    // The detail screen reads the campaign the shell holds, not a static
+    // copy: name and verdict have to come from the same campaign.
+    expect(screen.getByText('Season 2 Launch')).toBeTruthy()
+    expect(screen.getByText('$0.76').className).toMatch(/text-bad/)
+  })
+
   it('changes the cost-per-install target everyone on it is judged against', async () => {
     const user = userEvent.setup()
     render(<App />)

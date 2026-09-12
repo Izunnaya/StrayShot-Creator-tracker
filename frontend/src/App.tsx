@@ -3,7 +3,12 @@ import { AppMasthead } from './components/layout/AppMasthead'
 import { campaigns as seedCampaigns, creators as seedCreators } from './data/fixtures'
 import { currentTeamMember } from './data/session'
 import type { Campaign, Creator, Payment } from './data/types'
-import { buildCampaign, getCampaignName, type CampaignDraft } from './domain/campaigns'
+import {
+  buildCampaign,
+  findCampaign,
+  getCampaignName,
+  type CampaignDraft,
+} from './domain/campaigns'
 import { applyDraftToCreator, buildCreator, type CreatorDraft } from './domain/creatorRecording'
 import { buildPayment, buildReversal, type PaymentDraft } from './domain/paymentRecording'
 import { CreatorDetailScreen } from './features/creatorDetail/CreatorDetailScreen'
@@ -136,7 +141,7 @@ export default function App() {
       {creatorInDetail ? (
         <CreatorDetailScreen
           creator={creatorInDetail}
-          campaignName={getCampaignName(campaigns, creatorInDetail.campaignId)}
+          campaign={findCampaign(campaigns, creatorInDetail.campaignId)}
           onBack={() => setSelectedCreatorId(null)}
           onEditCreator={(creator) => setCreatorBeingEditedId(creator.id)}
           onRecordPayment={(creator) => setCreatorBeingPaidId(creator.id)}

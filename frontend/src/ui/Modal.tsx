@@ -61,14 +61,20 @@ export function Modal({
       const first = focusable[0]!
       const last = focusable[focusable.length - 1]!
       const movingBackwards = event.shiftKey
+      const active = document.activeElement
 
-      if (movingBackwards && document.activeElement === first) {
-        event.preventDefault()
-        last.focus()
-      } else if (!movingBackwards && document.activeElement === last) {
-        event.preventDefault()
-        first.focus()
-      }
+      /* Watching only the two ends assumes focus is always on one of the
+         dialog's own controls. It need not be: the panel takes focus when
+         anyone clicks the heading or the dead space around it, a control
+         that had focus can be removed from under it, and the fallback puts
+         it there deliberately. From any of those, one Tab reaches the page
+         behind. So the move is worked out from wherever focus actually is
+         rather than only at the edges. */
+      event.preventDefault()
+      const nextInCycle = movingBackwards
+        ? [...focusable].reverse().find((candidate) => comesBefore(candidate, active))
+        : focusable.find((candidate) => comesBefore(active, candidate))
+      ;(nextInCycle ?? (movingBackwards ? last : first)).focus()
     }
 
     document.addEventListener('keydown', handleKeyDown)
@@ -146,6 +152,15 @@ function isTabReachable(element: HTMLElement): boolean {
   if (element instanceof HTMLInputElement && element.type === 'hidden') return false
   if (element.closest('[hidden], [inert]')) return false
   return isRendered(element)
+}
+
+/**
+ * Whether `node` sits earlier in the document than `other`, which is what
+ * "the next one along" means once focus can start from outside the ring.
+ */
+function comesBefore(node: Node | null, other: Node | null): boolean {
+  if (!node || !other) return false
+  return Boolean(node.compareDocumentPosition(other) & Node.DOCUMENT_POSITION_FOLLOWING)
 }
 
 function isRendered(element: HTMLElement): boolean {

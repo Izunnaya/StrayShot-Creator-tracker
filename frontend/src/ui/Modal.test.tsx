@@ -137,6 +137,72 @@ describe('controls the browser will not focus', () => {
   })
 })
 
+describe('focus that is not on a control of its own', () => {
+  /* Tab has to be worked out from wherever focus actually is. Watching only
+     the first and last control leaves every other starting point free to
+     Tab straight out of the dialog, and there are three ordinary ways to be
+     at one: clicking the heading, a control disappearing from under focus,
+     and the empty-dialog fallback. */
+
+  it('sends Tab from the panel itself to the first control', async () => {
+    const user = userEvent.setup()
+    const { panel } = renderModal(
+      <input aria-label="Amount" />,
+      <button type="button">Save</button>,
+    )
+
+    panel.focus() // what clicking the heading or the dead space around it does
+    await user.tab()
+
+    expect(document.activeElement).toBe(screen.getByLabelText('Amount'))
+  })
+
+  it('sends Shift+Tab from the panel itself to the last control', async () => {
+    const user = userEvent.setup()
+    const { panel } = renderModal(
+      <input aria-label="Amount" />,
+      <button type="button">Save</button>,
+    )
+
+    panel.focus()
+    await user.tab({ shift: true })
+
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Save' }))
+  })
+
+  it('pulls focus back in when it has drifted out to the page behind', async () => {
+    const user = userEvent.setup()
+    const { panel } = renderModal(
+      <input aria-label="Amount" />,
+      <button type="button">Save</button>,
+    )
+
+    screen.getByRole('button', { name: 'opener' }).focus()
+    await user.tab()
+
+    expect(panel.contains(document.activeElement)).toBe(true)
+    expect(document.activeElement).toBe(screen.getByLabelText('Amount'))
+  })
+
+  it('carries on from a control the tab order skips, rather than starting over', async () => {
+    const user = userEvent.setup()
+    renderModal(
+      <>
+        <input aria-label="Amount" />
+        <button type="button" tabIndex={-1}>
+          Roving
+        </button>
+        <input aria-label="Reference" />
+      </>,
+    )
+
+    screen.getByRole('button', { name: 'Roving' }).focus() // reachable by mouse
+    await user.tab()
+
+    expect(document.activeElement).toBe(screen.getByLabelText('Reference'))
+  })
+})
+
 describe('closing', () => {
   it('closes on Escape', async () => {
     const user = userEvent.setup()

@@ -37,11 +37,13 @@ const problemMessages: Record<CreatorProblem, string> = {
   'email-missing': 'Enter an email — the portal invite is sent there.',
   'email-unreadable': 'That email does not look like an address.',
   'campaign-missing': 'Choose the campaign this deal belongs to.',
+  'campaign-unknown': 'That campaign no longer exists. Choose one of the current campaigns.',
   'code-missing': 'Give them a code.',
   'code-unreadable': 'Codes are 2 to 8 letters or digits, with nothing in between.',
   'code-taken': 'Another creator already has that code.',
   'rate-missing': 'Enter the agreed rate.',
-  'rate-unreadable': 'Enter the rate as a number, such as 1800 or 1,800.50.',
+  'rate-unreadable':
+    'Enter the rate in dollars and cents, such as 1800 or 1,800.50. No fractions of a cent.',
   'streams-missing': 'Enter how many streams they have committed to.',
   'streams-unreadable': 'Streams committed has to be a whole number.',
   'hours-unreadable': 'Minimum duration has to be a number of hours, such as 2 or 1.5.',
@@ -84,7 +86,7 @@ export function CreatorModal({
   const [step, setStep] = useState<CreatorFormStep>('identity')
   const [hasTriedToSave, setHasTriedToSave] = useState(false)
 
-  const review = reviewCreatorDraft(draft, { creators, editingId: editing?.id })
+  const review = reviewCreatorDraft(draft, { creators, campaigns, editingId: editing?.id })
   const visibleProblems = hasTriedToSave ? review.problems : []
 
   const update = (field: keyof CreatorDraft) => (value: string) =>

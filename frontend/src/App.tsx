@@ -108,7 +108,9 @@ export default function App() {
     setCreators((current) =>
       editing
         ? current.map((creator) =>
-            creator.id === editing.id ? applyDraftToCreator(creator, draft) : creator,
+            creator.id === editing.id
+              ? applyDraftToCreator(creator, draft, { campaigns })
+              : creator,
           )
         : [...current, buildCreator(draft, { id: nextCreatorId(current), campaigns })],
     )

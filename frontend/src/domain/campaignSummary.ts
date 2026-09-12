@@ -18,7 +18,7 @@ export interface CampaignSummaryTotals {
   totalViews: number
   /**
    * Total paid divided by total installs, in cents per install. Infinity when
-   * no installs have landed yet, matching getCostPerInstall for one creator.
+   * no installs have landed or no money has been paid.
    */
   blendedCostPerInstallInCents: number
 }

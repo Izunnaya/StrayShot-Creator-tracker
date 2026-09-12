@@ -42,6 +42,27 @@ describe('parseAmountToCents', () => {
     expect(parseAmountToCents('10.004')).toBe(1000)
   })
 
+  it('rounds the same half cent the same way, whatever the amount', () => {
+    /* Multiplying by 100 and rounding sent these in different directions:
+       1.005 * 100 lands below 100.5 in binary and went down to 100, while
+       10.005 lands above 1000.5 and went up. Same half cent, two answers. */
+    expect(parseAmountToCents('1.005')).toBe(101)
+    expect(parseAmountToCents('1.015')).toBe(102)
+    expect(parseAmountToCents('0.005')).toBe(1)
+    expect(parseAmountToCents('2.675')).toBe(268)
+    expect(parseAmountToCents('1,234,567.895')).toBe(123_456_790)
+  })
+
+  it('rounds a reversal to the mirror of what it undoes', () => {
+    // A reversal a cent away from its payment leaves a balance behind it.
+    expect(parseAmountToCents('-1.005')).toBe(-101)
+    expect(parseAmountToCents('-10.005')).toBe(-1001)
+  })
+
+  it('refuses an amount too large to count in exact cents', () => {
+    expect(parseAmountToCents('999999999999999999')).toBeNull()
+  })
+
   it('refuses what it cannot read rather than guessing', () => {
     expect(parseAmountToCents('')).toBeNull()
     expect(parseAmountToCents('   ')).toBeNull()

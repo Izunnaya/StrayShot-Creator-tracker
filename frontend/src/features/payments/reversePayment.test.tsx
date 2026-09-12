@@ -32,13 +32,25 @@ describe('reversing a payment', () => {
   it('offers a reversal on each payment in the history', async () => {
     await openNovaKess()
 
-    expect(screen.getAllByRole('button', { name: 'Reverse' })).toHaveLength(2)
+    expect(screen.getAllByRole('button', { name: /^Reverse payment of/ })).toHaveLength(2)
+  })
+
+  it('names each reversal by the payment it would undo', async () => {
+    await openNovaKess()
+
+    const names = screen
+      .getAllByRole('button', { name: /^Reverse payment of/ })
+      .map((button) => button.textContent)
+
+    expect(names[0]).toMatch(/\$1,600\.00 from Aug 14, 2026/)
+    expect(names[1]).toMatch(/\$1,600\.00 from Jul 24, 2026/)
+    expect(names[0]).toMatch(/reference TRF-2413-11/)
   })
 
   it('confirms what it is about to do before doing it', async () => {
     const user = await openNovaKess()
 
-    await user.click(screen.getAllByRole('button', { name: 'Reverse' })[0]!)
+    await user.click(screen.getAllByRole('button', { name: /^Reverse payment of/ })[0]!)
 
     expect(dialog().getByText(/stays in the history/)).toBeTruthy()
     expect(dialog().getByText(/-\$1,600\.00/)).toBeTruthy()
@@ -50,7 +62,7 @@ describe('reversing a payment', () => {
     // Paid $3,200 across two payments before anything is reversed.
     expect(screen.getByText(/\$3,200\.00 of \$4,800\.00 paid across 2 payments/)).toBeTruthy()
 
-    await user.click(screen.getAllByRole('button', { name: 'Reverse' })[0]!)
+    await user.click(screen.getAllByRole('button', { name: /^Reverse payment of/ })[0]!)
     await user.click(dialog().getByRole('button', { name: 'Reverse payment' }))
 
     expect(screen.queryByRole('dialog')).toBeNull()
@@ -62,28 +74,28 @@ describe('reversing a payment', () => {
   it('will not reverse the same payment twice, or reverse a reversal', async () => {
     const user = await openNovaKess()
 
-    await user.click(screen.getAllByRole('button', { name: 'Reverse' })[0]!)
+    await user.click(screen.getAllByRole('button', { name: /^Reverse payment of/ })[0]!)
     await user.click(dialog().getByRole('button', { name: 'Reverse payment' }))
 
     // Two records became three, and only the untouched payment can be undone.
-    expect(screen.getAllByRole('button', { name: 'Reverse' })).toHaveLength(1)
+    expect(screen.getAllByRole('button', { name: /^Reverse payment of/ })).toHaveLength(1)
   })
 
   it('changes nothing when the confirmation is dismissed', async () => {
     const user = await openNovaKess()
 
-    await user.click(screen.getAllByRole('button', { name: 'Reverse' })[0]!)
+    await user.click(screen.getAllByRole('button', { name: /^Reverse payment of/ })[0]!)
     await user.click(dialog().getByRole('button', { name: 'Keep it' }))
 
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(screen.getByText(/\$3,200\.00 of \$4,800\.00 paid across 2 payments/)).toBeTruthy()
-    expect(screen.getAllByRole('button', { name: 'Reverse' })).toHaveLength(2)
+    expect(screen.getAllByRole('button', { name: /^Reverse payment of/ })).toHaveLength(2)
   })
 
   it('puts the money back into what is outstanding', async () => {
     const user = await openNovaKess()
 
-    await user.click(screen.getAllByRole('button', { name: 'Reverse' })[0]!)
+    await user.click(screen.getAllByRole('button', { name: /^Reverse payment of/ })[0]!)
     await user.click(dialog().getByRole('button', { name: 'Reverse payment' }))
 
     // $4,800 agreed, $1,600 still paid, so $3,200 is open again.

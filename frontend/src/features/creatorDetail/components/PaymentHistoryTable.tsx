@@ -96,7 +96,12 @@ export function PaymentHistoryTable({
                   onClick={() => onReversePayment(payment)}
                   className="cursor-pointer text-[12px] uppercase tracking-[1px] text-ink-muted hover:text-amber focus-visible:outline-2 focus-visible:outline-amber"
                 >
-                  Reverse
+                  {/* Not aria-hidden: hiding it drops the verb from the
+                      accessible name, leaving "payment of $1,600.00 from…". */}
+                  <span>Reverse</span>
+                  <span className="sr-only">
+                    {` payment of ${formatPaymentAmount(payment.amountInCents)} from ${formatDate(payment.paidOn)}${payment.reference ? `, reference ${payment.reference}` : ''}`}
+                  </span>
                 </button>
               )}
             </div>

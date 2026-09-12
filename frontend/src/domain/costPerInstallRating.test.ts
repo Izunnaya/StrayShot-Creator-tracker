@@ -46,3 +46,13 @@ describe('rateCostPerInstall', () => {
     expect(rateCostPerInstall(2.9, 1.5)).toBe('over-target')
   })
 })
+
+describe('with no target to judge against', () => {
+  /* The creator has no campaign, so nobody has agreed what an install is
+     worth to them. A figure is still a figure; it is the verdict that has
+     nothing to rest on. */
+  it('reaches no verdict, however good or bad the figure looks', () => {
+    expect(rateCostPerInstall(0.1, null)).toBe('not-measurable')
+    expect(rateCostPerInstall(99, null)).toBe('not-measurable')
+  })
+})

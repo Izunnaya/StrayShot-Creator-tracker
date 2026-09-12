@@ -89,15 +89,42 @@ so a $100.49 payment must survive a round trip intact.
 **Ruled out:** multi-currency totals with conversion; floats.
 **Reversible:** the currency scope, yes. The storage unit is a migration.
 
+## Q9 — Per stream and flat fee are supported; per view is not
+
+**Decided:** a deal's agreed total is the rate multiplied by the streams
+committed when paying per stream, and the rate itself when it is a flat fee.
+Per view is left out of the rate model entirely for now.
+
+Per view has no agreed total, and everything about how this application
+handles money is built on having one. The paid-against-agreed bar, the
+outstanding balance, what the record payment modal projects, the "delivered,
+payment open" panel and the overpayment rule are all proportions of a figure
+agreed before any money moves. A per-view deal has no such figure until the
+views exist, so those five things would each need a second meaning.
+
+Supporting it properly needs one more piece of product: either a committed
+view count, which would make it arithmetic like per stream, or a cap, which
+would make it a flat fee with a refund. Neither is in the brief's field list,
+and inventing one would be guessing at a commercial term.
+
+So the dropdown offers the two that work, and the third waits for an answer
+rather than being half-built. If a per-view deal is signed before then, it can
+be recorded as a flat fee for the agreed cap.
+
+**Ruled out:** an agreed total that moves as views accumulate — it would make
+a settled deal un-settle itself overnight.
+**Reversible:** yes. Adding a rate model is additive, and no existing record
+would need to change.
+
 ---
 
 ## What these cost to implement
 
-| Change | Where |
-| --- | --- |
-| `currentTeamMember` stub, read-only in the modal | Module 6 |
-| `getOverpaymentAmount`, warning copy, balance display | `creatorCalculations`, Module 6 |
-| `reversesPaymentId` on `Payment`, negative-amount validation | `data/types`, Module 6, Module 7 |
+| Change                                                         | Where                                          |
+| -------------------------------------------------------------- | ---------------------------------------------- |
+| `currentTeamMember` stub, read-only in the modal               | Module 6                                       |
+| `getOverpaymentAmount`, warning copy, balance display          | `creatorCalculations`, Module 6                |
+| `reversesPaymentId` on `Payment`, negative-amount validation   | `data/types`, Module 6, Module 7               |
 | Money as integer cents through fixtures, domain and formatters | `data/fixtures`, `lib/format`, all money tests |
 
 The cents change touches the most files and is worth doing before the record

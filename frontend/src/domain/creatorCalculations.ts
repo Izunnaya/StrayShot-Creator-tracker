@@ -45,7 +45,7 @@ export function hasOutstandingBalance(creator: Creator): boolean {
 /** How far through the contracted amount we have paid, 0 to 100. */
 export function getPaymentProgressPercent(creator: Creator): number {
   if (creator.contractedAmountInCents === 0) return 0
-  return (getAmountPaid(creator) / creator.contractedAmountInCents) * 100
+  return Math.min(100, (getAmountPaid(creator) / creator.contractedAmountInCents) * 100)
 }
 
 /**

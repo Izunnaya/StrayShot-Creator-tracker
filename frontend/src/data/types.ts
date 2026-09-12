@@ -61,14 +61,25 @@ export interface Campaign {
   targetCostPerInstallInCents: number
 }
 
+/** How a deal's money is agreed. Per view is not supported — see DECISIONS Q9. */
+export type RateModel = 'per-stream' | 'flat-fee'
+
 export interface Creator {
   id: number
   name: string
+  /** Where the portal invite is sent. Required from the first step. */
+  email: string
   platform: StreamingPlatform
   /** The code viewers type in to credit this creator. Unique per creator. */
   creatorCode: string
-  /** Campaign this creator's deal belongs to. One campaign each — see Q13. */
-  campaignName: string
+  /**
+   * The campaign this creator's deal belongs to. One campaign each — see Q13.
+   *
+   * Held by id, not by name: a campaign can be renamed, and a name copied
+   * across fourteen creator records would have to be found and rewritten
+   * every time it was. This is also the shape the API will use.
+   */
+  campaignId: number
 
   /** How many streams the deal commits them to. */
   streamsCommitted: number
@@ -81,15 +92,47 @@ export interface Creator {
   /** Installs credited to this creator's code and tracking link. */
   installsAttributed: number
 
-  /** The full agreed value of the deal, before any payment is made. */
+  /**
+   * The full agreed value of the deal, before any payment is made.
+   *
+   * Worked out from the rate model when the deal is saved, rather than
+   * recomputed on every read: a creator whose rate changes mid-campaign was
+   * not retroactively owed a different amount for work already done.
+   */
   contractedAmountInCents: number
-  /** The per-stream rate the contracted amount was built from. */
-  agreedRatePerStreamInCents: number
+  /** What the rate means: per stream delivered, or for the deal as a whole. */
+  rateModel?: RateModel
+  /** The agreed rate the contracted amount was built from. */
+  agreedRateInCents: number
 
   /** Follower or subscriber count, shown as text such as "412K". */
   audienceSize: string
   channelUrl: string
   portalInviteState: PortalInviteState
+
+  /* Everything below comes from steps 2 and 3 of the add creator form, both
+     of which are skippable — a prospect is a creator with none of it. */
+
+  /** Telegram or Discord, whichever they actually answer on. */
+  contactHandle?: string
+  contentLanguage?: string
+  region?: string
+  /**
+   * What they would rather be paid in. Recorded for whoever makes the
+   * transfer; every figure in the application is USD — see DECISIONS Q8.
+   */
+  payoutCurrency?: string
+  /** Hours a stream has to run to count towards the commitment. */
+  minimumStreamHours?: number
+  deliveryWindowStart?: string
+  deliveryWindowEnd?: string
+  /** Free text: code on screen, link in the description, and so on. */
+  requirements?: string
+  paymentMethod?: string
+  /** Account details or reference for the transfer. */
+  paymentDetails?: string
+  /** Team only. Never shown to the creator. */
+  notes?: string
 
   /** Every payment made so far. Amounts paid and owed derive from this list. */
   payments: Payment[]

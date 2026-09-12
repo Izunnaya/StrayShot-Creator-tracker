@@ -10,10 +10,13 @@ import { Button, Label, PlatformTag } from '@/ui'
  */
 export function CreatorDetailHeader({
   creator,
+  campaignName,
   onBack,
   onEditCreator,
 }: {
   creator: Creator
+  /** Looked up by the screen: a creator holds only the campaign's id. */
+  campaignName: string
   onBack: () => void
   /**
    * Opens the add/edit creator modal, prefilled. That modal is Module 4, so
@@ -37,7 +40,7 @@ export function CreatorDetailHeader({
 
           <div className="mt-3 flex flex-wrap items-center gap-4 text-[14px] text-ink-muted">
             <PlatformTag platform={creator.platform} />
-            <span>{creator.campaignName}</span>
+            <span>{campaignName}</span>
             <span>{creator.audienceSize} subscribers</span>
             <a
               href={`https://${creator.channelUrl}`}

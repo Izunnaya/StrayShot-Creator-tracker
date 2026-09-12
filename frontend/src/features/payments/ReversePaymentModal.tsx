@@ -19,11 +19,14 @@ import { formatDate, formatPaymentAmount } from '@/lib/format'
  */
 export function ReversePaymentModal({
   creator,
+  campaignName,
   payment,
   onConfirm,
   onClose,
 }: {
   creator: Creator
+  /** Looked up by the shell: a creator holds only the campaign's id. */
+  campaignName: string
   payment: Payment
   onConfirm: () => void
   onClose: () => void
@@ -33,7 +36,7 @@ export function ReversePaymentModal({
   return (
     <Modal
       title="Reverse payment"
-      subtitle={`${creator.name} · ${creator.campaignName}`}
+      subtitle={`${creator.name} · ${campaignName}`}
       labelId="reverse-payment-title"
       onClose={onClose}
       footer={

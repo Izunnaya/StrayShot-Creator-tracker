@@ -13,7 +13,7 @@ export type CostPerInstallRating =
   | 'acceptable'
   /** Far enough over target that the team should look at the deal. */
   | 'over-target'
-  /** Nothing paid yet, so there is no figure to judge. */
+  /** Nothing paid yet, or no target to judge against. Either way, no verdict. */
   | 'not-measurable'
 
 /**
@@ -31,8 +31,12 @@ export const DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS = 350
 
 export function rateCostPerInstall(
   costPerInstall: number,
-  targetCostPerInstallInCents: number,
+  /** null where no campaign target applies to this creator. */
+  targetCostPerInstallInCents: number | null,
 ): CostPerInstallRating {
+  /* A figure measured against a target that is not theirs reads as a verdict
+     and is not one -- good or bad against a number nobody agreed to. */
+  if (targetCostPerInstallInCents === null) return 'not-measurable'
   if (!Number.isFinite(costPerInstall)) return 'not-measurable'
   if (costPerInstall <= targetCostPerInstallInCents) return 'under-target'
   if (costPerInstall <= targetCostPerInstallInCents * OVER_TARGET_MULTIPLIER) return 'acceptable'

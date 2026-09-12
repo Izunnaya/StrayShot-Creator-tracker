@@ -1,7 +1,7 @@
 import { Button } from '@/ui'
 
-/* Static masthead — task 0.14. The tabs render their selected state but do not
-   switch views yet; that is Phase 3.
+/* The masthead. The tabs switch the screen below; which one is showing is
+   the shell's state.
 
    Layout: one row from md up, exactly as the design was reviewed. On a phone
    it becomes two rows — wordmark and the primary action, then the tabs with
@@ -13,16 +13,21 @@ import { Button } from '@/ui'
    box again and the two sit together at the far right, which is what keeps
    the desktop masthead identical to the design. */
 
-const tabs = [
+/** The screens the tabs choose between. */
+export type AppTab = 'overview' | 'payments'
+
+const tabs: { id: AppTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'payments', label: 'Payments' },
 ]
 
 export function AppMasthead({
   activeTab = 'overview',
+  onSelectTab,
   onAddCreator,
 }: {
-  activeTab?: string
+  activeTab?: AppTab
+  onSelectTab?: (tab: AppTab) => void
   onAddCreator?: () => void
 }) {
   return (
@@ -61,6 +66,9 @@ export function AppMasthead({
           {tabs.map((tab) => (
             <button
               key={tab.id}
+              type="button"
+              aria-current={tab.id === activeTab ? 'page' : undefined}
+              onClick={onSelectTab ? () => onSelectTab(tab.id) : undefined}
               className={
                 'cursor-pointer border-none bg-transparent px-0.5 pb-1 pt-1.5 font-head text-[13px] uppercase tracking-[2px] ' +
                 (tab.id === activeTab

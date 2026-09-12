@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AppMasthead } from './components/layout/AppMasthead'
+import { AppMasthead, type AppTab } from './components/layout/AppMasthead'
 import { campaigns as seedCampaigns, creators as seedCreators } from './data/fixtures'
 import { currentTeamMember } from './data/session'
 import type { Campaign, Creator, Payment } from './data/types'
@@ -9,10 +9,12 @@ import {
   getCampaignName,
   type CampaignDraft,
 } from './domain/campaigns'
+import { EVERY_CAMPAIGN, type CampaignFilter } from './domain/creatorFiltering'
 import { applyDraftToCreator, buildCreator, type CreatorDraft } from './domain/creatorRecording'
 import { buildPayment, buildReversal, type PaymentDraft } from './domain/paymentRecording'
 import { CreatorDetailScreen } from './features/creatorDetail/CreatorDetailScreen'
 import { CampaignOverviewScreen } from './features/dashboard/CampaignOverviewScreen'
+import { PaymentsLedgerScreen } from './features/payments/PaymentsLedgerScreen'
 import { useCreatorFilterSelection } from './features/dashboard/hooks/useCreatorFilterSelection'
 import { useCreatorSortSelection } from './features/dashboard/hooks/useCreatorSortSelection'
 import { CampaignModal } from './features/campaigns/CampaignModal'
@@ -30,12 +32,16 @@ import { ReversePaymentModal } from './features/payments/ReversePaymentModal'
  * cache the API fills, and the screens below do not change either way, since
  * they already take what to show as props.
  *
- * Which screen is showing is state rather than a router: with two screens and
- * no shareable URLs yet, that is the honest amount of machinery. The detail
- * screen is looked up by id rather than held as an object, so it cannot show
- * a stale copy of a creator who was just paid.
+ * Which screen is showing is state rather than a router: with no shareable
+ * URLs yet, that is the honest amount of machinery. A creator's own screen
+ * covers whichever tab it was opened from and goes back to it, so following a
+ * payment to the person it went to does not lose the ledger behind it.
+ *
+ * The detail screen is looked up by id rather than held as an object, so it
+ * cannot show a stale copy of a creator who was just paid.
  */
 export default function App() {
+  const [tab, setTab] = useState<AppTab>('overview')
   const [campaigns, setCampaigns] = useState<Campaign[]>(seedCampaigns)
   const [creators, setCreators] = useState<Creator[]>(seedCreators)
   const [selectedCreatorId, setSelectedCreatorId] = useState<number | null>(null)
@@ -45,6 +51,14 @@ export default function App() {
   const [campaignBeingEdited, setCampaignBeingEdited] = useState<Campaign | 'new' | null>(null)
   /** null while closed; a creator's id while editing; 'new' while adding. */
   const [creatorBeingEditedId, setCreatorBeingEditedId] = useState<number | 'new' | null>(null)
+
+  /**
+   * The ledger's own campaign filter, kept here rather than in the screen so
+   * it survives a trip to a creator and back, as the dashboard's does. It is
+   * separate from the dashboard's on purpose: narrowing one screen is not an
+   * instruction about the other.
+   */
+  const [ledgerCampaign, setLedgerCampaign] = useState<CampaignFilter>(EVERY_CAMPAIGN)
 
   const filterState = useCreatorFilterSelection()
   const sortState = useCreatorSortSelection()
@@ -138,7 +152,17 @@ export default function App() {
 
   return (
     <div className="grain min-h-screen">
-      <AppMasthead activeTab="overview" onAddCreator={() => setCreatorBeingEditedId('new')} />
+      <AppMasthead
+        activeTab={tab}
+        onSelectTab={(next) => {
+          /* Leaving a creator's screen is what choosing a tab means here --
+             otherwise the tab appears selected behind a screen that did not
+             change. */
+          setSelectedCreatorId(null)
+          setTab(next)
+        }}
+        onAddCreator={() => setCreatorBeingEditedId('new')}
+      />
 
       {creatorInDetail ? (
         <CreatorDetailScreen
@@ -148,6 +172,14 @@ export default function App() {
           onEditCreator={(creator) => setCreatorBeingEditedId(creator.id)}
           onRecordPayment={(creator) => setCreatorBeingPaidId(creator.id)}
           onReversePayment={setPaymentBeingReversed}
+        />
+      ) : tab === 'payments' ? (
+        <PaymentsLedgerScreen
+          campaigns={campaigns}
+          creators={creators}
+          selectedCampaign={ledgerCampaign}
+          onSelectCampaign={setLedgerCampaign}
+          onSelectCreator={setSelectedCreatorId}
         />
       ) : (
         <CampaignOverviewScreen

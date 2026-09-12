@@ -7,7 +7,9 @@ import { Button, FilterChip, Label } from '@/ui'
  * figures, the table, the status panels — is scoped by the selection here.
  *
  * Editing is offered only when a single campaign is in view, since that is
- * the only time there is one campaign to mean.
+ * the only time there is one campaign to mean. Creating is offered only where
+ * the screen can handle it -- the ledger filters by campaign without owning
+ * them, and a button that does nothing when pressed is worse than no button.
  */
 export function CampaignFilterChipRow({
   campaigns,
@@ -43,9 +45,11 @@ export function CampaignFilterChipRow({
         />
       ))}
 
-      <Button variant="addNew" onClick={onCreateCampaign}>
-        + New campaign
-      </Button>
+      {onCreateCampaign && (
+        <Button variant="addNew" onClick={onCreateCampaign}>
+          + New campaign
+        </Button>
+      )}
 
       {canEditSelectedCampaign && (
         <Button variant="text" onClick={onEditSelectedCampaign}>

@@ -63,6 +63,10 @@ the name is resolved from the session directory when it is rendered, so a
 correction or a shared name cannot make an append-only record misattribute
 itself (DECISIONS Q4). The directory never removes anyone.
 
+A payment is built only from a draft that passes the whole review, checked
+again in the builder rather than assumed from the form, since a payment is
+never edited once written (DECISIONS Q6).
+
 Balances derive from payment records. Unmeasurable cost per install displays as
 an em dash and sorts last in both directions. The blended figure is also
 unmeasurable when nothing has been paid. Payment history and its balance summary
@@ -98,10 +102,10 @@ to read the counts and stream-day creator codes as a table.
 
 ## Validation
 
-The suite contains 289 tests in 23 files. `npm test` is the source of truth
+The suite contains 291 tests in 23 files. `npm test` is the source of truth
 for that count; the split below is what each group is for.
 
-**Unit tests, 202, running in node.** Fourteen files covering the domain layer and
+**Unit tests, 204, running in node.** Fourteen files covering the domain layer and
 the formatters: calculations, filtering, sorting, the campaign summary, the
 cost-per-install rating, campaign and creator recording rules, payment history,
 the payment recording rules, the ledger, the campaign budget position and the

@@ -83,6 +83,7 @@ export default function App() {
     const payment = buildPayment(draft, {
       id: nextPaymentId(creators),
       recordedByTeamMemberId: currentTeamMember.id,
+      today: todayAsIsoDate(),
     })
 
     addPayment(creatorBeingPaid.id, payment)

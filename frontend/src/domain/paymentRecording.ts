@@ -127,15 +127,21 @@ function readDecimalAsCents(decimal: string): number | null {
      exact mirror of the payment it undoes rather than a cent off it. */
   const roundsUp = (fraction[2] ?? '0') >= '5'
   const magnitude = roundsUp ? cents + 1 : cents
+  if (!Number.isSafeInteger(magnitude)) return null
 
   return isNegative ? -magnitude : magnitude
 }
 
-export function reviewPaymentDraft(
-  draft: PaymentDraft,
-  creator: Creator,
-  today: string,
-): PaymentDraftReview {
+/**
+ * Everything wrong with a draft, in one place.
+ *
+ * Separate from the review because the review also answers what the payment
+ * would do to a creator's balance, and none of these rules depend on who is
+ * being paid -- an unreadable date is unreadable whoever the money is for.
+ * Keeping them here is what lets the builder enforce exactly what the form
+ * enforces, rather than a copy of it that falls behind the next rule added.
+ */
+function findPaymentProblems(draft: PaymentDraft, today: string): PaymentProblem[] {
   const problems: PaymentProblem[] = []
   const amountInCents = parseAmountToCents(draft.amount)
 
@@ -149,6 +155,17 @@ export function reviewPaymentDraft(
   else if (paidOn > today) problems.push('date-in-future')
 
   if (draft.method.trim() === '') problems.push('method-missing')
+
+  return problems
+}
+
+export function reviewPaymentDraft(
+  draft: PaymentDraft,
+  creator: Creator,
+  today: string,
+): PaymentDraftReview {
+  const problems = findPaymentProblems(draft, today)
+  const amountInCents = parseAmountToCents(draft.amount)
 
   const paymentTowardsBalance = amountInCents !== null && amountInCents > 0 ? amountInCents : 0
   const amountPaidAfterInCents = getAmountPaid(creator) + paymentTowardsBalance
@@ -173,13 +190,26 @@ export function getAmountToSettle(creator: Creator): number {
   return getOutstandingBalance(creator)
 }
 
+/**
+ * The record a saved form becomes.
+ *
+ * It checks the whole draft again rather than trusting that review was run.
+ * A payment is the one record here that is never edited afterwards (Q6), so
+ * an entry with no method, or dated next March, is not a mistake anyone can
+ * tidy up later -- it is a permanent line in the ledger. The date needs
+ * today to be judged against, which is why the caller supplies it.
+ */
 export function buildPayment(
   draft: PaymentDraft,
-  details: { id: number; recordedByTeamMemberId: string },
+  details: { id: number; recordedByTeamMemberId: string; today: string },
 ): Payment {
+  const problems = findPaymentProblems(draft, details.today)
   const amountInCents = parseAmountToCents(draft.amount)
-  if (amountInCents === null || amountInCents <= 0) {
-    throw new Error('buildPayment was given a draft that never passed review')
+
+  if (problems.length > 0 || amountInCents === null) {
+    throw new Error(
+      `buildPayment was given a draft that never passed review: ${problems.join(', ')}`,
+    )
   }
 
   return {

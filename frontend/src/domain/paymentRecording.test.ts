@@ -200,6 +200,7 @@ describe('buildPayment', () => {
     const payment = buildPayment(draft({ amount: '$1,600.50', reference: '  TRF-9  ' }), {
       id: 42,
       recordedByTeamMemberId: 'tm-kosei',
+      today: TODAY,
     })
 
     expect(payment).toEqual({
@@ -213,15 +214,54 @@ describe('buildPayment', () => {
   })
 
   it('refuses a draft that never passed review', () => {
-    const build = (amount: string) =>
-      buildPayment(draft({ amount }), { id: 1, recordedByTeamMemberId: 'tm-kosei' })
+    const build = (overrides: Partial<PaymentDraft>) =>
+      buildPayment(draft(overrides), { id: 1, recordedByTeamMemberId: 'tm-kosei', today: TODAY })
 
     // Everything review rejects, this rejects: reaching it with one of these
     // means the caller skipped review.
-    expect(() => build('twelve')).toThrow()
-    expect(() => build('')).toThrow()
-    expect(() => build('0')).toThrow()
-    expect(() => build('-50')).toThrow()
+    expect(() => build({ amount: 'twelve' })).toThrow()
+    expect(() => build({ amount: '' })).toThrow()
+    expect(() => build({ amount: '0' })).toThrow()
+    expect(() => build({ amount: '-50' })).toThrow()
+  })
+
+  it('refuses everything else review refuses, not only the amount', () => {
+    /* A payment is never edited afterwards (Q6), so a record with no method
+       or dated next March is a permanent line in the ledger rather than
+       something anyone can tidy up. */
+    const build = (overrides: Partial<PaymentDraft>) =>
+      buildPayment(draft(overrides), { id: 1, recordedByTeamMemberId: 'tm-kosei', today: TODAY })
+
+    expect(() => build({ method: '   ' })).toThrow(/method-missing/)
+    expect(() => build({ paidOn: '' })).toThrow(/date-missing/)
+    expect(() => build({ paidOn: '2026-02-30' })).toThrow(/date-unreadable/)
+    expect(() => build({ paidOn: '2026-09-11' })).toThrow(/date-in-future/)
+  })
+
+  it('agrees with the review, rule for rule', () => {
+    // The two read the same list, so neither can fall behind the other.
+    const invalid = [
+      { amount: 'twelve' },
+      { amount: '' },
+      { amount: '0' },
+      { method: '' },
+      { paidOn: '' },
+      { paidOn: '2026-02-30' },
+      { paidOn: '2026-09-11' },
+    ]
+
+    for (const overrides of invalid) {
+      const refused =
+        reviewPaymentDraft(draft(overrides), partlyPaidCreator, TODAY).canSave === false
+      expect({ overrides, refused }).toEqual({ overrides, refused: true })
+      expect(() =>
+        buildPayment(draft(overrides), {
+          id: 1,
+          recordedByTeamMemberId: 'tm-kosei',
+          today: TODAY,
+        }),
+      ).toThrow()
+    }
   })
 })
 

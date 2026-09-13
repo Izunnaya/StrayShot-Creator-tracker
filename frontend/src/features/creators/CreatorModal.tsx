@@ -4,6 +4,7 @@ import {
   draftFromCreator,
   emptyCreatorDraft,
   getTrackingLink,
+  hasUnsavedChanges,
   reviewCreatorDraft,
   type CreatorDraft,
   type CreatorFormStep,
@@ -75,8 +76,14 @@ export function CreatorModal({
   /** Everyone already recorded, so a duplicate code can be spotted. */
   creators: Creator[]
   editing?: Creator
-  onSave: (draft: CreatorDraft) => void
-  /** Sends or resends the portal invite. Only offered once saved. */
+  onSave: (draft: CreatorDraft, options?: { sendInvite?: boolean }) => void
+  /**
+   * Sends or resends the portal invite to the creator as saved.
+   *
+   * Only used while the form matches the record. With anything edited the
+   * invite goes through onSave instead, so it cannot be addressed from a
+   * record the form has already moved on from.
+   */
   onSendInvite?: (creator: Creator) => void
   onClose: () => void
 }) {
@@ -92,9 +99,12 @@ export function CreatorModal({
   const update = (field: keyof CreatorDraft) => (value: string) =>
     setDraft((current) => ({ ...current, [field]: value }))
 
-  function handleSave() {
+  /** What the form holds that the record does not. */
+  const isEdited = editing ? hasUnsavedChanges(draft, editing) : false
+
+  function handleSave(options?: { sendInvite?: boolean }) {
     setHasTriedToSave(true)
-    if (review.canSave) onSave(draft)
+    if (review.canSave) onSave(draft, options)
   }
 
   /* Once a deal is being filled in, saving means saving a creator — even if
@@ -133,7 +143,7 @@ export function CreatorModal({
                 {STEPS[STEPS.findIndex((entry) => entry.id === step) + 1]!.label} →
               </Button>
             )}
-            <Button variant="primary" onClick={handleSave} className="flex-1 sm:flex-none">
+            <Button variant="primary" onClick={() => handleSave()} className="flex-1 sm:flex-none">
               {saveLabel}
             </Button>
           </div>
@@ -444,11 +454,25 @@ export function CreatorModal({
                 {editing ? editing.portalInviteState : 'not sent'}
               </span>
               {editing && onSendInvite && (
-                <Button variant="outline" onClick={() => onSendInvite(editing)}>
-                  {editing.portalInviteState === 'not sent' ? 'Send invite' : 'Resend'}
+                /* An edited form is saved before the invite goes, and the
+                   button says so. Sending from the record as it stands would
+                   address the invite to the email being corrected -- which is
+                   the one reason anyone is on this field. */
+                <Button
+                  variant="outline"
+                  onClick={
+                    isEdited ? () => handleSave({ sendInvite: true }) : () => onSendInvite(editing)
+                  }
+                >
+                  {inviteButtonLabel(editing.portalInviteState, isEdited)}
                 </Button>
               )}
             </div>
+            {isEdited && (
+              <p className="mt-1.5 text-[12px] text-ink-muted">
+                The invite goes to the email as it now reads, once these changes are saved.
+              </p>
+            )}
           </Field>
 
           <Field label="Notes · team only, never shown to the creator" className="sm:col-span-2">
@@ -526,4 +550,10 @@ function nextStep(step: CreatorFormStep): CreatorFormStep {
 
 function previousStep(step: CreatorFormStep): CreatorFormStep {
   return step === 'payment' ? 'deal' : 'identity'
+}
+
+/** Says what pressing it will do, saving included. */
+function inviteButtonLabel(inviteState: Creator['portalInviteState'], isEdited: boolean): string {
+  const send = inviteState === 'not sent' ? 'Send invite' : 'Resend'
+  return isEdited ? `Save and ${send.toLowerCase()}` : send
 }

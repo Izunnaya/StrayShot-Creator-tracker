@@ -144,7 +144,9 @@ export function reviewCreatorDraft(
   const code = draft.creatorCode.trim()
   const campaignId = identifyCampaign(draft.campaignId, context.campaigns)
   const agreedRateInCents = parseDollarsToCents(draft.agreedRate)
-  const streamsCommitted = parseWholeNumber(draft.streamsCommitted)
+  const parsedStreamsCommitted = parseWholeNumber(draft.streamsCommitted)
+  const streamsCommitted =
+    parsedStreamsCommitted !== null && parsedStreamsCommitted > 0 ? parsedStreamsCommitted : null
 
   /* A half-filled deal is not a deal. Nothing here is required on its own,
      but the moment any of it is touched, the four fields the money and the
@@ -337,6 +339,22 @@ export function applyDraftToCreator(
     channelUrl: draft.channelUrl.trim(),
     ...optionalDealFields(draft),
   }
+}
+
+/**
+ * Whether a form still says what the record says.
+ *
+ * Compared field by field against a draft taken from the record now, rather
+ * than by tracking edits: a field typed and typed back is not a change, and
+ * an action that depends on the record being current should not be blocked by
+ * one. Every field counts, so a field added to the draft is covered by this
+ * without anyone remembering to come back here.
+ */
+export function hasUnsavedChanges(draft: CreatorDraft, creator: Creator): boolean {
+  const saved = draftFromCreator(creator)
+  return (Object.keys(saved) as (keyof CreatorDraft)[]).some(
+    (field) => draft[field] !== saved[field],
+  )
 }
 
 /** The draft that reopens an existing creator for editing. */

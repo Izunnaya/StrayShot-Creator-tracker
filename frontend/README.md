@@ -54,6 +54,10 @@ records is a prospect. A zero-dollar deal with committed streams is contracted
 until delivery is complete. This convention should be replaced by an explicit
 deal record when the API is introduced.
 
+The portal invite is addressed from the saved record, so a form with unsaved
+edits saves before it sends and the button says so ("Save and send invite").
+An invite never goes to an email address that has just been corrected.
+
 A payment records the id of the team member who entered it, never their name:
 the name is resolved from the session directory when it is rendered, so a
 correction or a shared name cannot make an append-only record misattribute
@@ -94,24 +98,24 @@ to read the counts and stream-day creator codes as a table.
 
 ## Validation
 
-The suite contains 281 tests in 23 files. `npm test` is the source of truth
+The suite contains 289 tests in 23 files. `npm test` is the source of truth
 for that count; the split below is what each group is for.
 
-**Unit tests, 198, running in node.** Fourteen files covering the domain layer and
+**Unit tests, 202, running in node.** Fourteen files covering the domain layer and
 the formatters: calculations, filtering, sorting, the campaign summary, the
 cost-per-install rating, campaign and creator recording rules, payment history,
 the payment recording rules, the ledger, the campaign budget position and the
 team-member lookup, plus src/lib/format.test.ts, which holds money to exact
 cents.
 
-**Rendered tests, 83, running in jsdom.** Nine files, each opting in with a
+**Rendered tests, 87, running in jsdom.** Nine files, each opting in with a
 `// @vitest-environment jsdom` docblock so the unit suite keeps running in node
 and keeps its speed:
 
 | File                                                         | Tests | What it covers                                                                         |
 | ------------------------------------------------------------ | ----- | -------------------------------------------------------------------------------------- |
 | ui/Modal.test.tsx                                            | 15    | The dialog shell: focus in, no Tab out from anywhere, Escape, focus back to the opener |
-| features/creators/creatorManagement.test.tsx                 | 11    | Adding and editing a creator across the three steps, and the portal invite             |
+| features/creators/creatorManagement.test.tsx                 | 15    | Adding and editing a creator across the three steps, and where the invite goes         |
 | features/campaigns/campaignManagement.test.tsx               | 13    | Creating and editing a campaign, a rename reaching every creator, and the budget line  |
 | features/payments/recordPayment.test.tsx                     | 10    | Recording a payment through the modal, and every reason it refuses to save             |
 | features/payments/paymentsLedger.test.tsx                    | 8     | The ledger gathering every payment, money entered elsewhere reaching it, attribution   |

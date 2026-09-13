@@ -116,16 +116,24 @@ export default function App() {
     setCampaignBeingEdited(null)
   }
 
-  function saveCreator(draft: CreatorDraft) {
+  /**
+   * Saves the form, and sends the portal invite in the same step when it was
+   * the invite button that saved it.
+   *
+   * One operation rather than two, because the invite has to go to the record
+   * as saved. Sending first would address it from the record the form opened
+   * with -- the old email, in the one case anyone is editing that field for.
+   */
+  function saveCreator(draft: CreatorDraft, options: { sendInvite?: boolean } = {}) {
     const editing = creatorBeingEdited !== 'new' ? creatorBeingEdited : null
 
     setCreators((current) =>
       editing
-        ? current.map((creator) =>
-            creator.id === editing.id
-              ? applyDraftToCreator(creator, draft, { campaigns })
-              : creator,
-          )
+        ? current.map((creator) => {
+            if (creator.id !== editing.id) return creator
+            const saved = applyDraftToCreator(creator, draft, { campaigns })
+            return options.sendInvite ? asInvited(saved) : saved
+          })
         : [...current, buildCreator(draft, { id: nextCreatorId(current), campaigns })],
     )
     setCreatorBeingEditedId(null)
@@ -134,11 +142,7 @@ export default function App() {
   /** Sending is Module 8's work; this records that it went. */
   function sendInvite(creator: Creator) {
     setCreators((current) =>
-      current.map((entry) =>
-        entry.id === creator.id && entry.portalInviteState !== 'claimed'
-          ? { ...entry, portalInviteState: 'sent' }
-          : entry,
-      ),
+      current.map((entry) => (entry.id === creator.id ? asInvited(entry) : entry)),
     )
   }
 
@@ -241,6 +245,18 @@ export default function App() {
       )}
     </div>
   )
+}
+
+/**
+ * Records that the portal invite went out. Sending it is Module 8's work.
+ *
+ * Someone who has already claimed the portal is left as they are: a resend is
+ * a new email, not a reason to forget that they are already in.
+ */
+function asInvited(creator: Creator): Creator {
+  return creator.portalInviteState === 'claimed'
+    ? creator
+    : { ...creator, portalInviteState: 'sent' }
 }
 
 function nextCreatorId(creators: Creator[]): number {

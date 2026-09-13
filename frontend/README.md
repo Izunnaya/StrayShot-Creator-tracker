@@ -54,6 +54,11 @@ records is a prospect. A zero-dollar deal with committed streams is contracted
 until delivery is complete. This convention should be replaced by an explicit
 deal record when the API is introduced.
 
+A payment records the id of the team member who entered it, never their name:
+the name is resolved from the session directory when it is rendered, so a
+correction or a shared name cannot make an append-only record misattribute
+itself (DECISIONS Q4). The directory never removes anyone.
+
 Balances derive from payment records. Unmeasurable cost per install displays as
 an em dash and sorts last in both directions. The blended figure is also
 unmeasurable when nothing has been paid. Payment history and its balance summary
@@ -89,16 +94,17 @@ to read the counts and stream-day creator codes as a table.
 
 ## Validation
 
-The suite contains 272 tests in 22 files. `npm test` is the source of truth
+The suite contains 281 tests in 23 files. `npm test` is the source of truth
 for that count; the split below is what each group is for.
 
-**Unit tests, 190, running in node.** Thirteen files covering the domain layer and
+**Unit tests, 198, running in node.** Fourteen files covering the domain layer and
 the formatters: calculations, filtering, sorting, the campaign summary, the
 cost-per-install rating, campaign and creator recording rules, payment history,
-the payment recording rules, the ledger and the campaign budget position, plus
-src/lib/format.test.ts, which holds money to exact cents.
+the payment recording rules, the ledger, the campaign budget position and the
+team-member lookup, plus src/lib/format.test.ts, which holds money to exact
+cents.
 
-**Rendered tests, 82, running in jsdom.** Nine files, each opting in with a
+**Rendered tests, 83, running in jsdom.** Nine files, each opting in with a
 `// @vitest-environment jsdom` docblock so the unit suite keeps running in node
 and keeps its speed:
 
@@ -108,7 +114,7 @@ and keeps its speed:
 | features/creators/creatorManagement.test.tsx                 | 11    | Adding and editing a creator across the three steps, and the portal invite             |
 | features/campaigns/campaignManagement.test.tsx               | 13    | Creating and editing a campaign, a rename reaching every creator, and the budget line  |
 | features/payments/recordPayment.test.tsx                     | 10    | Recording a payment through the modal, and every reason it refuses to save             |
-| features/payments/paymentsLedger.test.tsx                    | 7     | The ledger gathering every payment, and money entered elsewhere reaching it at once    |
+| features/payments/paymentsLedger.test.tsx                    | 8     | The ledger gathering every payment, money entered elsewhere reaching it, attribution   |
 | features/payments/reversePayment.test.tsx                    | 7     | Reversing a payment, and that dismissing the confirmation changes nothing              |
 | features/dashboard/components/InstallsOverTimeChart.test.tsx | 7     | The chart component, including a zero-install series keeping its stream markers        |
 | features/dashboard/dashboardInteraction.test.tsx             | 10    | Filtering and sorting reaching the table, what the headline figures follow, the budget |

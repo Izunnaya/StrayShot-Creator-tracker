@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { teamMembers } from '@/data/session'
 import type { Campaign, Creator } from '@/data/types'
 import type { CampaignFilter } from '@/domain/creatorFiltering'
 import { buildPaymentLedger, filterLedgerByCampaign, summariseLedger } from '@/domain/paymentLedger'
@@ -39,7 +40,11 @@ export function PaymentsLedgerScreen({
   onSelectCreator?: (creatorId: number) => void
 }) {
   const entries = useMemo(
-    () => filterLedgerByCampaign(buildPaymentLedger(creators, campaigns), selectedCampaign),
+    () =>
+      filterLedgerByCampaign(
+        buildPaymentLedger(creators, { campaigns, teamMembers }),
+        selectedCampaign,
+      ),
     [creators, campaigns, selectedCampaign],
   )
 

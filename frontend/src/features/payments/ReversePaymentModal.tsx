@@ -1,6 +1,7 @@
-import { currentTeamMember } from '@/data/session'
+import { currentTeamMember, teamMembers } from '@/data/session'
 import type { Creator, Payment } from '@/data/types'
 import { getAmountPaid } from '@/domain/creatorCalculations'
+import { getTeamMemberName } from '@/domain/teamMembers'
 import { Button, Modal } from '@/ui'
 import { formatDate, formatPaymentAmount } from '@/lib/format'
 
@@ -69,7 +70,7 @@ export function ReversePaymentModal({
         </div>
         <div className="flex justify-between gap-4 py-1">
           <dt className="text-ink-muted">Recorded by</dt>
-          <dd>{payment.recordedBy}</dd>
+          <dd>{getTeamMemberName(teamMembers, payment.recordedByTeamMemberId)}</dd>
         </div>
       </dl>
 

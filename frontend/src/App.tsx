@@ -82,7 +82,7 @@ export default function App() {
 
     const payment = buildPayment(draft, {
       id: nextPaymentId(creators),
-      recordedBy: currentTeamMember.name,
+      recordedByTeamMemberId: currentTeamMember.id,
     })
 
     addPayment(creatorBeingPaid.id, payment)
@@ -97,7 +97,7 @@ export default function App() {
       buildReversal(paymentBeingReversed, {
         id: nextPaymentId(creators),
         reversedOn: todayAsIsoDate(),
-        recordedBy: currentTeamMember.name,
+        recordedByTeamMemberId: currentTeamMember.id,
       }),
     )
     setPaymentBeingReversed(null)
@@ -135,7 +135,9 @@ export default function App() {
   function sendInvite(creator: Creator) {
     setCreators((current) =>
       current.map((entry) =>
-        entry.id === creator.id ? { ...entry, portalInviteState: 'sent' } : entry,
+        entry.id === creator.id && entry.portalInviteState !== 'claimed'
+          ? { ...entry, portalInviteState: 'sent' }
+          : entry,
       ),
     )
   }

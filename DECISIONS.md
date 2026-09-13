@@ -21,11 +21,32 @@ default, or set to anyone. The value of the field is answering "who do I ask
 about this entry", and only an authenticated identity answers that.
 
 Team authentication is Q3 and does not exist yet (task 0.16). Until it does,
-the value comes from a single `currentTeamMember` stub so the field is real
-from the first payment recorded, and swapping the stub for the session is a
-one-line change rather than a data migration.
+the value comes from a `currentTeamMember` stub so the field is real from the
+first payment recorded, and swapping the stub for the session is a one-line
+change rather than a data migration.
 
-**Ruled out:** free text with a default. **Reversible:** yes, cheaply.
+**Amended:** the payment stores `recordedByTeamMemberId`, not a name. A
+display name cannot tell two M. Devlins apart, and it stops being true the
+moment one is corrected or changed — on an append-only record, where the entry
+is never rewritten, that leaves attribution quietly wrong rather than
+obviously missing. The id is immutable and the name is resolved from
+`teamMembers` when a payment is rendered, the same way a campaign name is
+resolved from its id.
+
+That directory is append-only for the same reason. Someone who leaves is
+deactivated, never deleted: their id is on every payment they recorded, and
+removing the row would turn exact attribution into "unknown team member"
+across the whole history.
+
+The id is a string while every other id here is a number, because it does not
+come from the same place: the others are minted by the API, and this one
+identifies an authenticated subject, which arrives as a string from whatever
+issues the session. Storing it as a number now would guarantee the migration
+this decision set out to avoid.
+
+**Ruled out:** free text with a default; storing the display name alongside
+the id, which is the same staleness with an extra copy to disagree with.
+**Reversible:** yes, cheaply.
 
 ## Q5 — Overpayment is allowed, warned about, and recorded truthfully
 

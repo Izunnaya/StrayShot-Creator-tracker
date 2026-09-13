@@ -34,8 +34,15 @@ export interface Payment {
   method: string
   /** Transaction ID or bank reference, for reconciling against a statement. */
   reference: string
-  /** The team member who recorded it, stamped from the session — Q4. */
-  recordedBy: string
+  /**
+   * The team member who recorded it, stamped from the session — Q4.
+   *
+   * The id, not the name. A finance record has to answer "who do I ask about
+   * this entry" years later, and a stored name stops answering it the moment
+   * one changes or a second person shares it. The name is resolved for
+   * display, from a directory that never removes anyone.
+   */
+  recordedByTeamMemberId: string
   /**
    * Set only on a reversing entry, naming the payment it cancels.
    *

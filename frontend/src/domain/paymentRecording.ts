@@ -175,7 +175,7 @@ export function getAmountToSettle(creator: Creator): number {
 
 export function buildPayment(
   draft: PaymentDraft,
-  details: { id: number; recordedBy: string },
+  details: { id: number; recordedByTeamMemberId: string },
 ): Payment {
   const amountInCents = parseAmountToCents(draft.amount)
   if (amountInCents === null || amountInCents <= 0) {
@@ -188,7 +188,7 @@ export function buildPayment(
     amountInCents,
     method: draft.method.trim(),
     reference: draft.reference.trim(),
-    recordedBy: details.recordedBy,
+    recordedByTeamMemberId: details.recordedByTeamMemberId,
   }
 }
 
@@ -203,7 +203,7 @@ export function buildPayment(
  */
 export function buildReversal(
   payment: Payment,
-  details: { id: number; reversedOn: string; recordedBy: string },
+  details: { id: number; reversedOn: string; recordedByTeamMemberId: string },
 ): Payment {
   return {
     id: details.id,
@@ -211,7 +211,7 @@ export function buildReversal(
     amountInCents: -payment.amountInCents,
     method: payment.method,
     reference: payment.reference,
-    recordedBy: details.recordedBy,
+    recordedByTeamMemberId: details.recordedByTeamMemberId,
     reversesPaymentId: payment.id,
   }
 }

@@ -1,5 +1,11 @@
 import type { CampaignSummaryTotals } from '@/domain/campaignSummary'
-import { formatCostPerInstall, formatMoney, formatNumber, formatViewsCompact } from '@/lib/format'
+import {
+  formatCostPerInstall,
+  formatCountCompact,
+  formatMoney,
+  formatNumber,
+  formatViewsCompact,
+} from '@/lib/format'
 import { StatStrip, StatTile } from '@/ui'
 
 /**
@@ -7,14 +13,14 @@ import { StatStrip, StatTile } from '@/ui'
  *
  * Takes an already-calculated summary rather than a creator list, so that the
  * screen decides which creators count and this component only presents the
- * result. On a phone the row scrolls sideways and the captions shorten, as
- * the phone design writes them.
+ * result. On a phone the four figures sit two by two under the masthead and
+ * the captions shorten, as the phone design writes them.
  */
 export function DashboardSummaryStrip({ summary }: { summary: CampaignSummaryTotals }) {
   const creatorsOwed = summary.creatorsWithOutstandingBalanceCount
 
   return (
-    <StatStrip mobileLayout="scroll">
+    <StatStrip mobileLayout="banner">
       <StatTile
         label="Paid to date"
         value={formatMoney(summary.totalAmountPaidInCents)}
@@ -33,6 +39,7 @@ export function DashboardSummaryStrip({ summary }: { summary: CampaignSummaryTot
         phoneLabel="Installs"
         value={formatNumber(summary.totalInstalls)}
         supportingText={`${formatViewsCompact(summary.totalViews)} views`}
+        phoneSupportingText={`${formatCountCompact(summary.totalViews)} views`}
       />
       <StatTile
         label="Blended cost / install"

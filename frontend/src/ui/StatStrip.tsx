@@ -8,33 +8,30 @@ import { joinClassNames } from '@/lib/classNames'
  * in two parts rather than two independent pieces.
  *
  * From md up the strip is the design's single row of framed tiles. Below md
- * the phone design does one of two things with it, chosen by the caller:
- * "scroll" keeps every figure on one line and lets the row move sideways
- * under a thumb, bleeding to the screen edges with an amber rule beneath it,
- * as the overview does; "grid" breaks the tiles into two columns between
- * hairlines, as the creator screen does.
+ * it breaks into two columns bleeding to the screen edges, finished one of
+ * two ways, chosen by the caller: "banner" with an amber rule beneath it, as
+ * the overview heads the screen with it, or "inset" between hairlines, as the
+ * creator screen sets it under the creator's header.
  */
 
 export function StatStrip({
   children,
   hasAmberFrame = true,
   columnCount = 4,
-  mobileLayout = 'grid',
+  mobileLayout = 'inset',
 }: {
   children: ReactNode
   hasAmberFrame?: boolean
   columnCount?: 3 | 4
-  mobileLayout?: 'scroll' | 'grid'
+  mobileLayout?: 'banner' | 'inset'
 }) {
   return (
     <div
       className={joinClassNames(
-        'gap-px bg-hair md:grid md:border',
+        'grid grid-cols-2 gap-px bg-hair md:border',
         columnCount === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3',
         hasAmberFrame ? 'md:border-amber' : 'md:border-hair',
-        mobileLayout === 'scroll'
-          ? 'scroll-x flex border-b border-amber md:overflow-visible'
-          : 'grid grid-cols-2 border-y border-hair',
+        mobileLayout === 'banner' ? 'border-b border-amber' : 'border-y border-hair',
         /* Bleeds to the screen edge below md, through the page's side padding. */
         '-mx-4 sm:-mx-6 md:mx-0',
       )}
@@ -82,13 +79,15 @@ export function StatTile({
   return (
     <div
       className={joinClassNames(
-        'shrink-0 bg-panel px-4 py-3.25',
-        size === 'large' ? 'min-w-33 md:min-w-0 md:px-5.5 md:py-4.5' : 'md:px-4.5 md:py-3.5',
+        /* min-w-0 and truncation keep a long figure inside its half of a
+           phone screen rather than pushing the grid wider than the page. */
+        'min-w-0 bg-panel px-4 py-3.25',
+        size === 'large' ? 'md:px-5.5 md:py-4.5' : 'md:px-4.5 md:py-3.5',
       )}
     >
       <div
         className={joinClassNames(
-          'whitespace-nowrap text-[10px] uppercase tracking-[1.5px] text-ink-muted md:text-[11px] md:tracking-[2px]',
+          'truncate text-[10px] uppercase tracking-[1.5px] text-ink-muted md:text-[11px] md:tracking-[2px]',
           size === 'large' ? 'mb-1.25 md:mb-1.5' : 'mb-1',
         )}
       >
@@ -96,15 +95,17 @@ export function StatTile({
       </div>
       <div
         className={joinClassNames(
-          'whitespace-nowrap font-head font-semibold leading-none',
-          size === 'large' ? 'text-[26px] md:text-[38px]' : 'text-[24px] md:text-[28px]',
+          'truncate font-head font-semibold',
+          size === 'large'
+            ? 'text-[26px] leading-[1.25] md:text-[38px] md:leading-none'
+            : 'text-[24px] leading-none md:text-[28px]',
           toneClasses[tone],
         )}
       >
         {value}
       </div>
       {supportingText && (
-        <div className="mt-1 whitespace-nowrap text-[11px] text-ink-dim md:text-[12px] md:text-ink-muted">
+        <div className="mt-1 truncate text-[11px] text-ink-dim md:text-[12px] md:text-ink-muted">
           <ResponsiveText wide={supportingText} phone={phoneSupportingText} />
         </div>
       )}

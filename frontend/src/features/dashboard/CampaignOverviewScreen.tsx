@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { buildInstallChart } from '@/domain/installChart'
 import type { Campaign, Creator } from '@/data/types'
 import { dailyInstalls, chartStartDate, chartDayCount, streams } from '@/data/fixtures'
@@ -13,9 +13,11 @@ import {
 } from '@/domain/creatorFiltering'
 import { sortCreators } from '@/domain/creatorSorting'
 import { usePhoneLayout } from '@/lib/usePhoneLayout'
-import { Panel, SearchField, SectionTitle } from '@/ui'
+import { FilterSheetButton, Panel, SearchField, SectionTitle } from '@/ui'
 import { CampaignBudgetPanel } from './components/CampaignBudgetPanel'
 import { CampaignFilterChipRow } from './components/CampaignFilterChipRow'
+import { CreatorFilterSheet } from './components/CreatorFilterSheet'
+import { describeCreatorFilters } from './creatorFilterSummary'
 import { CreatorPerformanceTable } from './components/CreatorPerformanceTable'
 import { CreatorStatusFilterChipRow } from './components/CreatorStatusFilterChipRow'
 import { DashboardSummaryStrip } from './components/DashboardSummaryStrip'
@@ -68,6 +70,7 @@ export function CampaignOverviewScreen({
   } = filterState
   const { selection: sortSelection, handleColumnClick, stepPhoneSort } = sortState
   const isPhone = usePhoneLayout()
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
 
   /** The one campaign in view, or undefined with every campaign at once. */
   const selectedCampaign = campaigns.find((campaign) => campaign.id === filterSelection.campaign)
@@ -147,28 +150,103 @@ export function CampaignOverviewScreen({
      cards. The chart, the budget and the two follow-up panels have no room
      beside a single column, and the one action they carry -- recording a
      payment -- moves onto the cards of the creators who are owed. */
+  const searchField = (
+    <SearchField
+      label="Search creators by name or code"
+      placeholder="Search creator or code"
+      value={filterSelection.searchText}
+      onValueChange={setSearchText}
+    />
+  )
+  const editSelectedCampaign =
+    selectedCampaign && onEditCampaign ? () => onEditCampaign(selectedCampaign) : undefined
+
+  if (isPhone) {
+    /* The phone design folds both chip rows into one button that says what
+       is applied and opens a sheet of choices, beside the button that adds a
+       campaign. Nothing is hidden past the edge of the screen that way. */
+    const { summary: filterSummary, isFiltered } = describeCreatorFilters(
+      campaigns,
+      filterSelection.campaign,
+      filterSelection.lifecycleStatus,
+    )
+
+    return (
+      <div className="flex flex-col gap-3 px-4 pb-6 sm:px-6">
+        <DashboardSummaryStrip summary={summary} />
+
+        <div className="mt-0.5">{searchField}</div>
+
+        <div
+          className={
+            onCreateCampaign ? 'grid grid-cols-[auto_minmax(0,1fr)] gap-2.5' : 'grid grid-cols-1'
+          }
+        >
+          {onCreateCampaign && (
+            <button
+              type="button"
+              onClick={onCreateCampaign}
+              className="min-h-12 cursor-pointer whitespace-nowrap border border-dashed border-hair-6 bg-transparent px-3.5 text-[14px] font-semibold text-ink-muted hover:border-amber hover:text-amber focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+            >
+              + Campaign
+            </button>
+          )}
+          <FilterSheetButton
+            label="Filter creators"
+            summary={filterSummary}
+            isFiltered={isFiltered}
+            onClick={() => setIsFilterSheetOpen(true)}
+          />
+        </div>
+
+        <div className="mt-0.5">
+          <CreatorPerformanceTable
+            creators={creatorsInTable}
+            sortSelection={sortSelection}
+            onColumnHeadingClick={handleColumnClick}
+            onStepPhoneSort={stepPhoneSort}
+            targetCostPerInstallInCents={targetCostPerInstallInCents}
+            onSelectCreator={onSelectCreator}
+            onRecordPayment={onRecordPayment}
+          />
+        </div>
+
+        {isFilterSheetOpen && (
+          <CreatorFilterSheet
+            campaigns={campaigns}
+            selectedCampaign={filterSelection.campaign}
+            onSelectCampaign={selectCampaign}
+            selectedStatus={filterSelection.lifecycleStatus}
+            onSelectStatus={selectLifecycleStatus}
+            countsByStatus={countsByStatus}
+            matchingCreatorCount={creatorsInTable.length}
+            onEditSelectedCampaign={
+              editSelectedCampaign &&
+              (() => {
+                setIsFilterSheetOpen(false)
+                editSelectedCampaign()
+              })
+            }
+            onClose={() => setIsFilterSheetOpen(false)}
+          />
+        )}
+      </div>
+    )
+  }
+
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-3.5 px-4 pb-6 sm:px-6 md:gap-6 md:px-8 md:pb-12 md:pt-7">
+    <div className="mx-auto flex max-w-7xl flex-col gap-6 px-8 pb-12 pt-7">
       <DashboardSummaryStrip summary={summary} />
 
-      <div className="flex flex-col gap-2.5 md:gap-4">
+      <div className="flex flex-col gap-4">
         <CampaignFilterChipRow
           campaigns={campaigns}
           selectedCampaign={filterSelection.campaign}
           onSelectCampaign={selectCampaign}
-          canEditSelectedCampaign={Boolean(selectedCampaign && onEditCampaign)}
+          canEditSelectedCampaign={Boolean(editSelectedCampaign)}
           onCreateCampaign={onCreateCampaign}
-          onEditSelectedCampaign={
-            selectedCampaign && onEditCampaign ? () => onEditCampaign(selectedCampaign) : undefined
-          }
-          leading={
-            <SearchField
-              label="Search creators by name or code"
-              placeholder="Search creator or code"
-              value={filterSelection.searchText}
-              onValueChange={setSearchText}
-            />
-          }
+          onEditSelectedCampaign={editSelectedCampaign}
+          leading={searchField}
         />
 
         <CreatorStatusFilterChipRow
@@ -178,7 +256,7 @@ export function CampaignOverviewScreen({
         />
       </div>
 
-      {selectedCampaign && !isPhone && (
+      {selectedCampaign && (
         <CampaignBudgetPanel campaign={selectedCampaign} creators={allCreators} />
       )}
 
@@ -189,41 +267,38 @@ export function CampaignOverviewScreen({
         onStepPhoneSort={stepPhoneSort}
         targetCostPerInstallInCents={targetCostPerInstallInCents}
         onSelectCreator={onSelectCreator}
-        onRecordPayment={isPhone ? onRecordPayment : undefined}
       />
 
-      {!isPhone && (
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
-          <Panel className="px-5.5 py-5">
-            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <SectionTitle>
-                Installs <span className="text-amber">over time</span>
-              </SectionTitle>
-              <div className="text-[12px] text-ink-muted">
-                Dashed lines mark stream days · last 6 weeks
-              </div>
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+        <Panel className="px-5.5 py-5">
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <SectionTitle>
+              Installs <span className="text-amber">over time</span>
+            </SectionTitle>
+            <div className="text-[12px] text-ink-muted">
+              Dashed lines mark stream days · last 6 weeks
             </div>
-
-            <InstallsOverTimeChart
-              dailyInstallCounts={chart.dailyInstallCounts}
-              streamDayMarkers={chart.streamDayMarkers}
-              weekLabels={chart.weekLabels}
-            />
-          </Panel>
-
-          <div className="grid gap-6">
-            <DeliveredPaymentOpenPanel
-              onRecordPayment={onRecordPayment}
-              creators={creatorsAwaitingPayment}
-              totalOutstandingBalanceInCents={
-                calculateCampaignSummary(creatorsAwaitingPayment).totalOutstandingBalanceInCents
-              }
-            />
-
-            <PaidNotDeliveredPanel creators={creatorsPaidButUndelivered} />
           </div>
+
+          <InstallsOverTimeChart
+            dailyInstallCounts={chart.dailyInstallCounts}
+            streamDayMarkers={chart.streamDayMarkers}
+            weekLabels={chart.weekLabels}
+          />
+        </Panel>
+
+        <div className="grid gap-6">
+          <DeliveredPaymentOpenPanel
+            onRecordPayment={onRecordPayment}
+            creators={creatorsAwaitingPayment}
+            totalOutstandingBalanceInCents={
+              calculateCampaignSummary(creatorsAwaitingPayment).totalOutstandingBalanceInCents
+            }
+          />
+
+          <PaidNotDeliveredPanel creators={creatorsPaidButUndelivered} />
         </div>
-      )}
+      </div>
     </div>
   )
 }

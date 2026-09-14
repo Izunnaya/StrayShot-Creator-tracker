@@ -51,7 +51,7 @@ export function CampaignFilterChipRow({
         </Button>
       )}
 
-      {canEditSelectedCampaign && (
+      {canEditSelectedCampaign && onEditSelectedCampaign && (
         <Button variant="text" onClick={onEditSelectedCampaign}>
           Edit campaign
         </Button>

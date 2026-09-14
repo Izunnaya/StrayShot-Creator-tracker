@@ -13,9 +13,8 @@ export function getAmountPaid(creator: Creator): number {
 }
 
 /**
- * What is still owed on the agreed contract, in cents. Never negative: paying more than
- * the contracted amount currently shows as a zero balance rather than credit,
- * which is open question Q5.
+ * What is still owed on the agreed contract, in cents. Never negative.
+ * `getOverpaymentAmount` reports money paid beyond the contracted amount.
  */
 export function getOutstandingBalance(creator: Creator): number {
   return Math.max(0, creator.contractedAmountInCents - getAmountPaid(creator))

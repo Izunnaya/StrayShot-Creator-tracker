@@ -154,8 +154,12 @@ export default function App() {
   }
 
   return (
-    <div className="grain min-h-screen">
+    /* Room at the bottom on a phone for the fixed tab bar, so the last card
+       can scroll clear of it. */
+    <div className="grain min-h-screen pb-24 md:pb-0">
       <AppMasthead
+        phoneTitle={creatorInDetail ? 'Creator' : tab === 'payments' ? 'Ledger' : 'Roster'}
+        onBack={creatorInDetail ? () => setSelectedCreatorId(null) : undefined}
         activeTab={tab}
         onSelectTab={(next) => {
           /* Leaving a creator's screen is what choosing a tab means here --

@@ -15,7 +15,7 @@ export function createTestPayment(overrides: Partial<Payment> = {}): Payment {
     amountInCents: 100000,
     method: 'Bank transfer',
     reference: 'TEST-0001',
-    recordedBy: 'Test User',
+    recordedByTeamMemberId: 'tm-araouf',
     ...overrides,
   }
 }

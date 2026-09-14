@@ -1,7 +1,9 @@
+import type { TeamMember } from '@/data/session'
 import type { Campaign, Creator, Payment } from '@/data/types'
 import { getCampaignName } from './campaigns'
 import { EVERY_CAMPAIGN, type CampaignFilter } from './creatorFiltering'
 import { hasBeenReversed, isReversal } from './paymentRecording'
+import { getTeamMemberName } from './teamMembers'
 
 /**
  * Every payment the team has made, across every creator, as one record.
@@ -20,9 +22,11 @@ export interface LedgerEntry {
   creatorId: number
   creatorName: string
   creatorCode: string
-  campaignId: number
+  campaignId: number | null
   /** Resolved here so a renamed campaign reads correctly without a lookup. */
   campaignName: string
+  /** Resolved the same way, from the id the payment actually stores. */
+  recordedByName: string
   /** This entry cancels an earlier payment. */
   isReversal: boolean
   /** This payment was later cancelled by one. */
@@ -54,7 +58,10 @@ export interface LedgerTotals {
  * id is the only thing that can, since two payments made on the same day to
  * two people are otherwise indistinguishable.
  */
-export function buildPaymentLedger(creators: Creator[], campaigns: Campaign[]): LedgerEntry[] {
+export function buildPaymentLedger(
+  creators: Creator[],
+  directories: { campaigns: Campaign[]; teamMembers: TeamMember[] },
+): LedgerEntry[] {
   const entries = creators.flatMap((creator) =>
     creator.payments.map((payment) => ({
       payment,
@@ -62,7 +69,8 @@ export function buildPaymentLedger(creators: Creator[], campaigns: Campaign[]): 
       creatorName: creator.name,
       creatorCode: creator.creatorCode,
       campaignId: creator.campaignId,
-      campaignName: getCampaignName(campaigns, creator.campaignId),
+      campaignName: getCampaignName(directories.campaigns, creator.campaignId),
+      recordedByName: getTeamMemberName(directories.teamMembers, payment.recordedByTeamMemberId),
       isReversal: isReversal(payment),
       wasReversed: hasBeenReversed(payment, creator.payments),
     })),

@@ -37,7 +37,10 @@ export interface CampaignDraftReview {
   targetCostPerInstallInCents: number | null
 }
 
-export function findCampaign(campaigns: Campaign[], campaignId: number): Campaign | undefined {
+export function findCampaign(
+  campaigns: Campaign[],
+  campaignId: number | null,
+): Campaign | undefined {
   return campaigns.find((campaign) => campaign.id === campaignId)
 }
 
@@ -48,7 +51,7 @@ export function findCampaign(campaigns: Campaign[], campaignId: number): Campaig
  * every caller would otherwise need its own fallback. Deleting a campaign
  * that still has creators is open question 1.6.
  */
-export function getCampaignName(campaigns: Campaign[], campaignId: number): string {
+export function getCampaignName(campaigns: Campaign[], campaignId: number | null): string {
   return findCampaign(campaigns, campaignId)?.name ?? 'No campaign'
 }
 
@@ -138,24 +141,29 @@ export function draftFromCampaign(campaign: Campaign): CampaignDraft {
 }
 
 /**
- * Money typed into a campaign field, in cents. Zero is allowed here — an
- * unfunded campaign is a real thing to set up — but nothing unreadable is.
- */
-/**
- * Reads a typed dollar amount into cents, or null if it cannot be read.
+ * Reads a typed dollar amount into cents, or null if it cannot be read. Zero
+ * is allowed here — an unfunded campaign is a real thing to set up — but
+ * nothing unreadable is.
  *
  * Two decimal places at most. A third is not a rounding problem to solve
  * quietly -- $1.005 is not an amount anyone can be paid, and storing $1.01
- * against it puts a figure on the record that nobody typed or agreed. The
- * rounding left is only for binary floating point, where 10.29 * 100 does
- * not land exactly on 1029.
+ * against it puts a figure on the record that nobody typed or agreed.
+ *
+ * The dollars and cents are read as separate integers rather than as one
+ * float scaled by 100. A float passes Number.isFinite long after it has
+ * stopped holding every cent, so a large budget would otherwise save as a
+ * figure a few cents off the one typed.
  */
 function parseDollarsToCents(typedAmount: string): number | null {
   const trimmed = typedAmount.trim()
   if (!/^\$?\s*(?:(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?|\.\d{1,2})$/.test(trimmed)) return null
 
-  const asNumber = Number(trimmed.replace(/[$,\s]/g, ''))
-  return Number.isFinite(asNumber) ? Math.round(asNumber * 100) : null
+  // Safe now: the only separators left are ones the pattern allowed.
+  const [dollars = '', cents = ''] = trimmed.replace(/[$,\s]/g, '').split('.')
+  const totalInCents = Number(dollars || '0') * 100 + Number(cents.padEnd(2, '0'))
+
+  // Past this, cents cannot be counted exactly, so the amount is refused.
+  return Number.isSafeInteger(totalInCents) ? totalInCents : null
 }
 
 /** Whether a string is a date that exists. Mirrors the payment date rule. */

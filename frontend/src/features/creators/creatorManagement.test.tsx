@@ -61,12 +61,13 @@ describe('adding a creator', () => {
     await openTheAddForm(user)
     await fillIdentity(user)
 
-    await user.click(dialog().getByRole('button', { name: 'Step 2: The deal' }))
+    await user.click(dialog().getByRole('button', { name: 'Step 2: The deal, incomplete' }))
     await user.selectOptions(dialog().getByLabelText('Campaign'), '1')
     await user.type(dialog().getByLabelText('Assigned code'), 'ASH')
     await user.type(dialog().getByLabelText('Agreed rate in dollars'), '1800')
     await user.type(dialog().getByLabelText('Streams committed'), '2')
 
+    expect(dialog().getByRole('button', { name: 'Step 2: The deal, complete' })).toBeTruthy()
     expect(dialog().getByRole('button', { name: 'Save creator' })).toBeTruthy()
 
     await user.click(dialog().getByRole('button', { name: 'Save creator' }))
@@ -82,7 +83,7 @@ describe('adding a creator', () => {
     await openTheAddForm(user)
     await fillIdentity(user)
 
-    await user.click(dialog().getByRole('button', { name: 'Step 2: The deal' }))
+    await user.click(dialog().getByRole('button', { name: /^Step 2: The deal, / }))
     await user.selectOptions(dialog().getByLabelText('Campaign'), '1')
     await user.type(dialog().getByLabelText('Assigned code'), 'NOVA')
     await user.type(dialog().getByLabelText('Agreed rate in dollars'), '1800')
@@ -98,7 +99,7 @@ describe('adding a creator', () => {
     await openTheAddForm(user)
     await fillIdentity(user)
 
-    await user.click(dialog().getByRole('button', { name: 'Step 2: The deal' }))
+    await user.click(dialog().getByRole('button', { name: /^Step 2: The deal, / }))
     await user.type(dialog().getByLabelText('Assigned code'), 'ASH')
 
     // Touching the deal changes what saving means, so the button says so.
@@ -130,7 +131,7 @@ describe('editing a creator', () => {
 
     expect((dialog().getByLabelText('Creator name') as HTMLInputElement).value).toBe('NovaKess')
 
-    await user.click(dialog().getByRole('button', { name: 'Step 2: The deal' }))
+    await user.click(dialog().getByRole('button', { name: /^Step 2: The deal, / }))
     expect((dialog().getByLabelText('Assigned code') as HTMLInputElement).value).toBe('NOVA')
     expect((dialog().getByLabelText('Agreed rate in dollars') as HTMLInputElement).value).toBe(
       '1600',
@@ -150,7 +151,7 @@ describe('editing a creator', () => {
     render(<App />)
     await openNovaKessForEditing(user)
 
-    await user.click(dialog().getByRole('button', { name: 'Step 2: The deal' }))
+    await user.click(dialog().getByRole('button', { name: /^Step 2: The deal, / }))
     const rate = dialog().getByLabelText('Agreed rate in dollars')
     await user.clear(rate)
     await user.type(rate, '2000')
@@ -192,5 +193,75 @@ describe('editing a creator', () => {
     expect(dialog().getByText('sent')).toBeTruthy()
     expect(dialog().getByRole('button', { name: 'Resend' })).toBeTruthy()
     expect(dialog().queryByRole('button', { name: 'Send invite' })).toBeNull()
+  })
+})
+
+describe('sending the invite from a form that has been edited', () => {
+  /* The address is the one thing an invite depends on, and correcting it is
+     the reason anyone opens this field. Sending from the record as it stands
+     would send to the address being corrected. */
+
+  async function openAshFallWithNoInviteSent(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole('button', { name: '+ Add creator' }))
+    await fillIdentity(user)
+    await user.click(dialog().getByRole('button', { name: 'Save as prospect' }))
+    await user.click(creatorTable().getByRole('button', { name: 'AshFall' }))
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+  }
+
+  it('says it will save first, once anything has been edited', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await openAshFallWithNoInviteSent(user)
+
+    expect(dialog().getByRole('button', { name: 'Send invite' })).toBeTruthy()
+
+    await user.clear(dialog().getByLabelText('Email'))
+    await user.type(dialog().getByLabelText('Email'), 'ash@newhouse.gg')
+
+    expect(dialog().getByRole('button', { name: 'Save and send invite' })).toBeTruthy()
+    expect(dialog().queryByRole('button', { name: 'Send invite' })).toBeNull()
+  })
+
+  it('keeps the corrected address rather than sending to the old one', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await openAshFallWithNoInviteSent(user)
+
+    await user.clear(dialog().getByLabelText('Email'))
+    await user.type(dialog().getByLabelText('Email'), 'ash@newhouse.gg')
+    await user.click(dialog().getByRole('button', { name: 'Save and send invite' }))
+
+    // Reopened from the list, so this is the record, not the form's memory.
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    expect((dialog().getByLabelText('Email') as HTMLInputElement).value).toBe('ash@newhouse.gg')
+    expect(dialog().getByText('sent')).toBeTruthy()
+  })
+
+  it('refuses to send while the form cannot be saved', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await openAshFallWithNoInviteSent(user)
+
+    await user.clear(dialog().getByLabelText('Email'))
+    await user.click(dialog().getByRole('button', { name: 'Save and send invite' }))
+
+    expect(screen.getByRole('dialog')).toBeTruthy()
+    expect(dialog().getByRole('alert').textContent).toMatch(/invite is sent there/)
+    expect(dialog().getByText('not sent')).toBeTruthy()
+  })
+
+  it('does not knock a claimed invite back to sent', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(creatorTable().getByRole('button', { name: 'QuietStorm' }))
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.clear(dialog().getByLabelText('Email'))
+    await user.type(dialog().getByLabelText('Email'), 'quiet@newhouse.gg')
+    await user.click(dialog().getByRole('button', { name: 'Save and resend' }))
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    expect(dialog().getByText('claimed')).toBeTruthy()
   })
 })

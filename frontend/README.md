@@ -39,15 +39,33 @@ keeps text files using LF across platforms.
 
 ## Current behavior
 
-The overview filters creators by campaign and lifecycle status. The summary and
-installs chart follow both filters; status-chip counts and follow-up panels
-follow the campaign only. The app shell preserves filtering and sorting when
+The overview filters creators by campaign and lifecycle status. Campaign is a
+scope and status is a lens: the summary figures, status-chip counts, follow-up
+panels and budget panel follow the campaign only, while the table and the
+installs chart follow both (DECISIONS Q20). With a single campaign in view, the
+budget panel shows what its deals commit against its budget, and flags a
+campaign that has committed past it — allowed and reported rather than refused,
+per DECISIONS Q7. The campaign form says what is already committed while the
+budget is being typed. The app shell preserves filtering and sorting when
 opening a creator and returning to the overview.
 
 A creator with no committed streams, agreed amount, delivered streams, or payment
 records is a prospect. A zero-dollar deal with committed streams is contracted
 until delivery is complete. This convention should be replaced by an explicit
 deal record when the API is introduced.
+
+The portal invite is addressed from the saved record, so a form with unsaved
+edits saves before it sends and the button says so ("Save and send invite").
+An invite never goes to an email address that has just been corrected.
+
+A payment records the id of the team member who entered it, never their name:
+the name is resolved from the session directory when it is rendered, so a
+correction or a shared name cannot make an append-only record misattribute
+itself (DECISIONS Q4). The directory never removes anyone.
+
+A payment is built only from a draft that passes the whole review, checked
+again in the builder rather than assumed from the form, since a payment is
+never edited once written (DECISIONS Q6).
 
 Balances derive from payment records. Unmeasurable cost per install displays as
 an em dash and sorts last in both directions. The blended figure is also
@@ -84,30 +102,31 @@ to read the counts and stream-day creator codes as a table.
 
 ## Validation
 
-The suite contains 256 tests in 21 files. `npm test` is the source of truth
+The suite contains 291 tests in 23 files. `npm test` is the source of truth
 for that count; the split below is what each group is for.
 
-**Unit tests, 182, running in node.** Twelve files covering the domain layer and
+**Unit tests, 204, running in node.** Fourteen files covering the domain layer and
 the formatters: calculations, filtering, sorting, the campaign summary, the
 cost-per-install rating, campaign and creator recording rules, payment history,
-the payment recording rules and the ledger, plus src/lib/format.test.ts, which
-holds money to exact cents.
+the payment recording rules, the ledger, the campaign budget position and the
+team-member lookup, plus src/lib/format.test.ts, which holds money to exact
+cents.
 
-**Rendered tests, 74, running in jsdom.** Nine files, each opting in with a
+**Rendered tests, 87, running in jsdom.** Nine files, each opting in with a
 `// @vitest-environment jsdom` docblock so the unit suite keeps running in node
 and keeps its speed:
 
-| File                                                         | Tests | What it covers                                                                          |
-| ------------------------------------------------------------ | ----- | --------------------------------------------------------------------------------------- |
-| ui/Modal.test.tsx                                            | 15    | The dialog shell: focus in, no Tab out from anywhere, Escape, focus back to the opener  |
-| features/creators/creatorManagement.test.tsx                 | 11    | Adding and editing a creator across the three steps, and the portal invite              |
-| features/campaigns/campaignManagement.test.tsx               | 10    | Creating and editing a campaign, including a rename reaching every creator on it        |
-| features/payments/recordPayment.test.tsx                     | 10    | Recording a payment through the modal, and every reason it refuses to save              |
-| features/payments/paymentsLedger.test.tsx                    | 7     | The ledger gathering every payment, and money entered elsewhere reaching it at once     |
-| features/payments/reversePayment.test.tsx                    | 7     | Reversing a payment, and that dismissing the confirmation changes nothing               |
-| features/dashboard/components/InstallsOverTimeChart.test.tsx | 7     | The chart component, including a zero-install series keeping its stream markers         |
-| features/dashboard/dashboardInteraction.test.tsx             | 5     | Filtering and sorting reaching the table, and returning from a creator with both intact |
-| features/creatorDetail/CreatorDetailScreen.test.tsx          | 2     | A creator with no campaign showing a figure without a verdict                           |
+| File                                                         | Tests | What it covers                                                                         |
+| ------------------------------------------------------------ | ----- | -------------------------------------------------------------------------------------- |
+| ui/Modal.test.tsx                                            | 15    | The dialog shell: focus in, no Tab out from anywhere, Escape, focus back to the opener |
+| features/creators/creatorManagement.test.tsx                 | 15    | Adding and editing a creator across the three steps, and where the invite goes         |
+| features/campaigns/campaignManagement.test.tsx               | 13    | Creating and editing a campaign, a rename reaching every creator, and the budget line  |
+| features/payments/recordPayment.test.tsx                     | 10    | Recording a payment through the modal, and every reason it refuses to save             |
+| features/payments/paymentsLedger.test.tsx                    | 8     | The ledger gathering every payment, money entered elsewhere reaching it, attribution   |
+| features/payments/reversePayment.test.tsx                    | 7     | Reversing a payment, and that dismissing the confirmation changes nothing              |
+| features/dashboard/components/InstallsOverTimeChart.test.tsx | 7     | The chart component, including a zero-install series keeping its stream markers        |
+| features/dashboard/dashboardInteraction.test.tsx             | 10    | Filtering and sorting reaching the table, what the headline figures follow, the budget |
+| features/creatorDetail/CreatorDetailScreen.test.tsx          | 2     | A creator with no campaign showing a figure without a verdict                          |
 
 Vitest discovers both .test.ts and .test.tsx files.
 
@@ -124,11 +143,11 @@ memory. Sorting the creator table is unavailable below the lg breakpoint, where
 the table becomes cards and the column headings it lives in are gone; the
 ledger has no sorting to lose, being ordered by date throughout.
 
-Product decisions still open include whether status should filter headline
-figures, the cost-per-install target when all campaigns are selected (currently
-350 cents, and used only there — a creator with no campaign is left unrated
-rather than judged against it), and whether commitments should be allowed to
-exceed a campaign budget, which is currently unenforced. The four payment decisions — who is recorded, how
+One product decision is still open: the cost-per-install target when all
+campaigns are selected (currently 350 cents, and used only there — a creator
+with no campaign is left unrated rather than judged against it). Whether status
+filters the headline figures and whether commitments may exceed a campaign
+budget are settled in DECISIONS.md as Q20 and Q7. The four payment decisions — who is recorded, how
 overpayment behaves, how a mistake is corrected, and the money unit — are
 settled in DECISIONS.md at the repository root. One piece of the overpayment
 decision is still outstanding: the record payment modal warns and allows it,

@@ -199,7 +199,8 @@ describe('buildPayment', () => {
   it('stamps who recorded it rather than taking it from the form', () => {
     const payment = buildPayment(draft({ amount: '$1,600.50', reference: '  TRF-9  ' }), {
       id: 42,
-      recordedBy: 'K. Osei',
+      recordedByTeamMemberId: 'tm-kosei',
+      today: TODAY,
     })
 
     expect(payment).toEqual({
@@ -208,20 +209,59 @@ describe('buildPayment', () => {
       amountInCents: 160_050,
       method: 'Bank transfer',
       reference: 'TRF-9',
-      recordedBy: 'K. Osei',
+      recordedByTeamMemberId: 'tm-kosei',
     })
   })
 
   it('refuses a draft that never passed review', () => {
-    const build = (amount: string) =>
-      buildPayment(draft({ amount }), { id: 1, recordedBy: 'K. Osei' })
+    const build = (overrides: Partial<PaymentDraft>) =>
+      buildPayment(draft(overrides), { id: 1, recordedByTeamMemberId: 'tm-kosei', today: TODAY })
 
     // Everything review rejects, this rejects: reaching it with one of these
     // means the caller skipped review.
-    expect(() => build('twelve')).toThrow()
-    expect(() => build('')).toThrow()
-    expect(() => build('0')).toThrow()
-    expect(() => build('-50')).toThrow()
+    expect(() => build({ amount: 'twelve' })).toThrow()
+    expect(() => build({ amount: '' })).toThrow()
+    expect(() => build({ amount: '0' })).toThrow()
+    expect(() => build({ amount: '-50' })).toThrow()
+  })
+
+  it('refuses everything else review refuses, not only the amount', () => {
+    /* A payment is never edited afterwards (Q6), so a record with no method
+       or dated next March is a permanent line in the ledger rather than
+       something anyone can tidy up. */
+    const build = (overrides: Partial<PaymentDraft>) =>
+      buildPayment(draft(overrides), { id: 1, recordedByTeamMemberId: 'tm-kosei', today: TODAY })
+
+    expect(() => build({ method: '   ' })).toThrow(/method-missing/)
+    expect(() => build({ paidOn: '' })).toThrow(/date-missing/)
+    expect(() => build({ paidOn: '2026-02-30' })).toThrow(/date-unreadable/)
+    expect(() => build({ paidOn: '2026-09-11' })).toThrow(/date-in-future/)
+  })
+
+  it('agrees with the review, rule for rule', () => {
+    // The two read the same list, so neither can fall behind the other.
+    const invalid = [
+      { amount: 'twelve' },
+      { amount: '' },
+      { amount: '0' },
+      { method: '' },
+      { paidOn: '' },
+      { paidOn: '2026-02-30' },
+      { paidOn: '2026-09-11' },
+    ]
+
+    for (const overrides of invalid) {
+      const refused =
+        reviewPaymentDraft(draft(overrides), partlyPaidCreator, TODAY).canSave === false
+      expect({ overrides, refused }).toEqual({ overrides, refused: true })
+      expect(() =>
+        buildPayment(draft(overrides), {
+          id: 1,
+          recordedByTeamMemberId: 'tm-kosei',
+          today: TODAY,
+        }),
+      ).toThrow()
+    }
   })
 })
 
@@ -232,7 +272,7 @@ describe('reversing a payment', () => {
     const reversal = buildReversal(original, {
       id: 8,
       reversedOn: TODAY,
-      recordedBy: 'M. Devlin',
+      recordedByTeamMemberId: 'tm-mdevlin',
     })
 
     expect(reversal.amountInCents).toBe(-160_000)
@@ -241,14 +281,22 @@ describe('reversing a payment', () => {
   })
 
   it('nets to nothing once both records are summed', () => {
-    const reversal = buildReversal(original, { id: 8, reversedOn: TODAY, recordedBy: 'M. Devlin' })
+    const reversal = buildReversal(original, {
+      id: 8,
+      reversedOn: TODAY,
+      recordedByTeamMemberId: 'tm-mdevlin',
+    })
     const creator = createTestCreator({ payments: [original, reversal] })
 
     expect(getAmountPaid(creator)).toBe(0)
   })
 
   it('knows which records are reversals and which have been reversed', () => {
-    const reversal = buildReversal(original, { id: 8, reversedOn: TODAY, recordedBy: 'M. Devlin' })
+    const reversal = buildReversal(original, {
+      id: 8,
+      reversedOn: TODAY,
+      recordedByTeamMemberId: 'tm-mdevlin',
+    })
     const payments = [original, reversal]
 
     expect(isReversal(reversal)).toBe(true)
@@ -258,7 +306,11 @@ describe('reversing a payment', () => {
   })
 
   it('will not reverse a reversal, or reverse the same payment twice', () => {
-    const reversal = buildReversal(original, { id: 8, reversedOn: TODAY, recordedBy: 'M. Devlin' })
+    const reversal = buildReversal(original, {
+      id: 8,
+      reversedOn: TODAY,
+      recordedByTeamMemberId: 'tm-mdevlin',
+    })
     const payments = [original, reversal]
 
     expect(canReverse(original, [original])).toBe(true)
@@ -268,7 +320,11 @@ describe('reversing a payment', () => {
 
   it('leaves only the payments that still stand, for counting', () => {
     const untouched = createTestPayment({ id: 9, amountInCents: 50_000 })
-    const reversal = buildReversal(original, { id: 8, reversedOn: TODAY, recordedBy: 'M. Devlin' })
+    const reversal = buildReversal(original, {
+      id: 8,
+      reversedOn: TODAY,
+      recordedByTeamMemberId: 'tm-mdevlin',
+    })
 
     const standing = getStandingPayments([original, reversal, untouched])
 

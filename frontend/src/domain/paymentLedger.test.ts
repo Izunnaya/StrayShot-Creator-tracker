@@ -5,12 +5,15 @@ import {
   createTestPayment,
 } from '@/testing/createTestCreator'
 import { EVERY_CAMPAIGN } from './creatorFiltering'
+import { teamMembers } from '@/data/session'
 import { buildPaymentLedger, filterLedgerByCampaign, summariseLedger } from './paymentLedger'
 
 const campaigns = [
   createTestCampaign({ id: 1, name: 'Season 2 Launch' }),
   createTestCampaign({ id: 2, name: 'Clan Wars Update' }),
 ]
+
+const directories = { campaigns, teamMembers }
 
 const creators = [
   createTestCreator({
@@ -34,18 +37,20 @@ const creators = [
 
 describe('building the ledger', () => {
   it('gathers every payment across every creator', () => {
-    expect(buildPaymentLedger(creators, campaigns).map((entry) => entry.payment.id)).toHaveLength(3)
+    expect(buildPaymentLedger(creators, directories).map((entry) => entry.payment.id)).toHaveLength(
+      3,
+    )
   })
 
   it('puts the most recent first, and the last recorded first within a day', () => {
     // 12 and 11 were both paid on the 14th; 12 was recorded after 11.
-    expect(buildPaymentLedger(creators, campaigns).map((entry) => entry.payment.id)).toEqual([
+    expect(buildPaymentLedger(creators, directories).map((entry) => entry.payment.id)).toEqual([
       12, 11, 10,
     ])
   })
 
   it('names who was paid and which campaign it came out of', () => {
-    const [newest] = buildPaymentLedger(creators, campaigns)
+    const [newest] = buildPaymentLedger(creators, directories)
 
     expect(newest?.creatorName).toBe('NovaKess')
     expect(newest?.creatorCode).toBe('NOVA')
@@ -55,7 +60,7 @@ describe('building the ledger', () => {
   it('says so rather than leaving a hole when the campaign has gone', () => {
     const stranded = [createTestCreator({ campaignId: 99, payments: [createTestPayment()] })]
 
-    expect(buildPaymentLedger(stranded, campaigns)[0]?.campaignName).toBe('No campaign')
+    expect(buildPaymentLedger(stranded, directories)[0]?.campaignName).toBe('No campaign')
   })
 
   it('marks both halves of a cancelled pair', () => {
@@ -68,26 +73,26 @@ describe('building the ledger', () => {
       }),
     ]
 
-    const ledger = buildPaymentLedger(withReversal, campaigns)
+    const ledger = buildPaymentLedger(withReversal, directories)
 
     expect(ledger.find((entry) => entry.payment.id === 2)?.isReversal).toBe(true)
     expect(ledger.find((entry) => entry.payment.id === 1)?.wasReversed).toBe(true)
   })
 
   it('has nothing in it before anyone has been paid', () => {
-    expect(buildPaymentLedger([createTestCreator({ payments: [] })], campaigns)).toEqual([])
+    expect(buildPaymentLedger([createTestCreator({ payments: [] })], directories)).toEqual([])
   })
 })
 
 describe('narrowing the ledger to one campaign', () => {
   it('keeps only what that campaign paid for', () => {
-    const ledger = buildPaymentLedger(creators, campaigns)
+    const ledger = buildPaymentLedger(creators, directories)
 
     expect(filterLedgerByCampaign(ledger, 2).map((entry) => entry.payment.id)).toEqual([11])
   })
 
   it('keeps everything when no campaign is chosen', () => {
-    const ledger = buildPaymentLedger(creators, campaigns)
+    const ledger = buildPaymentLedger(creators, directories)
 
     expect(filterLedgerByCampaign(ledger, EVERY_CAMPAIGN)).toHaveLength(3)
   })
@@ -95,7 +100,7 @@ describe('narrowing the ledger to one campaign', () => {
 
 describe('what the entries in view add up to', () => {
   it('totals what was paid, and to how many people', () => {
-    const totals = summariseLedger(buildPaymentLedger(creators, campaigns))
+    const totals = summariseLedger(buildPaymentLedger(creators, directories))
 
     expect(totals.netInCents).toBe(200_000)
     expect(totals.entryCount).toBe(3)
@@ -115,7 +120,7 @@ describe('what the entries in view add up to', () => {
       }),
     ]
 
-    const totals = summariseLedger(buildPaymentLedger(withReversal, campaigns))
+    const totals = summariseLedger(buildPaymentLedger(withReversal, directories))
 
     expect(totals.grossInCents).toBe(125_000)
     expect(totals.reversedInCents).toBe(100_000)
@@ -124,7 +129,7 @@ describe('what the entries in view add up to', () => {
   })
 
   it('counts a creator once however many times they were paid', () => {
-    const totals = summariseLedger(buildPaymentLedger([creators[0]!], campaigns))
+    const totals = summariseLedger(buildPaymentLedger([creators[0]!], directories))
 
     expect(totals.creatorCount).toBe(1)
     expect(totals.entryCount).toBe(2)
@@ -138,5 +143,42 @@ describe('what the entries in view add up to', () => {
       entryCount: 0,
       creatorCount: 0,
     })
+  })
+})
+
+describe('who recorded a payment', () => {
+  /* The payment stores an id. A name copied onto it would be right on the day
+     and wrong after a correction, a marriage, or a second M. Devlin. */
+  it('resolves the name from the directory, not from the record', () => {
+    const paid = [
+      createTestCreator({
+        payments: [createTestPayment({ recordedByTeamMemberId: 'tm-mdevlin' })],
+      }),
+    ]
+
+    expect(buildPaymentLedger(paid, directories)[0]?.recordedByName).toBe('M. Devlin')
+  })
+
+  it('follows a rename without rewriting a single payment', () => {
+    const paid = [
+      createTestCreator({
+        payments: [createTestPayment({ recordedByTeamMemberId: 'tm-mdevlin' })],
+      }),
+    ]
+    const renamed = teamMembers.map((member) =>
+      member.id === 'tm-mdevlin' ? { ...member, name: 'M. Devlin-Okafor' } : member,
+    )
+
+    expect(buildPaymentLedger(paid, { campaigns, teamMembers: renamed })[0]?.recordedByName).toBe(
+      'M. Devlin-Okafor',
+    )
+  })
+
+  it('says the directory has lost them rather than leaving a blank', () => {
+    const paid = [
+      createTestCreator({ payments: [createTestPayment({ recordedByTeamMemberId: 'tm-gone' })] }),
+    ]
+
+    expect(buildPaymentLedger(paid, directories)[0]?.recordedByName).toBe('Unknown team member')
   })
 })

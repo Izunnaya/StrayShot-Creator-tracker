@@ -180,3 +180,22 @@ describe('money typed to more than two decimal places', () => {
     expect(review.targetCostPerInstallInCents).toBe(50)
   })
 })
+
+describe('money too large to count to the cent', () => {
+  /* As a float, 90071992547409.93 is still finite, but scaled to cents it
+     is 9007199254740993 -- one past what a number can hold exactly. */
+  it('is refused rather than stored as a different amount', () => {
+    expect(
+      reviewCampaignDraft(draft({ totalBudget: '90071992547409.93' }), existing).problems,
+    ).toEqual(['budget-unreadable'])
+    expect(
+      reviewCampaignDraft(draft({ totalBudget: '999999999999999999' }), existing).problems,
+    ).toEqual(['budget-unreadable'])
+  })
+
+  it('reads the largest amount that fits, every cent intact', () => {
+    expect(
+      reviewCampaignDraft(draft({ totalBudget: '90071992547409.91' }), existing).totalBudgetInCents,
+    ).toBe(Number.MAX_SAFE_INTEGER)
+  })
+})

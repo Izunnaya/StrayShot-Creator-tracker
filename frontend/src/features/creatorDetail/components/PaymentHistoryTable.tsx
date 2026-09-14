@@ -1,7 +1,9 @@
+import { teamMembers } from '@/data/session'
 import type { Creator, Payment } from '@/data/types'
 import { getOutstandingBalance, hasOutstandingBalance } from '@/domain/creatorCalculations'
 import { sortPaymentsNewestFirst } from '@/domain/paymentHistory'
 import { canReverse, hasBeenReversed, isReversal } from '@/domain/paymentRecording'
+import { getTeamMemberName } from '@/domain/teamMembers'
 import { joinClassNames } from '@/lib/classNames'
 import { formatDate, formatPaymentAmount } from '@/lib/format'
 
@@ -77,7 +79,7 @@ export function PaymentHistoryTable({
             </div>
 
             <div className="order-4 text-right text-ink-muted sm:order-0 sm:text-left">
-              {payment.recordedBy}
+              {getTeamMemberName(teamMembers, payment.recordedByTeamMemberId)}
             </div>
 
             <div

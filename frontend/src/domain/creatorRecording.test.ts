@@ -9,6 +9,7 @@ import {
   emptyCreatorDraft,
   getContractedAmountInCents,
   getTrackingLink,
+  hasUnsavedChanges,
   NO_CAMPAIGN_ID,
   reviewCreatorDraft,
   type CreatorDraft,
@@ -307,6 +308,35 @@ describe('editing an existing creator', () => {
     expect(updated.streamsDelivered).toBe(2)
     expect(updated.installsAttributed).toBe(700)
     expect(updated.totalViews).toBe(110_000)
+  })
+})
+
+describe('whether a form still says what the record says', () => {
+  const saved = createTestCreator({ id: 5, email: 'nova@creators.gg' })
+
+  it('is unchanged straight after opening', () => {
+    expect(hasUnsavedChanges(draftFromCreator(saved), saved)).toBe(false)
+  })
+
+  it('notices the email, which is where an invite would go', () => {
+    const edited = { ...draftFromCreator(saved), email: 'nova@newhouse.gg' }
+
+    expect(hasUnsavedChanges(edited, saved)).toBe(true)
+  })
+
+  it('notices any field, not a chosen few', () => {
+    const original = draftFromCreator(saved)
+
+    for (const field of Object.keys(original) as (keyof CreatorDraft)[]) {
+      expect(hasUnsavedChanges({ ...original, [field]: 'something else' }, saved)).toBe(true)
+    }
+  })
+
+  it('counts a field typed and typed back as no change', () => {
+    const there = { ...draftFromCreator(saved), email: 'typo@creators.gg' }
+    const back = { ...there, email: saved.email }
+
+    expect(hasUnsavedChanges(back, saved)).toBe(false)
   })
 })
 

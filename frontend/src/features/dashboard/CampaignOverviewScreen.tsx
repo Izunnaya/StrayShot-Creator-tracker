@@ -13,6 +13,7 @@ import {
 } from '@/domain/creatorFiltering'
 import { sortCreators } from '@/domain/creatorSorting'
 import { Panel, SectionTitle } from '@/ui'
+import { CampaignBudgetPanel } from './components/CampaignBudgetPanel'
 import { CampaignFilterChipRow } from './components/CampaignFilterChipRow'
 import { CreatorPerformanceTable } from './components/CreatorPerformanceTable'
 import { CreatorStatusFilterChipRow } from './components/CreatorStatusFilterChipRow'
@@ -61,6 +62,9 @@ export function CampaignOverviewScreen({
   const { selection: filterSelection, selectCampaign, selectLifecycleStatus } = filterState
   const { selection: sortSelection, handleColumnClick } = sortState
 
+  /** The one campaign in view, or undefined with every campaign at once. */
+  const selectedCampaign = campaigns.find((campaign) => campaign.id === filterSelection.campaign)
+
   /**
    * The creator table shows creators matching BOTH filters, sorted by the
    * selected column.
@@ -88,13 +92,19 @@ export function CampaignOverviewScreen({
   )
 
   /**
-   * The headline figures are calculated from the same filtered set, so
-   * narrowing the filters also narrows the totals. Whether the team expects
-   * the status filter to move these figures is open question Q20.
+   * The headline figures follow the campaign but not the status filter.
+   *
+   * Campaign is a scope: it says which campaign these are the figures for.
+   * Status is a lens on the table below, and the chip counts and both
+   * follow-up panels already treat it that way -- the strip was the only
+   * place it changed what the numbers meant. Selecting Prospects made the
+   * campaign read "$0 of $0 committed", which looks like a broken campaign
+   * rather than an empty slice, and took away the denominator the table is
+   * being read against. Q20, decided.
    */
   const summary = useMemo(
-    () => calculateCampaignSummary(filterCreators(allCreators, filterSelection)),
-    [allCreators, filterSelection],
+    () => calculateCampaignSummary(filterCreatorsByCampaign(allCreators, filterSelection.campaign)),
+    [allCreators, filterSelection.campaign],
   )
 
   /** Chip counts follow the campaign filter but not the status filter. */
@@ -121,7 +131,6 @@ export function CampaignOverviewScreen({
    * no single target, so the figures fall back to a default — open question
    * Q21.
    */
-  const selectedCampaign = campaigns.find((campaign) => campaign.id === filterSelection.campaign)
   const targetCostPerInstallInCents =
     selectedCampaign?.targetCostPerInstallInCents ?? DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS
 
@@ -147,6 +156,10 @@ export function CampaignOverviewScreen({
           countsByStatus={countsByStatus}
         />
       </div>
+
+      {selectedCampaign && (
+        <CampaignBudgetPanel campaign={selectedCampaign} creators={allCreators} />
+      )}
 
       <CreatorPerformanceTable
         creators={creatorsInTable}

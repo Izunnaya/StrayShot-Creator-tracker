@@ -108,13 +108,13 @@ describe('creating a campaign', () => {
   })
 })
 
-describe('editing a campaign', () => {
-  /** Editing is only offered once the dashboard is showing one campaign. */
-  async function openTheEditFormForSeason2(user: ReturnType<typeof userEvent.setup>) {
-    await user.click(screen.getByRole('button', { name: /Season 2 Launch/ }))
-    await user.click(screen.getByRole('button', { name: 'Edit campaign' }))
-  }
+/** Editing is only offered once the dashboard is showing one campaign. */
+async function openTheEditFormForSeason2(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: /Season 2 Launch/ }))
+  await user.click(screen.getByRole('button', { name: 'Edit campaign' }))
+}
 
+describe('editing a campaign', () => {
   it('is offered only when a single campaign is in view', async () => {
     const user = userEvent.setup()
     render(<App />)
@@ -207,5 +207,45 @@ describe('editing a campaign', () => {
     await user.click(dialog().getByRole('button', { name: 'Save changes' }))
 
     expect(novaKessCostPerInstall().className).toMatch(/text-bad/)
+  })
+})
+
+describe('the budget, against what is already committed', () => {
+  it('says what the campaign has committed while the budget is being typed', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await openTheEditFormForSeason2(user)
+
+    // $34,300 of deals against the $30,000 budget the form opens with.
+    expect(dialog().getByText(/\$34,300 is already committed/)).toBeTruthy()
+    expect(dialog().getByText(/\$4,300 more than this budget/)).toBeTruthy()
+  })
+
+  it('follows the number being typed rather than the one that was saved', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await openTheEditFormForSeason2(user)
+
+    const budget = dialog().getByLabelText('Total budget in dollars')
+    await user.clear(budget)
+    await user.type(budget, '40000')
+
+    expect(dialog().getByText(/leaving \$5,700 of this budget/)).toBeTruthy()
+  })
+
+  it('saves a budget under what is committed rather than refusing the edit', async () => {
+    /* The deals were agreed. Refusing the edit would not unagree them, and a
+       tracker that will not hold a fact gets worked around. DECISIONS Q7. */
+    const user = userEvent.setup()
+    render(<App />)
+    await openTheEditFormForSeason2(user)
+
+    const budget = dialog().getByLabelText('Total budget in dollars')
+    await user.clear(budget)
+    await user.type(budget, '20000')
+    await user.click(dialog().getByRole('button', { name: 'Save changes' }))
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.getByText('$14,300 over budget')).toBeTruthy()
   })
 })

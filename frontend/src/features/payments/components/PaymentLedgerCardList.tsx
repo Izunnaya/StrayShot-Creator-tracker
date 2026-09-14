@@ -96,7 +96,7 @@ function PaymentLedgerCard({
         <span className="whitespace-nowrap font-mono tracking-[0.5px]">
           {payment.reference || '—'}
         </span>
-        <span>Recorded by {payment.recordedBy}</span>
+        <span>Recorded by {entry.recordedByName}</span>
       </div>
     </li>
   )

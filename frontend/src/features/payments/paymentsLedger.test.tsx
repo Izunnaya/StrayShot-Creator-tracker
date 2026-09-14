@@ -101,6 +101,27 @@ describe('money entered elsewhere', () => {
     expect(screen.getByText('$48,500')).toBeTruthy()
   })
 
+  it('names who recorded it, resolved from the id the payment stores', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    // The fixture payments carry ids; the directory supplies the names.
+    await user.click(screen.getByRole('button', { name: 'Payments' }))
+    expect(within(ledger().getAllByRole('row')[1]!).getByText('M. Devlin')).toBeTruthy()
+
+    // A payment recorded now is stamped with the session's id, and reads back
+    // as that person's name without the name ever being written down.
+    await user.click(screen.getByRole('button', { name: 'Overview' }))
+    await user.click(screen.getAllByRole('button', { name: /Record payment/ })[0]!)
+    await user.type(dialog().getByLabelText('Amount paid in dollars'), '250')
+    await user.type(dialog().getByLabelText('Reference or transaction ID'), 'WHO-RECORDED-1')
+    await user.click(dialog().getByRole('button', { name: 'Save payment' }))
+    await user.click(screen.getByRole('button', { name: 'Payments' }))
+
+    const recorded = ledger().getByText('WHO-RECORDED-1').closest('tr')!
+    expect(within(recorded).getByText('A. Raouf')).toBeTruthy()
+  })
+
   it('shows a reversal beside what it undid, and takes it off the total', async () => {
     const user = userEvent.setup()
     render(<App />)

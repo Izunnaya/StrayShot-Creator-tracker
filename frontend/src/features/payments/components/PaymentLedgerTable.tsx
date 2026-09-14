@@ -143,7 +143,7 @@ function PaymentLedgerTableRow({
         {payment.reference || '—'}
       </td>
 
-      <td className="px-2 py-3 text-ink-muted">{payment.recordedBy}</td>
+      <td className="px-2 py-3 text-ink-muted">{entry.recordedByName}</td>
 
       <td
         className={joinClassNames(

@@ -12,7 +12,7 @@ import {
   filterCreatorsByCampaign,
 } from '@/domain/creatorFiltering'
 import { sortCreators } from '@/domain/creatorSorting'
-import { Panel, SectionTitle } from '@/ui'
+import { Panel, SearchField, SectionTitle } from '@/ui'
 import { CampaignBudgetPanel } from './components/CampaignBudgetPanel'
 import { CampaignFilterChipRow } from './components/CampaignFilterChipRow'
 import { CreatorPerformanceTable } from './components/CreatorPerformanceTable'
@@ -59,15 +59,20 @@ export function CampaignOverviewScreen({
   /** Edits whichever campaign the filter is currently narrowed to. */
   onEditCampaign?: (campaign: Campaign) => void
 }) {
-  const { selection: filterSelection, selectCampaign, selectLifecycleStatus } = filterState
+  const {
+    selection: filterSelection,
+    selectCampaign,
+    selectLifecycleStatus,
+    setSearchText,
+  } = filterState
   const { selection: sortSelection, handleColumnClick } = sortState
 
   /** The one campaign in view, or undefined with every campaign at once. */
   const selectedCampaign = campaigns.find((campaign) => campaign.id === filterSelection.campaign)
 
   /**
-   * The creator table shows creators matching BOTH filters, sorted by the
-   * selected column.
+   * The creator table shows creators matching every filter -- campaign,
+   * status and search -- sorted by the selected column.
    */
   const creatorsInTable = useMemo(
     () => sortCreators(filterCreators(allCreators, filterSelection), sortSelection),
@@ -92,7 +97,9 @@ export function CampaignOverviewScreen({
   )
 
   /**
-   * The headline figures follow the campaign but not the status filter.
+   * The headline figures follow the campaign but not the status filter, and
+   * not the search either, for the same reason: a search is a lens on the
+   * table, not a change of what the campaign has cost.
    *
    * Campaign is a scope: it says which campaign these are the figures for.
    * Status is a lens on the table below, and the chip counts and both
@@ -147,6 +154,14 @@ export function CampaignOverviewScreen({
           onCreateCampaign={onCreateCampaign}
           onEditSelectedCampaign={
             selectedCampaign && onEditCampaign ? () => onEditCampaign(selectedCampaign) : undefined
+          }
+          leading={
+            <SearchField
+              label="Search creators by name or code"
+              placeholder="Search creator or code"
+              value={filterSelection.searchText}
+              onValueChange={setSearchText}
+            />
           }
         />
 

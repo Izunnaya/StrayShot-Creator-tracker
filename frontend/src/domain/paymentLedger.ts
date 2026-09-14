@@ -1,7 +1,8 @@
 import type { TeamMember } from '@/data/session'
 import type { Campaign, Creator, Payment } from '@/data/types'
 import { getCampaignName } from './campaigns'
-import { EVERY_CAMPAIGN, type CampaignFilter } from './creatorFiltering'
+import { EVERY_CAMPAIGN, normaliseSearch, type CampaignFilter } from './creatorFiltering'
+import type { SortDirection } from './creatorSorting'
 import { hasBeenReversed, isReversal } from './paymentRecording'
 import { getTeamMemberName } from './teamMembers'
 
@@ -82,12 +83,127 @@ export function buildPaymentLedger(
   )
 }
 
+/** Everything the ledger can be narrowed by. */
+export interface LedgerFilter {
+  campaign: CampaignFilter
+  /** Matched against the creator's name or code, or the payment reference. */
+  searchText: string
+  /** ISO date, inclusive. Empty means no lower bound. */
+  paidFrom: string
+  /** ISO date, inclusive. Empty means no upper bound. */
+  paidTo: string
+}
+
+export const UNFILTERED_LEDGER: LedgerFilter = {
+  campaign: EVERY_CAMPAIGN,
+  searchText: '',
+  paidFrom: '',
+  paidTo: '',
+}
+
 export function filterLedgerByCampaign(
   entries: LedgerEntry[],
   campaign: CampaignFilter,
 ): LedgerEntry[] {
   if (campaign === EVERY_CAMPAIGN) return entries
   return entries.filter((entry) => entry.campaignId === campaign)
+}
+
+/**
+ * The entries matching every part of the filter at once.
+ *
+ * The reference is searched because it is what a bank statement line carries:
+ * reconciling means finding the payment behind "WISE-8842-B", not the person.
+ *
+ * Both ends of the date range are inclusive, since "from the 1st to the 14th"
+ * means the 14th too. Dates are ISO strings, which compare correctly as text.
+ * A range that ends before it starts matches nothing rather than being
+ * silently swapped — see isDateRangeBackwards, which lets the screen say why.
+ *
+ * A reversal is filtered on its own date and reference like any other entry.
+ * Narrowing to a month can therefore show a payment without the reversal that
+ * later cancelled it; the Reversed tag on the payment is what says so.
+ */
+export function filterLedger(entries: LedgerEntry[], filter: LedgerFilter): LedgerEntry[] {
+  const needle = normaliseSearch(filter.searchText)
+
+  return filterLedgerByCampaign(entries, filter.campaign).filter((entry) => {
+    const { paidOn, reference } = entry.payment
+    if (filter.paidFrom && paidOn < filter.paidFrom) return false
+    if (filter.paidTo && paidOn > filter.paidTo) return false
+    if (!needle) return true
+    return (
+      entry.creatorName.toLowerCase().includes(needle) ||
+      entry.creatorCode.toLowerCase().includes(needle) ||
+      reference.toLowerCase().includes(needle)
+    )
+  })
+}
+
+/** True when both dates are set and the range ends before it starts. */
+export function isDateRangeBackwards(filter: Pick<LedgerFilter, 'paidFrom' | 'paidTo'>): boolean {
+  return Boolean(filter.paidFrom && filter.paidTo && filter.paidFrom > filter.paidTo)
+}
+
+export type LedgerSortColumn = 'date' | 'amount'
+
+export interface LedgerSortSelection {
+  column: LedgerSortColumn
+  direction: SortDirection
+}
+
+/** How the ledger opens: newest first, the order a statement is read in. */
+export const DEFAULT_LEDGER_SORT: LedgerSortSelection = { column: 'date', direction: 'descending' }
+
+/**
+ * A sorted copy of the entries; the input is left alone.
+ *
+ * Amount sorts on the signed figure, so on largest-first a reversal falls to
+ * the bottom, below every payment — it took money back rather than paying
+ * any. Entries that tie are ordered newest first, then most recently recorded
+ * first, whichever way the column runs: a tie says nothing about direction,
+ * and the most recent is the one being looked for.
+ */
+export function sortLedger(entries: LedgerEntry[], selection: LedgerSortSelection): LedgerEntry[] {
+  const sign = selection.direction === 'ascending' ? 1 : -1
+
+  return [...entries].sort((left, right) => {
+    const primary =
+      selection.column === 'amount'
+        ? left.payment.amountInCents - right.payment.amountInCents
+        : left.payment.paidOn.localeCompare(right.payment.paidOn)
+
+    return (
+      primary * sign ||
+      right.payment.paidOn.localeCompare(left.payment.paidOn) ||
+      right.payment.id - left.payment.id
+    )
+  })
+}
+
+/**
+ * What clicking a sortable column heading does: the column already sorted
+ * reverses, and any other column takes over largest or newest first, which is
+ * the end of the ledger that is usually wanted.
+ */
+export function ledgerSortAfterColumnClick(
+  current: LedgerSortSelection,
+  column: LedgerSortColumn,
+): LedgerSortSelection {
+  if (current.column === column) {
+    return { column, direction: current.direction === 'ascending' ? 'descending' : 'ascending' }
+  }
+  return { column, direction: 'descending' }
+}
+
+/**
+ * The phone ledger has no column headings to click, so one button steps
+ * through every order: date newest first, date oldest first, amount largest
+ * first, amount smallest first, and round again.
+ */
+export function nextLedgerSort(current: LedgerSortSelection): LedgerSortSelection {
+  if (current.direction === 'descending') return { ...current, direction: 'ascending' }
+  return { column: current.column === 'date' ? 'amount' : 'date', direction: 'descending' }
 }
 
 /**

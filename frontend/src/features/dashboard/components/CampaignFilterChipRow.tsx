@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Campaign } from '@/data/types'
 import { EVERY_CAMPAIGN, type CampaignFilter } from '@/domain/creatorFiltering'
 import { Button, FilterChip, Label } from '@/ui'
@@ -10,6 +11,10 @@ import { Button, FilterChip, Label } from '@/ui'
  * the only time there is one campaign to mean. Creating is offered only where
  * the screen can handle it -- the ledger filters by campaign without owning
  * them, and a button that does nothing when pressed is worse than no button.
+ *
+ * The search leads the row and the ledger's date range follows it, both as
+ * items of this same wrapping row rather than rows of their own, so on a wide
+ * screen they sit in one line with the chips as the design lays them out.
  */
 export function CampaignFilterChipRow({
   campaigns,
@@ -18,6 +23,8 @@ export function CampaignFilterChipRow({
   canEditSelectedCampaign,
   onCreateCampaign,
   onEditSelectedCampaign,
+  leading,
+  trailing,
 }: {
   campaigns: Campaign[]
   selectedCampaign: CampaignFilter
@@ -25,9 +32,15 @@ export function CampaignFilterChipRow({
   canEditSelectedCampaign: boolean
   onCreateCampaign?: () => void
   onEditSelectedCampaign?: () => void
+  /** Placed before the chips: the screen's search. */
+  leading?: ReactNode
+  /** Placed after the chips and their controls. */
+  trailing?: ReactNode
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
+      {leading}
+
       <Label className="mr-1.5">Campaign</Label>
 
       <FilterChip
@@ -56,6 +69,8 @@ export function CampaignFilterChipRow({
           Edit campaign
         </Button>
       )}
+
+      {trailing}
     </div>
   )
 }

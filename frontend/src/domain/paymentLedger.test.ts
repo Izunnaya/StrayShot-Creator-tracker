@@ -6,7 +6,19 @@ import {
 } from '@/testing/createTestCreator'
 import { EVERY_CAMPAIGN } from './creatorFiltering'
 import { teamMembers } from '@/data/session'
-import { buildPaymentLedger, filterLedgerByCampaign, summariseLedger } from './paymentLedger'
+import {
+  buildPaymentLedger,
+  DEFAULT_LEDGER_SORT,
+  filterLedger,
+  filterLedgerByCampaign,
+  isDateRangeBackwards,
+  ledgerSortAfterColumnClick,
+  nextLedgerSort,
+  sortLedger,
+  summariseLedger,
+  UNFILTERED_LEDGER,
+  type LedgerSortSelection,
+} from './paymentLedger'
 
 const campaigns = [
   createTestCampaign({ id: 1, name: 'Season 2 Launch' }),
@@ -95,6 +107,139 @@ describe('narrowing the ledger to one campaign', () => {
     const ledger = buildPaymentLedger(creators, directories)
 
     expect(filterLedgerByCampaign(ledger, EVERY_CAMPAIGN)).toHaveLength(3)
+  })
+})
+
+describe('searching and dating the ledger', () => {
+  const searchable = [
+    createTestCreator({
+      id: 1,
+      name: 'NovaKess',
+      creatorCode: 'NOVA',
+      campaignId: 1,
+      payments: [
+        createTestPayment({ id: 1, paidOn: '2026-07-31', reference: 'TRF-2291-04' }),
+        createTestPayment({ id: 2, paidOn: '2026-08-01', reference: 'WISE-8842-B' }),
+      ],
+    }),
+    createTestCreator({
+      id: 2,
+      name: 'AshFall',
+      creatorCode: 'ASH',
+      campaignId: 2,
+      payments: [createTestPayment({ id: 3, paidOn: '2026-08-14', reference: 'TRF-2413-11' })],
+    }),
+  ]
+  const ledger = buildPaymentLedger(searchable, directories)
+  const idsFor = (changes: Partial<typeof UNFILTERED_LEDGER>) =>
+    filterLedger(ledger, { ...UNFILTERED_LEDGER, ...changes }).map((entry) => entry.payment.id)
+
+  it('keeps everything when nothing is set', () => {
+    expect(idsFor({})).toEqual([3, 2, 1])
+  })
+
+  it('finds a payment by its reference, ignoring case and stray spaces', () => {
+    expect(idsFor({ searchText: ' wise-8842 ' })).toEqual([2])
+  })
+
+  it('finds every payment to a creator by name or by code', () => {
+    expect(idsFor({ searchText: 'kess' })).toEqual([2, 1])
+    expect(idsFor({ searchText: 'ash' })).toEqual([3])
+  })
+
+  it('includes both ends of the date range', () => {
+    expect(idsFor({ paidFrom: '2026-08-01', paidTo: '2026-08-14' })).toEqual([3, 2])
+  })
+
+  it('takes either end of the range on its own', () => {
+    expect(idsFor({ paidFrom: '2026-08-01' })).toEqual([3, 2])
+    expect(idsFor({ paidTo: '2026-07-31' })).toEqual([1])
+  })
+
+  it('matches nothing for a range that ends before it starts', () => {
+    const backwards = { paidFrom: '2026-08-14', paidTo: '2026-08-01' }
+
+    expect(idsFor(backwards)).toEqual([])
+    expect(isDateRangeBackwards(backwards)).toBe(true)
+    expect(isDateRangeBackwards({ paidFrom: '2026-08-01', paidTo: '2026-08-01' })).toBe(false)
+    expect(isDateRangeBackwards({ paidFrom: '2026-08-14', paidTo: '' })).toBe(false)
+  })
+
+  it('applies the campaign, the search and the dates together', () => {
+    expect(idsFor({ campaign: 1, searchText: 'TRF', paidFrom: '2026-07-01' })).toEqual([1])
+  })
+})
+
+describe('ordering the ledger', () => {
+  const sortable = [
+    createTestCreator({
+      id: 1,
+      payments: [
+        createTestPayment({ id: 1, paidOn: '2026-07-18', amountInCents: 450_000 }),
+        createTestPayment({ id: 2, paidOn: '2026-08-20', amountInCents: 450_000 }),
+        createTestPayment({ id: 3, paidOn: '2026-08-08', amountInCents: 140_000 }),
+        createTestPayment({
+          id: 4,
+          paidOn: '2026-08-21',
+          amountInCents: -140_000,
+          reversesPaymentId: 3,
+        }),
+      ],
+    }),
+  ]
+  const ledger = buildPaymentLedger(sortable, directories)
+  const idsSortedBy = (selection: LedgerSortSelection) =>
+    sortLedger(ledger, selection).map((entry) => entry.payment.id)
+
+  it('opens newest first', () => {
+    expect(idsSortedBy(DEFAULT_LEDGER_SORT)).toEqual([4, 2, 3, 1])
+  })
+
+  it('runs oldest first when ascending', () => {
+    expect(idsSortedBy({ column: 'date', direction: 'ascending' })).toEqual([1, 3, 2, 4])
+  })
+
+  it('puts the largest first, breaking a tie in favour of the more recent', () => {
+    expect(idsSortedBy({ column: 'amount', direction: 'descending' })).toEqual([2, 1, 3, 4])
+  })
+
+  it('sorts a reversal by its signed amount, below every payment', () => {
+    expect(idsSortedBy({ column: 'amount', direction: 'ascending' })).toEqual([4, 3, 2, 1])
+  })
+
+  it('leaves the ledger it was given untouched', () => {
+    const before = ledger.map((entry) => entry.payment.id)
+    sortLedger(ledger, { column: 'amount', direction: 'ascending' })
+
+    expect(ledger.map((entry) => entry.payment.id)).toEqual(before)
+  })
+})
+
+describe('changing the ledger order', () => {
+  it('reverses the column already sorted', () => {
+    expect(ledgerSortAfterColumnClick(DEFAULT_LEDGER_SORT, 'date')).toEqual({
+      column: 'date',
+      direction: 'ascending',
+    })
+  })
+
+  it('starts another column largest first, whatever direction was in use', () => {
+    expect(
+      ledgerSortAfterColumnClick({ column: 'date', direction: 'ascending' }, 'amount'),
+    ).toEqual({ column: 'amount', direction: 'descending' })
+  })
+
+  it('steps the phone button through all four orders and back to the start', () => {
+    const steps = [DEFAULT_LEDGER_SORT]
+    for (let step = 0; step < 4; step++) steps.push(nextLedgerSort(steps[steps.length - 1]!))
+
+    expect(steps).toEqual([
+      { column: 'date', direction: 'descending' },
+      { column: 'date', direction: 'ascending' },
+      { column: 'amount', direction: 'descending' },
+      { column: 'amount', direction: 'ascending' },
+      { column: 'date', direction: 'descending' },
+    ])
   })
 })
 

@@ -13,17 +13,16 @@ import { formatDate, formatPaymentAmount } from '@/lib/format'
  */
 export function PaymentLedgerCardList({
   entries,
+  emptyMessage,
   onSelectCreator,
 }: {
   entries: LedgerEntry[]
+  /** Shown in place of the cards when nothing matches. */
+  emptyMessage: string
   onSelectCreator?: (creatorId: number) => void
 }) {
   if (entries.length === 0) {
-    return (
-      <p className="px-4 py-6 text-[14px] text-ink-muted">
-        No payments have been recorded for this campaign.
-      </p>
-    )
+    return <p className="px-4 py-6 text-[14px] text-ink-muted">{emptyMessage}</p>
   }
 
   return (

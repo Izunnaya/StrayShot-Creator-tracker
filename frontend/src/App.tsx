@@ -9,12 +9,12 @@ import {
   getCampaignName,
   type CampaignDraft,
 } from './domain/campaigns'
-import { EVERY_CAMPAIGN, type CampaignFilter } from './domain/creatorFiltering'
 import { applyDraftToCreator, buildCreator, type CreatorDraft } from './domain/creatorRecording'
 import { buildPayment, buildReversal, type PaymentDraft } from './domain/paymentRecording'
 import { CreatorDetailScreen } from './features/creatorDetail/CreatorDetailScreen'
 import { CampaignOverviewScreen } from './features/dashboard/CampaignOverviewScreen'
 import { PaymentsLedgerScreen } from './features/payments/PaymentsLedgerScreen'
+import { usePaymentLedgerSelection } from './features/payments/hooks/usePaymentLedgerSelection'
 import { useCreatorFilterSelection } from './features/dashboard/hooks/useCreatorFilterSelection'
 import { useCreatorSortSelection } from './features/dashboard/hooks/useCreatorSortSelection'
 import { CampaignModal } from './features/campaigns/CampaignModal'
@@ -52,14 +52,8 @@ export default function App() {
   /** null while closed; a creator's id while editing; 'new' while adding. */
   const [creatorBeingEditedId, setCreatorBeingEditedId] = useState<number | 'new' | null>(null)
 
-  /**
-   * The ledger's own campaign filter, kept here rather than in the screen so
-   * it survives a trip to a creator and back, as the dashboard's does. It is
-   * separate from the dashboard's on purpose: narrowing one screen is not an
-   * instruction about the other.
-   */
-  const [ledgerCampaign, setLedgerCampaign] = useState<CampaignFilter>(EVERY_CAMPAIGN)
-
+  /** Kept here so each screen's filters survive a trip to a creator and back. */
+  const ledgerSelectionState = usePaymentLedgerSelection()
   const filterState = useCreatorFilterSelection()
   const sortState = useCreatorSortSelection()
 
@@ -186,8 +180,7 @@ export default function App() {
         <PaymentsLedgerScreen
           campaigns={campaigns}
           creators={creators}
-          selectedCampaign={ledgerCampaign}
-          onSelectCampaign={setLedgerCampaign}
+          selectionState={ledgerSelectionState}
           onSelectCreator={setSelectedCreatorId}
         />
       ) : (

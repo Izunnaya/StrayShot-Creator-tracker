@@ -1,48 +1,95 @@
-import type { LedgerEntry } from '@/domain/paymentLedger'
+import type { LedgerEntry, LedgerSortColumn, LedgerSortSelection } from '@/domain/paymentLedger'
 import { joinClassNames } from '@/lib/classNames'
-import { formatDate, formatPaymentAmount } from '@/lib/format'
+import { formatDate, formatNumber, formatPaymentAmount } from '@/lib/format'
 import { PaymentLedgerCardList } from './PaymentLedgerCardList'
 
 /**
- * Every payment in view, newest first, one row each.
+ * Every payment in view, one row each, in the order chosen.
  *
  * The columns are the ones a bank statement is reconciled against: when the
  * money moved, who it went to, what it came out of, how it was sent, and the
  * reference to match it by. Amounts are in cents throughout — this is the
  * screen where a rounded figure would be the one that fails to reconcile.
  *
+ * Date and amount are the two orders a ledger is read in, so those headings
+ * sort and the rest do not. The total closes the table, as it would on paper,
+ * and is the net of the rows above it.
+ *
  * Cards below lg and the table from lg up, the same division the creator
  * table makes and for the same reason: seven columns cannot be read on a
  * phone, and overriding a table's display strips its semantics in some screen
- * readers rather than adapting them.
+ * readers rather than adapting them. The cards have no headings to click, so
+ * they get a single button that steps through the orders instead.
  */
 
-const COLUMNS = [
-  { key: 'date', heading: 'Date paid', weight: 1 },
+const COLUMNS: { key: string; heading: string; weight: number; sortsBy?: LedgerSortColumn }[] = [
+  { key: 'date', heading: 'Date paid', weight: 1, sortsBy: 'date' },
   { key: 'creator', heading: 'Creator', weight: 1.3 },
   { key: 'campaign', heading: 'Campaign', weight: 1.2 },
   { key: 'method', heading: 'Method', weight: 1 },
   { key: 'reference', heading: 'Reference', weight: 1.4 },
   { key: 'recordedBy', heading: 'Recorded by', weight: 1 },
-  { key: 'amount', heading: 'Amount', weight: 1 },
+  { key: 'amount', heading: 'Amount', weight: 1, sortsBy: 'amount' },
 ]
 
 const MINIMUM_WIDTH_PX = 980
 
 export function PaymentLedgerTable({
   entries,
+  netTotalInCents,
+  sortSelection,
+  onColumnHeadingClick,
+  onStepSort,
+  emptyMessage,
   onSelectCreator,
 }: {
   entries: LedgerEntry[]
+  /** What the entries add up to, reversals deducted. */
+  netTotalInCents: number
+  sortSelection: LedgerSortSelection
+  onColumnHeadingClick: (column: LedgerSortColumn) => void
+  /** Moves the phone layout on to its next order. */
+  onStepSort: () => void
+  /** Shown in place of the rows when nothing matches. */
+  emptyMessage: string
   /** Opens the creator a payment went to. Absent where there is nowhere to go. */
   onSelectCreator?: (creatorId: number) => void
 }) {
   const totalWeight = COLUMNS.reduce((sum, column) => sum + column.weight, 0)
+  const paymentCount = `${formatNumber(entries.length)} ${entries.length === 1 ? 'payment' : 'payments'}`
 
   return (
     <div className="border border-hair bg-panel">
       <div className="lg:hidden">
-        <PaymentLedgerCardList entries={entries} onSelectCreator={onSelectCreator} />
+        <div className="flex items-center justify-between gap-3 border-b border-hair px-4 py-2">
+          <span className="text-[11px] uppercase tracking-[1.5px] text-ink-muted">
+            {paymentCount}
+          </span>
+          <button
+            type="button"
+            onClick={onStepSort}
+            aria-label={`Sorted by ${describeSort(sortSelection)}. Change order`}
+            className="min-h-10 cursor-pointer whitespace-nowrap border border-hair bg-transparent px-3 py-2 text-[12px] uppercase tracking-[1px] text-ink-muted hover:border-amber hover:text-amber focus-visible:outline-2 focus-visible:outline-amber"
+          >
+            Sort · {sortSelection.column === 'date' ? 'Date' : 'Amount'}
+            {sortSelection.direction === 'ascending' ? ' ↑' : ' ↓'}
+          </button>
+        </div>
+
+        <PaymentLedgerCardList
+          entries={entries}
+          emptyMessage={emptyMessage}
+          onSelectCreator={onSelectCreator}
+        />
+
+        <div className="sticky bottom-0 flex items-center justify-between gap-2.5 border-t-2 border-amber bg-total-row px-4 py-3.5">
+          <span className="text-[11px] uppercase tracking-[1.5px] text-ink-muted">
+            Total in filter
+          </span>
+          <span className="whitespace-nowrap font-mono text-[19px] text-amber">
+            {formatPaymentAmount(netTotalInCents)}
+          </span>
+        </div>
       </div>
 
       <div className="hidden overflow-x-auto lg:block">
@@ -58,18 +105,57 @@ export function PaymentLedgerTable({
           </colgroup>
           <thead className="border-b border-hair bg-panel-head">
             <tr>
-              {COLUMNS.map((column) => (
-                <th
-                  key={column.key}
-                  scope="col"
-                  className={joinClassNames(
-                    'whitespace-nowrap px-2 py-2.75 text-[11px] font-normal uppercase tracking-[1.5px] text-ink-muted first:pl-4.5 last:pr-4.5',
-                    column.key === 'amount' && 'text-right',
-                  )}
-                >
-                  {column.heading}
-                </th>
-              ))}
+              {COLUMNS.map((column) => {
+                const alignRight = column.key === 'amount'
+                const headingClasses = joinClassNames(
+                  'whitespace-nowrap py-2.75 text-[11px] font-normal uppercase tracking-[1.5px]',
+                  alignRight && 'text-right',
+                )
+
+                if (!column.sortsBy) {
+                  return (
+                    <th
+                      key={column.key}
+                      scope="col"
+                      className={joinClassNames(
+                        headingClasses,
+                        'px-2 text-ink-muted first:pl-4.5 last:pr-4.5',
+                      )}
+                    >
+                      {column.heading}
+                    </th>
+                  )
+                }
+
+                const sortsBy = column.sortsBy
+                const selected = sortSelection.column === sortsBy
+                return (
+                  <th
+                    key={column.key}
+                    scope="col"
+                    aria-sort={selected ? sortSelection.direction : 'none'}
+                    className="px-2 first:pl-4.5 last:pr-4.5"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => onColumnHeadingClick(sortsBy)}
+                      className={joinClassNames(
+                        headingClasses,
+                        'w-full cursor-pointer border-none bg-transparent hover:text-amber focus-visible:outline-2 focus-visible:outline-amber',
+                        !alignRight && 'text-left',
+                        selected ? 'text-amber' : 'text-ink-muted',
+                      )}
+                    >
+                      {column.heading}
+                      {selected && (
+                        <span aria-hidden="true">
+                          {sortSelection.direction === 'ascending' ? ' ▲' : ' ▼'}
+                        </span>
+                      )}
+                    </button>
+                  </th>
+                )
+              })}
             </tr>
           </thead>
           <tbody>
@@ -84,15 +170,36 @@ export function PaymentLedgerTable({
             {entries.length === 0 && (
               <tr>
                 <td colSpan={COLUMNS.length} className="px-4.5 py-6 text-[14px] text-ink-muted">
-                  No payments have been recorded for this campaign.
+                  {emptyMessage}
                 </td>
               </tr>
             )}
           </tbody>
+          <tfoot className="border-t-2 border-amber bg-total-row">
+            <tr>
+              <th
+                scope="row"
+                colSpan={COLUMNS.length - 1}
+                className="py-3 pl-4.5 pr-2 text-left text-[11px] font-normal uppercase tracking-[1.5px] text-ink-muted"
+              >
+                Total · {paymentCount} in filter
+              </th>
+              <td className="whitespace-nowrap py-3 pl-2 pr-4.5 text-right font-mono text-[15px] font-medium text-amber">
+                {formatPaymentAmount(netTotalInCents)}
+              </td>
+            </tr>
+          </tfoot>
         </table>
       </div>
     </div>
   )
+}
+
+function describeSort(selection: LedgerSortSelection): string {
+  if (selection.column === 'date') {
+    return selection.direction === 'descending' ? 'date, newest first' : 'date, oldest first'
+  }
+  return selection.direction === 'descending' ? 'amount, largest first' : 'amount, smallest first'
 }
 
 function PaymentLedgerTableRow({

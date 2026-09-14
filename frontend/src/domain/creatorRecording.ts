@@ -374,7 +374,8 @@ export function draftFromCreator(creator: Creator): CreatorDraft {
     campaignId: creator.campaignId === NO_CAMPAIGN_ID ? '' : String(creator.campaignId),
     creatorCode: creator.creatorCode,
     rateModel: creator.rateModel ?? 'per-stream',
-    agreedRate: creator.agreedRateInCents ? String(creator.agreedRateInCents / 100) : '',
+    agreedRate:
+      creator.campaignId === NO_CAMPAIGN_ID ? '' : String(creator.agreedRateInCents / 100),
     payoutCurrency: creator.payoutCurrency ?? 'USD',
     streamsCommitted: creator.streamsCommitted ? String(creator.streamsCommitted) : '',
     minimumStreamHours: creator.minimumStreamHours ? String(creator.minimumStreamHours) : '',

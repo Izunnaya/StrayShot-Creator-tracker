@@ -18,6 +18,7 @@ export function Modal({
   title,
   subtitle,
   aside,
+  titleAction,
   onClose,
   children,
   footer,
@@ -29,6 +30,8 @@ export function Modal({
   subtitle?: ReactNode
   /** A short note opposite the title, from md up only. */
   aside?: ReactNode
+  /** A control opposite the title at every width, such as a filter sheet's Clear all. */
+  titleAction?: ReactNode
   onClose: () => void
   children: ReactNode
   /** Actions row, after the body. */
@@ -132,6 +135,7 @@ export function Modal({
             {title}
           </h2>
           {aside && <div className="hidden text-[12px] text-ink-muted md:block">{aside}</div>}
+          {titleAction}
         </div>
         {subtitle && <div className="mt-0.75 text-[14px] text-ink-muted md:mt-1">{subtitle}</div>}
 

@@ -6,6 +6,7 @@
 export { Button, type ButtonSize, type ButtonVariant } from './Button'
 export { CreatorStatusPill } from './CreatorStatusPill'
 export { FilterChip } from './FilterChip'
+export { FilterSheetButton, FilterSheetOption, FilterSheetSection } from './FilterSheet'
 export {
   dialogActionsClasses,
   emphasisedFieldInputClasses,

@@ -159,7 +159,7 @@ describe('editing a creator', () => {
 
     // 3 streams at the new rate is $6,000 agreed; the 4,210 installs and the
     // $3,200 already paid are untouched.
-    expect(screen.getByText(/\$3,200\.00 of \$6,000\.00 paid/)).toBeTruthy()
+    expect(screen.getByText(/\$3,200 of \$6,000 paid/)).toBeTruthy()
     expect(screen.getByText('4,210')).toBeTruthy()
   })
 

@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { createTestCreator, createTestPayment } from '@/testing/createTestCreator'
 import { getAmountPaid, getOutstandingBalance } from '@/domain/creatorCalculations'
-import { formatCostPerInstall, formatMoney, formatPaymentAmount } from './format'
+import {
+  formatCostPerInstall,
+  formatCountCompact,
+  formatMoney,
+  formatPaymentAmount,
+} from './format'
 
 /**
  * Money is held in cents everywhere and only becomes dollars here.
@@ -20,7 +25,8 @@ describe('formatMoney', () => {
 
   it('puts the sign before the currency, for the negative half of a reversal', () => {
     expect(formatMoney(-160_000)).toBe('-$1,600')
-    expect(formatPaymentAmount(-160_000)).toBe('-$1,600.00')
+    expect(formatPaymentAmount(-160_000)).toBe('-$1,600')
+    expect(formatPaymentAmount(-10_049)).toBe('-$100.49')
   })
 
   it('rounds to the nearest dollar rather than truncating', () => {
@@ -33,7 +39,20 @@ describe('formatPaymentAmount', () => {
   it('keeps the exact amount, because these rows are read against a statement', () => {
     expect(formatPaymentAmount(10_049)).toBe('$100.49')
     expect(formatPaymentAmount(1)).toBe('$0.01')
-    expect(formatPaymentAmount(160_000)).toBe('$1,600.00')
+    expect(formatPaymentAmount(160_010)).toBe('$1,600.10')
+  })
+
+  it('writes a whole-dollar amount without cents, as the design does', () => {
+    expect(formatPaymentAmount(160_000)).toBe('$1,600')
+    expect(formatPaymentAmount(0)).toBe('$0')
+  })
+})
+
+describe('formatCountCompact', () => {
+  it('shortens from six digits up, and leaves smaller figures whole', () => {
+    expect(formatCountCompact(96_000)).toBe('96,000')
+    expect(formatCountCompact(412_000)).toBe('412K')
+    expect(formatCountCompact(2_280_000)).toBe('2.28M')
   })
 })
 
@@ -61,7 +80,7 @@ describe('money held in cents', () => {
 
     // The same figures as dollars: 0.1 + 0.2 + 0.7 is 0.9999999999999999.
     expect(getAmountPaid(creator)).toBe(100)
-    expect(formatPaymentAmount(getAmountPaid(creator))).toBe('$1.00')
+    expect(formatPaymentAmount(getAmountPaid(creator))).toBe('$1')
   })
 
   it('survives a payment with cents through the whole balance calculation', () => {

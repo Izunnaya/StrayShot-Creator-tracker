@@ -23,12 +23,20 @@ export function formatMoney(amountInCents: number): string {
   })
 }
 
-/** 10049 -> "$100.49". Exact amounts, for records read against a statement. */
+/**
+ * 10049 -> "$100.49", 160000 -> "$1,600". Exact amounts, for records read
+ * against a statement.
+ *
+ * Cents appear only when there are some. The design writes payments in whole
+ * dollars, and a whole-dollar payment loses nothing by it; a payment that
+ * carries cents keeps every one, which is the part that has to reconcile.
+ */
 export function formatPaymentAmount(amountInCents: number): string {
+  const hasCents = amountInCents % CENTS_PER_DOLLAR !== 0
   return (amountInCents / CENTS_PER_DOLLAR).toLocaleString('en-US', {
     style: 'currency',
     currency: 'USD',
-    minimumFractionDigits: 2,
+    minimumFractionDigits: hasCents ? 2 : 0,
     maximumFractionDigits: 2,
   })
 }
@@ -41,6 +49,17 @@ export function formatNumber(value: number): string {
 /** 2275000 -> "2.28M", 412000 -> "412,000". Used in the summary strip only. */
 export function formatViewsCompact(views: number): string {
   return views >= 1_000_000 ? (views / 1_000_000).toFixed(2) + 'M' : formatNumber(views)
+}
+
+/**
+ * 2275000 -> "2.28M", 412000 -> "412K", 96000 -> "96,000". The phone cards'
+ * shortening: a six-digit figure is the first that stops fitting beside two
+ * others on a 430px card, so that is where it starts.
+ */
+export function formatCountCompact(value: number): string {
+  if (value >= 1_000_000) return (value / 1_000_000).toFixed(2) + 'M'
+  if (value >= 100_000) return (value / 1000).toFixed(0) + 'K'
+  return formatNumber(value)
 }
 
 /**

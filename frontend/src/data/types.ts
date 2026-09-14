@@ -86,7 +86,7 @@ export interface Creator {
    * across fourteen creator records would have to be found and rewritten
    * every time it was. This is also the shape the API will use.
    */
-  campaignId: number
+  campaignId: number | null
 
   /** How many streams the deal commits them to. */
   streamsCommitted: number

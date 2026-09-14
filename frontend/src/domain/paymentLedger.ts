@@ -22,7 +22,7 @@ export interface LedgerEntry {
   creatorId: number
   creatorName: string
   creatorCode: string
-  campaignId: number
+  campaignId: number | null
   /** Resolved here so a renamed campaign reads correctly without a lookup. */
   campaignName: string
   /** Resolved the same way, from the id the payment actually stores. */

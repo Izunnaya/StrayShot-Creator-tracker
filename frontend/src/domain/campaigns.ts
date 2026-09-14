@@ -37,7 +37,10 @@ export interface CampaignDraftReview {
   targetCostPerInstallInCents: number | null
 }
 
-export function findCampaign(campaigns: Campaign[], campaignId: number): Campaign | undefined {
+export function findCampaign(
+  campaigns: Campaign[],
+  campaignId: number | null,
+): Campaign | undefined {
   return campaigns.find((campaign) => campaign.id === campaignId)
 }
 
@@ -48,7 +51,7 @@ export function findCampaign(campaigns: Campaign[], campaignId: number): Campaig
  * every caller would otherwise need its own fallback. Deleting a campaign
  * that still has creators is open question 1.6.
  */
-export function getCampaignName(campaigns: Campaign[], campaignId: number): string {
+export function getCampaignName(campaigns: Campaign[], campaignId: number | null): string {
   return findCampaign(campaigns, campaignId)?.name ?? 'No campaign'
 }
 

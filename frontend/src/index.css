@@ -56,6 +56,13 @@
 }
 
 @layer base {
+  /* The design is set at the browser's normal line height. Tailwind's reset
+     raises it to 1.5, which adds a few pixels to every row and tile until the
+     screens stop matching the design they were built from. */
+  html {
+    line-height: normal;
+  }
+
   body {
     margin: 0;
     background-color: var(--color-ground);
@@ -128,11 +135,6 @@
       0 0;
   }
 
-  /* Stencil cut on the modal shells */
-  .clip-corner {
-    clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
-  }
-
   /* Angled amber fill for a part-settled progress bar */
   .bar-partial {
     background: repeating-linear-gradient(
@@ -144,5 +146,26 @@
 
   .text-shadow-stencil {
     text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.85);
+  }
+}
+
+/* Declared with @utility rather than inside @layer utilities because these are
+   used behind breakpoint variants (md:clip-corner), and Tailwind v4 only
+   generates variants for utilities it registers this way. A class in a plain
+   layer silently ignores the prefix. */
+
+/* Stencil cut on the modal shells */
+@utility clip-corner {
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+}
+
+/* A row that scrolls sideways under a thumb without drawing a scrollbar, as
+   the phone design's figure strip and chip rows do. */
+@utility scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }

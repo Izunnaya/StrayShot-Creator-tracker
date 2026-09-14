@@ -148,7 +148,13 @@ export function InstallsOverTimeChart({
           <circle cx={x(0)} cy={y(dailyInstallCounts[0])} r="4" fill="var(--color-amber)" />
         )}
       </svg>
-      <div className="flex justify-between gap-1 text-[11px] text-ink-muted">
+      <div
+        className="flex justify-between gap-1 text-[11px] text-ink-muted"
+        style={{
+          marginLeft: `${(LEFT / WIDTH) * 100}%`,
+          marginRight: `${((WIDTH - RIGHT) / WIDTH) * 100}%`,
+        }}
+      >
         {weekLabels.map((label, index) => (
           <span key={index}>{label}</span>
         ))}

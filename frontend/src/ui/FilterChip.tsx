@@ -8,8 +8,9 @@ import { joinClassNames } from '@/lib/classNames'
  * Named FilterChip rather than Chip because every chip in this application is
  * a filter control, not a tag or a removable token.
  *
- * On a phone the chips sit in a row that scrolls sideways, so they never
- * shrink or wrap, and they are tall enough to tap.
+ * Chips never shrink: a row that runs out of room wraps to the next line
+ * instead. On a phone they are tall enough to tap, and a label too long for
+ * the screen breaks across lines rather than pushing past the edge.
  */
 export function FilterChip({
   label,
@@ -26,8 +27,8 @@ export function FilterChip({
       type="button"
       aria-pressed={isSelected}
       className={joinClassNames(
-        'flex min-h-10 shrink-0 cursor-pointer items-center whitespace-nowrap border px-3.5 py-2.25 text-[14px] font-semibold',
-        'md:min-h-0 md:items-baseline md:py-1.5 md:text-[13px] md:tracking-[0.5px]',
+        'flex min-h-10 max-w-full shrink-0 cursor-pointer items-center border px-3.5 py-2.25 text-left text-[14px] font-semibold',
+        'md:min-h-0 md:items-baseline md:whitespace-nowrap md:py-1.5 md:text-[13px] md:tracking-[0.5px]',
         count !== undefined && 'md:px-3',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber',
         isSelected

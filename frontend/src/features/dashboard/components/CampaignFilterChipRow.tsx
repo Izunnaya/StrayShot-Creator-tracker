@@ -15,10 +15,15 @@ import { Button, FilterChip, Label } from '@/ui'
  *
  * From md up the search leads the row, the chips follow, and the ledger's
  * date range comes after, all as items of one wrapping row as the design
- * lays them out. On a phone the search takes a line of its own, the chips a
- * row that scrolls sideways without its caption, and the dates a line after.
- * The chip scroller is `display: contents` from md up, which is what lets
- * its chips rejoin the wrapping row there.
+ * lays them out. On a phone the search takes a line of its own, the chips
+ * wrap onto as many lines as they need without their caption, and the dates
+ * come after. The chip group is `display: contents` from md up, which is what
+ * lets its chips rejoin the wrapping row there.
+ *
+ * The mobile design scrolls the chips sideways instead. It is not followed:
+ * with the scrollbar hidden, the selected campaign, + Campaign and Edit
+ * campaign all sat past the edge of a 390px screen with nothing to say they
+ * were there.
  */
 export function CampaignFilterChipRow({
   campaigns,
@@ -47,7 +52,7 @@ export function CampaignFilterChipRow({
     <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:gap-2">
       {leading}
 
-      <div className="scroll-x -mx-4 flex gap-2 px-4 sm:-mx-6 sm:px-6 md:contents">
+      <div className="flex flex-wrap gap-2 md:contents">
         <Label className="mr-1.5 hidden md:block">Campaign</Label>
 
         <FilterChip

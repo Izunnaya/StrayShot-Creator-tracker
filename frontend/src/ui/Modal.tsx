@@ -17,17 +17,24 @@ import { joinClassNames } from '@/lib/classNames'
 export function Modal({
   title,
   subtitle,
+  aside,
   onClose,
   children,
   footer,
+  width = 'regular',
   labelId = 'modal-title',
 }: {
   title: string
+  /** A line under the title. */
   subtitle?: ReactNode
+  /** A short note opposite the title, from md up only. */
+  aside?: ReactNode
   onClose: () => void
   children: ReactNode
-  /** Actions row, kept out of the scrolling body so it stays reachable. */
+  /** Actions row, after the body. */
   footer?: ReactNode
+  /** The design's widths: 520px for the campaign form, 560px, 680px for the creator form. */
+  width?: 'narrow' | 'regular' | 'wide'
   labelId?: string
 }) {
   const panel = useRef<HTMLDivElement>(null)
@@ -93,9 +100,13 @@ export function Modal({
     }
   }, [])
 
+  /* From md up, a centred panel with the stencil cut, scrolling as one piece
+     when it outgrows the screen. Below md, the phone design's bottom sheet:
+     full width, an amber rule along its top edge and a grab handle, rising
+     from the bottom where a thumb already is. */
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/78 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 md:items-center md:bg-black/78"
       onClick={onClose}
     >
       <div
@@ -106,26 +117,36 @@ export function Modal({
         aria-labelledby={labelId}
         onClick={(event) => event.stopPropagation()}
         className={joinClassNames(
-          'flex max-h-[92vh] w-full flex-col border border-amber bg-panel',
-          'sm:clip-corner sm:max-h-[88vh] sm:w-[560px]',
+          'max-h-[92vh] w-full max-w-107.5 overflow-y-auto border-t-2 border-amber bg-panel px-4 pb-6 pt-2',
+          'md:clip-corner md:max-h-[88vh] md:max-w-[calc(100vw-32px)] md:border md:px-7 md:py-6.5',
+          widthClasses[width],
         )}
       >
-        <div className="px-5 pt-5 sm:px-7 sm:pt-6">
+        <div aria-hidden="true" className="mx-auto mb-4 mt-1.5 h-1 w-10 bg-hair-6 md:hidden" />
+
+        <div className="flex items-baseline justify-between gap-4">
           <h2
             id={labelId}
-            className="font-display text-[20px] uppercase tracking-[1.5px] text-amber sm:text-[22px]"
+            className="font-display text-[21px] uppercase tracking-[1.5px] text-amber md:text-[22px]"
           >
             {title}
           </h2>
-          {subtitle && <div className="mt-1 text-[14px] text-ink-muted">{subtitle}</div>}
+          {aside && <div className="hidden text-[12px] text-ink-muted md:block">{aside}</div>}
         </div>
+        {subtitle && <div className="mt-0.75 text-[14px] text-ink-muted md:mt-1">{subtitle}</div>}
 
-        <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-7">{children}</div>
+        <div className="mt-3.5 md:mt-4.5">{children}</div>
 
-        {footer && <div className="border-t border-hair px-5 py-4 sm:px-7">{footer}</div>}
+        {footer && <div className="mt-4.5 md:mt-5">{footer}</div>}
       </div>
     </div>
   )
+}
+
+const widthClasses = {
+  narrow: 'md:w-130',
+  regular: 'md:w-140',
+  wide: 'md:w-170',
 }
 
 /**

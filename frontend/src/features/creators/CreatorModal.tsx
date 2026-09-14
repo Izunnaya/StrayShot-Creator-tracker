@@ -163,7 +163,9 @@ export function CreatorModal({
             aria-current={step === entry.id ? 'step' : undefined}
             /* Named for the step, so it is distinguishable from the footer
                control that moves to the same step. */
-            aria-label={`Step ${index + 1}: ${entry.label}`}
+            aria-label={`Step ${index + 1}: ${entry.label}, ${
+              review.completeByStep[entry.id] ? 'complete' : 'incomplete'
+            }`}
             className={joinClassNames(
               'cursor-pointer border-none px-2 py-2.5 text-left focus-visible:outline-2 focus-visible:outline-amber sm:px-3.5 sm:py-3',
               step === entry.id ? 'bg-row-hover' : 'bg-panel-head hover:bg-row-hover',

@@ -61,12 +61,13 @@ describe('adding a creator', () => {
     await openTheAddForm(user)
     await fillIdentity(user)
 
-    await user.click(dialog().getByRole('button', { name: 'Step 2: The deal' }))
+    await user.click(dialog().getByRole('button', { name: 'Step 2: The deal, incomplete' }))
     await user.selectOptions(dialog().getByLabelText('Campaign'), '1')
     await user.type(dialog().getByLabelText('Assigned code'), 'ASH')
     await user.type(dialog().getByLabelText('Agreed rate in dollars'), '1800')
     await user.type(dialog().getByLabelText('Streams committed'), '2')
 
+    expect(dialog().getByRole('button', { name: 'Step 2: The deal, complete' })).toBeTruthy()
     expect(dialog().getByRole('button', { name: 'Save creator' })).toBeTruthy()
 
     await user.click(dialog().getByRole('button', { name: 'Save creator' }))
@@ -82,7 +83,7 @@ describe('adding a creator', () => {
     await openTheAddForm(user)
     await fillIdentity(user)
 
-    await user.click(dialog().getByRole('button', { name: 'Step 2: The deal' }))
+    await user.click(dialog().getByRole('button', { name: /^Step 2: The deal, / }))
     await user.selectOptions(dialog().getByLabelText('Campaign'), '1')
     await user.type(dialog().getByLabelText('Assigned code'), 'NOVA')
     await user.type(dialog().getByLabelText('Agreed rate in dollars'), '1800')
@@ -98,7 +99,7 @@ describe('adding a creator', () => {
     await openTheAddForm(user)
     await fillIdentity(user)
 
-    await user.click(dialog().getByRole('button', { name: 'Step 2: The deal' }))
+    await user.click(dialog().getByRole('button', { name: /^Step 2: The deal, / }))
     await user.type(dialog().getByLabelText('Assigned code'), 'ASH')
 
     // Touching the deal changes what saving means, so the button says so.
@@ -130,7 +131,7 @@ describe('editing a creator', () => {
 
     expect((dialog().getByLabelText('Creator name') as HTMLInputElement).value).toBe('NovaKess')
 
-    await user.click(dialog().getByRole('button', { name: 'Step 2: The deal' }))
+    await user.click(dialog().getByRole('button', { name: /^Step 2: The deal, / }))
     expect((dialog().getByLabelText('Assigned code') as HTMLInputElement).value).toBe('NOVA')
     expect((dialog().getByLabelText('Agreed rate in dollars') as HTMLInputElement).value).toBe(
       '1600',
@@ -150,7 +151,7 @@ describe('editing a creator', () => {
     render(<App />)
     await openNovaKessForEditing(user)
 
-    await user.click(dialog().getByRole('button', { name: 'Step 2: The deal' }))
+    await user.click(dialog().getByRole('button', { name: /^Step 2: The deal, / }))
     const rate = dialog().getByLabelText('Agreed rate in dollars')
     await user.clear(rate)
     await user.type(rate, '2000')

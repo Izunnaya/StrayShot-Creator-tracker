@@ -1,6 +1,7 @@
 import type { LedgerEntry, LedgerSortColumn, LedgerSortSelection } from '@/domain/paymentLedger'
 import { joinClassNames } from '@/lib/classNames'
 import { formatDate, formatNumber, formatPaymentAmount } from '@/lib/format'
+import { useNarrowLayout } from '@/lib/usePhoneLayout'
 import { PaymentLedgerCardList } from './PaymentLedgerCardList'
 
 /**
@@ -8,8 +9,8 @@ import { PaymentLedgerCardList } from './PaymentLedgerCardList'
  *
  * The columns are the ones a bank statement is reconciled against: when the
  * money moved, who it went to, what it came out of, how it was sent, and the
- * reference to match it by. Amounts are in cents throughout — this is the
- * screen where a rounded figure would be the one that fails to reconcile.
+ * reference to match it by. Dates, references and amounts are set in the
+ * mono face, because that is how they are compared: character by character.
  *
  * Date and amount are the two orders a ledger is read in, so those headings
  * sort and the rest do not. The total closes the table, as it would on paper,
@@ -17,22 +18,22 @@ import { PaymentLedgerCardList } from './PaymentLedgerCardList'
  *
  * Cards below lg and the table from lg up, the same division the creator
  * table makes and for the same reason: seven columns cannot be read on a
- * phone, and overriding a table's display strips its semantics in some screen
- * readers rather than adapting them. The cards have no headings to click, so
- * they get a single button that steps through the orders instead.
+ * phone. The cards have no headings to click, so they get a single button
+ * that steps through the orders instead, and the total rides along the
+ * bottom of the screen.
  */
 
 const COLUMNS: { key: string; heading: string; weight: number; sortsBy?: LedgerSortColumn }[] = [
-  { key: 'date', heading: 'Date paid', weight: 1, sortsBy: 'date' },
+  { key: 'date', heading: 'Date', weight: 1, sortsBy: 'date' },
   { key: 'creator', heading: 'Creator', weight: 1.3 },
-  { key: 'campaign', heading: 'Campaign', weight: 1.2 },
+  { key: 'campaign', heading: 'Campaign', weight: 1.3 },
   { key: 'method', heading: 'Method', weight: 1 },
   { key: 'reference', heading: 'Reference', weight: 1.4 },
-  { key: 'recordedBy', heading: 'Recorded by', weight: 1 },
-  { key: 'amount', heading: 'Amount', weight: 1, sortsBy: 'amount' },
+  { key: 'recordedBy', heading: 'Recorded by', weight: 1.1 },
+  { key: 'amount', heading: 'Amount', weight: 0.9, sortsBy: 'amount' },
 ]
 
-const MINIMUM_WIDTH_PX = 980
+const MINIMUM_WIDTH_PX = 900
 
 export function PaymentLedgerTable({
   entries,
@@ -48,20 +49,21 @@ export function PaymentLedgerTable({
   netTotalInCents: number
   sortSelection: LedgerSortSelection
   onColumnHeadingClick: (column: LedgerSortColumn) => void
-  /** Moves the phone layout on to its next order. */
+  /** Moves the card layout on to its next order. */
   onStepSort: () => void
   /** Shown in place of the rows when nothing matches. */
   emptyMessage: string
   /** Opens the creator a payment went to. Absent where there is nowhere to go. */
   onSelectCreator?: (creatorId: number) => void
 }) {
+  const isNarrow = useNarrowLayout()
   const totalWeight = COLUMNS.reduce((sum, column) => sum + column.weight, 0)
   const paymentCount = `${formatNumber(entries.length)} ${entries.length === 1 ? 'payment' : 'payments'}`
 
-  return (
-    <div className="border border-hair bg-panel">
-      <div className="lg:hidden">
-        <div className="flex items-center justify-between gap-3 border-b border-hair px-4 py-2">
+  if (isNarrow) {
+    return (
+      <div>
+        <div className="flex items-center justify-between gap-3 pb-2">
           <span className="text-[11px] uppercase tracking-[1.5px] text-ink-muted">
             {paymentCount}
           </span>
@@ -76,13 +78,16 @@ export function PaymentLedgerTable({
           </button>
         </div>
 
-        <PaymentLedgerCardList
-          entries={entries}
-          emptyMessage={emptyMessage}
-          onSelectCreator={onSelectCreator}
-        />
+        <div className="-mx-4 border-t border-hair sm:-mx-6">
+          <PaymentLedgerCardList
+            entries={entries}
+            emptyMessage={emptyMessage}
+            onSelectCreator={onSelectCreator}
+          />
+        </div>
 
-        <div className="sticky bottom-0 flex items-center justify-between gap-2.5 border-t-2 border-amber bg-total-row px-4 py-3.5">
+        {/* Held above the phone's tab bar, which is 76px tall. */}
+        <div className="sticky bottom-19 -mx-4 flex items-center justify-between gap-2.5 border-t-2 border-amber bg-total-row px-4 py-3.5 sm:-mx-6 sm:px-6 md:bottom-0">
           <span className="text-[11px] uppercase tracking-[1.5px] text-ink-muted">
             Total in filter
           </span>
@@ -91,106 +96,108 @@ export function PaymentLedgerTable({
           </span>
         </div>
       </div>
+    )
+  }
 
-      <div className="hidden overflow-x-auto lg:block">
-        <table
-          className="w-full table-fixed border-collapse text-left"
-          style={{ minWidth: MINIMUM_WIDTH_PX }}
-        >
-          <caption className="sr-only">Payments</caption>
-          <colgroup>
-            {COLUMNS.map((column) => (
-              <col key={column.key} style={{ width: (column.weight / totalWeight) * 100 + '%' }} />
-            ))}
-          </colgroup>
-          <thead className="border-b border-hair bg-panel-head">
-            <tr>
-              {COLUMNS.map((column) => {
-                const alignRight = column.key === 'amount'
-                const headingClasses = joinClassNames(
-                  'whitespace-nowrap py-2.75 text-[11px] font-normal uppercase tracking-[1.5px]',
-                  alignRight && 'text-right',
-                )
+  return (
+    <div className="overflow-x-auto border border-hair bg-panel-2">
+      <table
+        className="w-full table-fixed border-collapse text-left"
+        style={{ minWidth: MINIMUM_WIDTH_PX }}
+      >
+        <caption className="sr-only">Payments</caption>
+        <colgroup>
+          {COLUMNS.map((column) => (
+            <col key={column.key} style={{ width: (column.weight / totalWeight) * 100 + '%' }} />
+          ))}
+        </colgroup>
+        <thead className="border-b border-hair bg-[#111111]">
+          <tr>
+            {COLUMNS.map((column) => {
+              const alignRight = column.key === 'amount'
+              const cellClasses = 'px-2 py-2.5 first:pl-5 last:pr-5'
+              const textClasses = joinClassNames(
+                'whitespace-nowrap text-[11px] font-normal uppercase tracking-[1.5px]',
+                alignRight ? 'text-right' : 'text-left',
+              )
 
-                if (!column.sortsBy) {
-                  return (
-                    <th
-                      key={column.key}
-                      scope="col"
-                      className={joinClassNames(
-                        headingClasses,
-                        'px-2 text-ink-muted first:pl-4.5 last:pr-4.5',
-                      )}
-                    >
-                      {column.heading}
-                    </th>
-                  )
-                }
-
-                const sortsBy = column.sortsBy
-                const selected = sortSelection.column === sortsBy
+              if (!column.sortsBy) {
                 return (
                   <th
                     key={column.key}
                     scope="col"
-                    aria-sort={selected ? sortSelection.direction : 'none'}
-                    className="px-2 first:pl-4.5 last:pr-4.5"
+                    className={joinClassNames(cellClasses, textClasses, 'text-ink-muted')}
                   >
-                    <button
-                      type="button"
-                      onClick={() => onColumnHeadingClick(sortsBy)}
-                      className={joinClassNames(
-                        headingClasses,
-                        'w-full cursor-pointer border-none bg-transparent hover:text-amber focus-visible:outline-2 focus-visible:outline-amber',
-                        !alignRight && 'text-left',
-                        selected ? 'text-amber' : 'text-ink-muted',
-                      )}
-                    >
-                      {column.heading}
-                      {selected && (
-                        <span aria-hidden="true">
-                          {sortSelection.direction === 'ascending' ? ' ▲' : ' ▼'}
-                        </span>
-                      )}
-                    </button>
+                    {column.heading}
                   </th>
                 )
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((entry) => (
-              <PaymentLedgerTableRow
-                key={entry.payment.id}
-                entry={entry}
-                onSelectCreator={onSelectCreator}
-              />
-            ))}
+              }
 
-            {entries.length === 0 && (
-              <tr>
-                <td colSpan={COLUMNS.length} className="px-4.5 py-6 text-[14px] text-ink-muted">
-                  {emptyMessage}
-                </td>
-              </tr>
-            )}
-          </tbody>
-          <tfoot className="border-t-2 border-amber bg-total-row">
+              const sortsBy = column.sortsBy
+              const selected = sortSelection.column === sortsBy
+              return (
+                <th
+                  key={column.key}
+                  scope="col"
+                  aria-sort={selected ? sortSelection.direction : 'none'}
+                  className={cellClasses}
+                >
+                  <button
+                    type="button"
+                    onClick={() => onColumnHeadingClick(sortsBy)}
+                    className={joinClassNames(
+                      textClasses,
+                      'w-full cursor-pointer border-none bg-transparent p-0 hover:text-amber focus-visible:outline-2 focus-visible:outline-amber',
+                      selected ? 'text-amber' : 'text-ink-muted',
+                    )}
+                  >
+                    {column.heading}
+                    {selected && (
+                      <span aria-hidden="true">
+                        {sortSelection.direction === 'ascending' ? ' ▲' : ' ▼'}
+                      </span>
+                    )}
+                  </button>
+                </th>
+              )
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map((entry) => (
+            <PaymentLedgerTableRow
+              key={entry.payment.id}
+              entry={entry}
+              onSelectCreator={onSelectCreator}
+            />
+          ))}
+
+          {entries.length === 0 && (
             <tr>
-              <th
-                scope="row"
-                colSpan={COLUMNS.length - 1}
-                className="py-3 pl-4.5 pr-2 text-left text-[11px] font-normal uppercase tracking-[1.5px] text-ink-muted"
+              <td
+                colSpan={COLUMNS.length}
+                className="border-t border-hair-5 px-5 py-5.5 text-[14px] text-ink-muted"
               >
-                Total · {paymentCount} in filter
-              </th>
-              <td className="whitespace-nowrap py-3 pl-2 pr-4.5 text-right font-mono text-[15px] font-medium text-amber">
-                {formatPaymentAmount(netTotalInCents)}
+                {emptyMessage}
               </td>
             </tr>
-          </tfoot>
-        </table>
-      </div>
+          )}
+        </tbody>
+        <tfoot className="border-t-2 border-amber bg-total-row">
+          <tr>
+            <th
+              scope="row"
+              colSpan={COLUMNS.length - 1}
+              className="py-3 pl-5 pr-2 text-left text-[11px] font-normal uppercase tracking-[1.5px] text-ink-muted"
+            >
+              Total · {paymentCount} in filter
+            </th>
+            <td className="whitespace-nowrap py-3 pl-2 pr-5 text-right font-mono text-[15px] font-medium text-amber">
+              {formatPaymentAmount(netTotalInCents)}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   )
 }
@@ -215,47 +222,48 @@ function PaymentLedgerTableRow({
   return (
     <tr
       className={joinClassNames(
-        'border-t border-hair-4 text-[14px]',
-        /* A cancelled pair stays in the record but recedes: what matters
-           afterwards is the payment that replaced it. */
-        cancelled ? 'text-ink-muted' : 'text-ink',
+        'border-t border-hair-5 align-baseline text-[13px]',
         onSelectCreator && 'hover:bg-row-hover',
       )}
     >
-      <td className="whitespace-nowrap px-2 py-3 first:pl-4.5">
+      <td className="whitespace-nowrap px-2 py-2.25 pl-5 font-mono text-[12px] text-ink-quiet">
         {formatDate(payment.paidOn)}
         {entry.isReversal && <LedgerTag>Reversal</LedgerTag>}
         {entry.wasReversed && <LedgerTag>Reversed</LedgerTag>}
       </td>
 
-      <th scope="row" className="px-2 py-3 text-left font-normal">
+      <th scope="row" className="px-2 py-2.25 text-left font-semibold">
         {onSelectCreator ? (
           <button
             type="button"
             onClick={() => onSelectCreator(entry.creatorId)}
-            className="cursor-pointer font-semibold text-ink hover:text-amber focus-visible:outline-2 focus-visible:outline-amber"
+            className={joinClassNames(
+              'cursor-pointer border-none bg-transparent p-0 text-left font-semibold hover:text-amber focus-visible:outline-2 focus-visible:outline-amber',
+              cancelled ? 'text-ink-muted' : 'text-ink',
+            )}
           >
             {entry.creatorName}
           </button>
         ) : (
-          <span className="font-semibold">{entry.creatorName}</span>
+          <span className={cancelled ? 'text-ink-muted' : 'text-ink'}>{entry.creatorName}</span>
         )}
-        <span className="ml-2 text-[12px] tracking-[1px] text-amber">{entry.creatorCode}</span>
       </th>
 
-      <td className="px-2 py-3 text-ink-muted">{entry.campaignName}</td>
-      <td className="px-2 py-3 text-ink-muted">{payment.method}</td>
+      <td className="px-2 py-2.25 text-ink-muted">{entry.campaignName}</td>
+      <td className="px-2 py-2.25 text-ink-muted">{payment.method}</td>
 
-      <td className="whitespace-nowrap px-2 py-3 font-mono text-[12px] tracking-[0.5px] text-ink-muted">
+      <td className="whitespace-nowrap px-2 py-2.25 font-mono text-[12px] text-ink-muted">
         {payment.reference || '—'}
       </td>
 
-      <td className="px-2 py-3 text-ink-muted">{entry.recordedByName}</td>
+      <td className="px-2 py-2.25 text-ink-muted">{entry.recordedByName}</td>
 
       <td
         className={joinClassNames(
-          'whitespace-nowrap px-2 py-3 text-right font-semibold last:pr-4.5',
-          entry.isReversal && 'text-bad',
+          'whitespace-nowrap px-2 py-2.25 pr-5 text-right font-mono text-[13px]',
+          /* A cancelled pair stays in the record but recedes: what matters
+             afterwards is the payment that replaced it. */
+          entry.isReversal ? 'text-bad' : cancelled ? 'text-ink-muted' : 'text-ink',
         )}
       >
         {formatPaymentAmount(payment.amountInCents)}
@@ -267,7 +275,7 @@ function PaymentLedgerTableRow({
 /** Marks a row as one half of a cancelled pair. */
 function LedgerTag({ children }: { children: string }) {
   return (
-    <span className="ml-2 border border-hair px-1.5 py-0.5 text-[10px] uppercase tracking-[1px] text-ink-faint">
+    <span className="ml-2 border border-hair px-1.5 py-0.5 font-body text-[10px] uppercase tracking-[1px] text-ink-faint">
       {children}
     </span>
   )

@@ -9,9 +9,9 @@ import {
   summariseLedger,
 } from '@/domain/paymentLedger'
 import { CampaignFilterChipRow } from '@/features/dashboard/components/CampaignFilterChipRow'
-import { SearchField, SectionTitle } from '@/ui'
+import { usePhoneLayout } from '@/lib/usePhoneLayout'
+import { SearchField } from '@/ui'
 import { PaidDateRangeFields } from './components/PaidDateRangeFields'
-import { PaymentLedgerSummaryStrip } from './components/PaymentLedgerSummaryStrip'
 import { PaymentLedgerTable } from './components/PaymentLedgerTable'
 import type { usePaymentLedgerSelection } from './hooks/usePaymentLedgerSelection'
 
@@ -28,10 +28,9 @@ import type { usePaymentLedgerSelection } from './hooks/usePaymentLedgerSelectio
  * application reads, on every render. There is no separate payments store to
  * fall out of step with the screen a payment was recorded on.
  *
- * Every figure on the screen, the summary strip included, describes the
- * entries in view. That is what "a total for the current filter" asks for, and
- * unlike the dashboard there is no campaign-wide denominator here for a
- * narrower filter to take away.
+ * It reads as a ledger rather than a dashboard: a title, the filters, and the
+ * rows closed by the total for the current filter, with no figures above
+ * them. The total is the net of the rows in view, reversals deducted.
  *
  * Recording a payment is not offered here: a payment belongs to a creator and
  * the form needs the deal it is settling, so it starts from the creator, on
@@ -51,6 +50,7 @@ export function PaymentsLedgerScreen({
   onSelectCreator?: (creatorId: number) => void
 }) {
   const { filter, sort } = selectionState
+  const isPhone = usePhoneLayout()
 
   const entries = useMemo(
     () =>
@@ -68,52 +68,53 @@ export function PaymentsLedgerScreen({
     : 'No payments match this filter.'
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 pb-10 pt-5 sm:px-6 md:gap-6 md:px-8 md:pb-12 md:pt-7">
-      <PaymentLedgerSummaryStrip totals={totals} />
-
-      <CampaignFilterChipRow
-        campaigns={campaigns}
-        selectedCampaign={filter.campaign}
-        onSelectCampaign={selectionState.selectCampaign}
-        canEditSelectedCampaign={false}
-        leading={
-          <SearchField
-            label="Search payments by creator or reference"
-            placeholder="Search creator or reference"
-            value={filter.searchText}
-            onValueChange={selectionState.setSearchText}
-          />
-        }
-        trailing={
-          <PaidDateRangeFields
-            paidFrom={filter.paidFrom}
-            paidTo={filter.paidTo}
-            onChangePaidFrom={selectionState.setPaidFrom}
-            onChangePaidTo={selectionState.setPaidTo}
-          />
-        }
-      />
-
-      <section className="flex flex-col gap-2.5">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-          <SectionTitle>
+    <div className="mx-auto max-w-295 px-4 pt-3.5 sm:px-6 md:px-8 md:pb-12 md:pt-7">
+      {/* On a phone the masthead already says Ledger. */}
+      {!isPhone && (
+        <div className="mb-4.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h1 className="font-display text-[28px] uppercase tracking-[1px] text-ink">
             Payment <span className="text-amber">ledger</span>
-          </SectionTitle>
-          <div className="text-[12px] text-ink-muted">
-            Amounts to the cent · reversals shown in place
+          </h1>
+          <div className="text-[13px] text-ink-muted">
+            Every recorded payment across all creators
           </div>
         </div>
+      )}
 
-        <PaymentLedgerTable
-          entries={entries}
-          netTotalInCents={totals.netInCents}
-          sortSelection={sort}
-          onColumnHeadingClick={selectionState.handleColumnClick}
-          onStepSort={selectionState.stepSort}
-          emptyMessage={emptyMessage}
-          onSelectCreator={onSelectCreator}
+      <div className="mb-4">
+        <CampaignFilterChipRow
+          campaigns={campaigns}
+          selectedCampaign={filter.campaign}
+          onSelectCampaign={selectionState.selectCampaign}
+          canEditSelectedCampaign={false}
+          leading={
+            <SearchField
+              label="Search payments by creator or reference"
+              placeholder="Search creator or reference"
+              value={filter.searchText}
+              onValueChange={selectionState.setSearchText}
+            />
+          }
+          trailing={
+            <PaidDateRangeFields
+              paidFrom={filter.paidFrom}
+              paidTo={filter.paidTo}
+              onChangePaidFrom={selectionState.setPaidFrom}
+              onChangePaidTo={selectionState.setPaidTo}
+            />
+          }
         />
-      </section>
+      </div>
+
+      <PaymentLedgerTable
+        entries={entries}
+        netTotalInCents={totals.netInCents}
+        sortSelection={sort}
+        onColumnHeadingClick={selectionState.handleColumnClick}
+        onStepSort={selectionState.stepSort}
+        emptyMessage={emptyMessage}
+        onSelectCreator={onSelectCreator}
+      />
     </div>
   )
 }

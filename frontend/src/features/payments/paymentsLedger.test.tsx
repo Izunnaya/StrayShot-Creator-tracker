@@ -60,7 +60,7 @@ describe('the ledger', () => {
 
     // The dashboard opens showing the same $47,000 paid.
     expect(ledgerFooter().getByText('$47,000')).toBeTruthy()
-    expect(screen.getByText('to 13 creators')).toBeTruthy()
+    expect(ledgerFooter().getByText('Total · 18 payments in filter')).toBeTruthy()
   })
 
   it('narrows to one campaign without touching the dashboard filter', async () => {
@@ -172,18 +172,18 @@ describe('sorting the ledger', () => {
   it('opens newest first, and says so to assistive technology', async () => {
     await openTheLedger()
 
-    expect(headerCell('Date paid')?.getAttribute('aria-sort')).toBe('descending')
+    expect(headerCell('Date')?.getAttribute('aria-sort')).toBe('descending')
     expect(headerCell('Amount')?.getAttribute('aria-sort')).toBe('none')
   })
 
   it('reverses the date order when the date heading is clicked', async () => {
     const user = await openTheLedger()
 
-    await user.click(heading(/Date paid/))
+    await user.click(heading(/^Date/))
 
     // DeadeyeDee's July 16 payment is the oldest on record.
     expect(referencesInOrder()[0]).toBe('WISE-7702-C')
-    expect(headerCell('Date paid')?.getAttribute('aria-sort')).toBe('ascending')
+    expect(headerCell('Date')?.getAttribute('aria-sort')).toBe('ascending')
   })
 
   it('puts the largest payment first on the first click of amount, then the smallest', async () => {
@@ -193,7 +193,7 @@ describe('sorting the ledger', () => {
     // RazeHavoc was paid $4,500 twice; the tie goes to the more recent.
     expect(referencesInOrder().slice(0, 2)).toEqual(['WISE-8842-B', 'WISE-7710-A'])
     expect(headerCell('Amount')?.getAttribute('aria-sort')).toBe('descending')
-    expect(headerCell('Date paid')?.getAttribute('aria-sort')).toBe('none')
+    expect(headerCell('Date')?.getAttribute('aria-sort')).toBe('none')
 
     await user.click(heading(/Amount/))
     expect(referencesInOrder()[0]).toBe('PP-5702-R')
@@ -205,7 +205,7 @@ describe('sorting the ledger', () => {
     await user.click(heading(/Amount/))
 
     expect(ledgerRowCount()).toBe(18)
-    expect(screen.getByText('to 13 creators')).toBeTruthy()
+    expect(ledgerFooter().getByText('Total · 18 payments in filter')).toBeTruthy()
   })
 })
 

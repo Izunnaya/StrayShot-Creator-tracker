@@ -145,7 +145,9 @@ export function Modal({
 function focusableWithin(container: HTMLElement | null): HTMLElement[] {
   if (!container) return []
   return Array.from(
-    container.querySelectorAll<HTMLElement>('a[href], button, input, select, textarea, [tabindex]'),
+    container.querySelectorAll<HTMLElement>(
+      'a[href], area[href], button, input, select, textarea, summary, iframe, [contenteditable]:not([contenteditable="false"]), [tabindex]',
+    ),
   ).filter(isTabReachable)
 }
 
@@ -153,7 +155,7 @@ function isTabReachable(element: HTMLElement): boolean {
   /* Taken out of the tab order deliberately, however focusable it stays to
      script -- the panel itself is the reason that pattern exists here. */
   if (element.tabIndex < 0) return false
-  if ('disabled' in element && element.disabled === true) return false
+  if (element.matches(':disabled')) return false
   // A hidden input is a value being carried, not a control to land on.
   if (element instanceof HTMLInputElement && element.type === 'hidden') return false
   if (element.closest('[hidden], [inert]')) return false
@@ -173,6 +175,11 @@ function isRendered(element: HTMLElement): boolean {
   /* checkVisibility answers this properly in a browser: ancestors, collapsed
      content, the lot. jsdom has no layout and no such method, so tests fall
      back to what is legible without one. */
-  if (typeof element.checkVisibility === 'function') return element.checkVisibility()
-  return getComputedStyle(element).display !== 'none'
+  if (typeof element.checkVisibility === 'function') {
+    return element.checkVisibility({ visibilityProperty: true })
+  }
+  const style = getComputedStyle(element)
+  return (
+    style.display !== 'none' && style.visibility !== 'hidden' && style.visibility !== 'collapse'
+  )
 }

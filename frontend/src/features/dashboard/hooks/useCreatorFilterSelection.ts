@@ -10,13 +10,14 @@ import {
 
 /**
  * Holds which campaign and which lifecycle status the dashboard is filtered
- * to. Selecting a campaign does not reset the status filter, and vice versa —
- * the two narrow independently.
+ * to, and what has been typed into its search. Changing one does not reset
+ * the others — they narrow independently.
  */
 export function useCreatorFilterSelection() {
-  const [selection, setSelection] = useState<CreatorFilterSelection>({
+  const [selection, setSelection] = useState<Required<CreatorFilterSelection>>({
     campaign: EVERY_CAMPAIGN,
     lifecycleStatus: EVERY_STATUS,
+    searchText: '',
   })
 
   function selectCampaign(campaign: CampaignFilter) {
@@ -27,6 +28,10 @@ export function useCreatorFilterSelection() {
     setSelection((current) => ({ ...current, lifecycleStatus }))
   }
 
+  function setSearchText(searchText: string) {
+    setSelection((current) => ({ ...current, searchText }))
+  }
+
   /** True when one specific campaign is selected, rather than all of them. */
   const hasSpecificCampaignSelected = selection.campaign !== EVERY_CAMPAIGN
 
@@ -34,6 +39,7 @@ export function useCreatorFilterSelection() {
     selection,
     selectCampaign,
     selectLifecycleStatus,
+    setSearchText,
     hasSpecificCampaignSelected,
   }
 }

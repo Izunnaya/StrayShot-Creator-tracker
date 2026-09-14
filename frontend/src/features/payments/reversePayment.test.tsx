@@ -42,8 +42,8 @@ describe('reversing a payment', () => {
       .getAllByRole('button', { name: /^Reverse payment of/ })
       .map((button) => button.textContent)
 
-    expect(names[0]).toMatch(/\$1,600\.00 from Aug 14, 2026/)
-    expect(names[1]).toMatch(/\$1,600\.00 from Jul 24, 2026/)
+    expect(names[0]).toMatch(/\$1,600 from Aug 14, 2026/)
+    expect(names[1]).toMatch(/\$1,600 from Jul 24, 2026/)
     expect(names[0]).toMatch(/reference TRF-2413-11/)
   })
 
@@ -53,20 +53,20 @@ describe('reversing a payment', () => {
     await user.click(screen.getAllByRole('button', { name: /^Reverse payment of/ })[0]!)
 
     expect(dialog().getByText(/stays in the history/)).toBeTruthy()
-    expect(dialog().getByText(/-\$1,600\.00/)).toBeTruthy()
+    expect(dialog().getByText(/-\$1,600/)).toBeTruthy()
   })
 
   it('leaves the original alone and adds the cancelling record beside it', async () => {
     const user = await openNovaKess()
 
     // Paid $3,200 across two payments before anything is reversed.
-    expect(screen.getByText(/\$3,200\.00 of \$4,800\.00 paid across 2 payments/)).toBeTruthy()
+    expect(screen.getByText(/\$3,200 of \$4,800 paid across 2 payments/)).toBeTruthy()
 
     await user.click(screen.getAllByRole('button', { name: /^Reverse payment of/ })[0]!)
     await user.click(dialog().getByRole('button', { name: 'Reverse payment' }))
 
     expect(screen.queryByRole('dialog')).toBeNull()
-    expect(screen.getByText(/\$1,600\.00 of \$4,800\.00 paid across 1 payment/)).toBeTruthy()
+    expect(screen.getByText(/\$1,600 of \$4,800 paid across 1 payment/)).toBeTruthy()
     expect(screen.getByText('Reversal')).toBeTruthy()
     expect(screen.getByText('Reversed')).toBeTruthy()
   })
@@ -88,7 +88,7 @@ describe('reversing a payment', () => {
     await user.click(dialog().getByRole('button', { name: 'Keep it' }))
 
     expect(screen.queryByRole('dialog')).toBeNull()
-    expect(screen.getByText(/\$3,200\.00 of \$4,800\.00 paid across 2 payments/)).toBeTruthy()
+    expect(screen.getByText(/\$3,200 of \$4,800 paid across 2 payments/)).toBeTruthy()
     expect(screen.getAllByRole('button', { name: /^Reverse payment of/ })).toHaveLength(2)
   })
 
@@ -99,6 +99,6 @@ describe('reversing a payment', () => {
     await user.click(dialog().getByRole('button', { name: 'Reverse payment' }))
 
     // $4,800 agreed, $1,600 still paid, so $3,200 is open again.
-    expect(screen.getByText(/\$3,200\.00 open/)).toBeTruthy()
+    expect(screen.getByText(/\$3,200 open/)).toBeTruthy()
   })
 })

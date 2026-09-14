@@ -8,6 +8,7 @@ import {
   filterCreators,
   filterCreatorsByCampaign,
   filterCreatorsByLifecycleStatus,
+  filterCreatorsBySearch,
 } from './creatorFiltering'
 
 /* The fixtures' two campaigns, and two of this file's own. Creators point at
@@ -81,7 +82,49 @@ describe('filterCreatorsByLifecycleStatus', () => {
   })
 })
 
+describe('filterCreatorsBySearch', () => {
+  const searchable = [
+    createTestCreator({ id: 1, name: 'IronLotus', creatorCode: 'LOTUS' }),
+    createTestCreator({ id: 2, name: 'NovaKess', creatorCode: 'NOVA' }),
+    createTestCreator({ id: 3, name: 'MiraPlays', creatorCode: 'MIRA' }),
+  ]
+  const namesFor = (searchText: string) =>
+    filterCreatorsBySearch(searchable, searchText).map((creator) => creator.name)
+
+  it('matches part of a name, ignoring case', () => {
+    expect(namesFor('kess')).toEqual(['NovaKess'])
+  })
+
+  it('matches the code when the name gives no hint of it', () => {
+    expect(namesFor('lotus')).toEqual(['IronLotus'])
+    expect(namesFor('LOT')).toEqual(['IronLotus'])
+  })
+
+  it('ignores the spaces a pasted code arrives with', () => {
+    expect(namesFor('  NOVA\t')).toEqual(['NovaKess'])
+  })
+
+  it('keeps everyone for an empty or blank search', () => {
+    expect(namesFor('')).toHaveLength(3)
+    expect(namesFor('   ')).toHaveLength(3)
+  })
+
+  it('returns nothing when nobody matches', () => {
+    expect(namesFor('zzz')).toEqual([])
+  })
+})
+
 describe('filterCreators', () => {
+  it('applies the search on top of the campaign and status', () => {
+    const result = filterCreators(testCreators, {
+      campaign: WINTER_OFFENSIVE,
+      lifecycleStatus: EVERY_STATUS,
+      searchText: 'active',
+    })
+
+    expect(result.map((creator) => creator.name)).toEqual(['Active Winter'])
+  })
+
   it('applies both filters together', () => {
     const result = filterCreators(testCreators, {
       campaign: WINTER_OFFENSIVE,

@@ -40,8 +40,18 @@ export function CreatorDetailStatStrip({
   return (
     <StatStrip hasAmberFrame={false}>
       <StatTile size="compact" label="Installs" value={formatNumber(creator.installsAttributed)} />
-      <StatTile size="compact" label="Total views" value={formatNumber(creator.totalViews)} />
-      <StatTile size="compact" label="Paid to date" value={formatMoney(getAmountPaid(creator))} />
+      <StatTile
+        size="compact"
+        label="Total views"
+        phoneLabel="Views"
+        value={formatNumber(creator.totalViews)}
+      />
+      <StatTile
+        size="compact"
+        label="Paid to date"
+        phoneLabel="Paid"
+        value={formatMoney(getAmountPaid(creator))}
+      />
       <StatTile
         size="compact"
         label="Cost / install"

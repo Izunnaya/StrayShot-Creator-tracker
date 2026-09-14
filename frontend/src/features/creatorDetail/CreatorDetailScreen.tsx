@@ -1,13 +1,15 @@
 import { useMemo } from 'react'
 import { streams as allStreams } from '@/data/fixtures'
 import type { Campaign, Creator, Payment } from '@/data/types'
+import { getLifecycleStatus } from '@/domain/creatorCalculations'
 import { getStreamHistoryForCreator } from '@/domain/streamHistory'
-import { Button, SectionTitle } from '@/ui'
+import { usePhoneLayout } from '@/lib/usePhoneLayout'
+import { Button, CreatorStatusPill, SectionTitle } from '@/ui'
 import { CreatorDetailHeader } from './components/CreatorDetailHeader'
 import { CreatorDetailStatStrip } from './components/CreatorDetailStatStrip'
-import { PaymentHistoryTable } from './components/PaymentHistoryTable'
+import { PaymentHistoryCards, PaymentHistoryTable } from './components/PaymentHistoryTable'
 import { PaymentProgressPanel } from './components/PaymentProgressPanel'
-import { StreamHistoryTable } from './components/StreamHistoryTable'
+import { StreamHistoryCards, StreamHistoryTable } from './components/StreamHistoryTable'
 
 /**
  * Everything about one creator: who they are, what they delivered, and what
@@ -15,7 +17,13 @@ import { StreamHistoryTable } from './components/StreamHistoryTable'
  *
  * The screen holds no state. It is given the creator to show and a way back,
  * which keeps it usable from anywhere that can name a creator — the dashboard
- * table today, the payments ledger once Module 7 exists.
+ * table, and the payments ledger.
+ *
+ * Two layouts. From md up, the design's: the header, the figures, the stream
+ * history, then the payment history. On a phone the design reorders it around
+ * what is done there — the code to read out, the figures, the balance with
+ * the button to settle it, the payments, and the streams last — and draws
+ * each list as cards.
  *
  * Data still comes from the fixture module; swapping those imports for API
  * calls is this screen's Phase 5 work.
@@ -40,12 +48,12 @@ export function CreatorDetailScreen({
    */
   campaign?: Campaign
   onBack: () => void
-  /** Module 4's add/edit modal. Disabled until it exists — task 3.13. */
   onEditCreator?: (creator: Creator) => void
   onRecordPayment?: (creator: Creator) => void
   /** Offers to undo one of this creator's payments. */
   onReversePayment?: (payment: Payment) => void
 }) {
+  const isPhone = usePhoneLayout()
   const streamHistory = useMemo(
     () => getStreamHistoryForCreator(allStreams, creator.id),
     [creator.id],
@@ -64,8 +72,76 @@ export function CreatorDetailScreen({
   const targetCostPerInstallInCents = campaign?.targetCostPerInstallInCents ?? null
   const campaignName = campaign?.name ?? 'No campaign'
 
+  const recordPayment = onRecordPayment ? () => onRecordPayment(creator) : undefined
+
+  if (isPhone) {
+    return (
+      <div className="px-4 pb-6 pt-5 sm:px-6">
+        <h1 className="font-display text-[32px] uppercase leading-none tracking-[1px] text-ink text-shadow-stencil">
+          {creator.name}
+        </h1>
+        <div className="mt-2.5 flex flex-wrap items-center gap-2.5 text-[13px] text-ink-muted">
+          <CreatorStatusPill status={getLifecycleStatus(creator)} size="small" />
+          <span>{creator.platform}</span>
+          <span>{campaignName}</span>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between gap-3 border border-amber px-3.75 py-3">
+          <div>
+            <div className="text-[10px] uppercase tracking-[2px] text-ink-muted">Code</div>
+            <div className="font-display text-[26px] leading-[1.15] tracking-[4px] text-amber">
+              {creator.creatorCode}
+            </div>
+          </div>
+          <Button
+            variant="secondary"
+            disabled={onEditCreator === undefined}
+            onClick={onEditCreator ? () => onEditCreator(creator) : undefined}
+            className="min-h-11"
+          >
+            Edit
+          </Button>
+        </div>
+
+        <div className="mt-4.5">
+          <CreatorDetailStatStrip
+            creator={creator}
+            targetCostPerInstallInCents={targetCostPerInstallInCents}
+          />
+        </div>
+
+        <div className="mt-5">
+          <PaymentProgressPanel
+            creator={creator}
+            layout="phone"
+            action={
+              <Button
+                variant="primary"
+                size="block"
+                disabled={recordPayment === undefined}
+                onClick={recordPayment}
+              >
+                + Record payment
+              </Button>
+            }
+          />
+        </div>
+
+        <SectionTitle size="small" className="mb-2.5 mt-6">
+          Payments
+        </SectionTitle>
+        <PaymentHistoryCards creator={creator} onReversePayment={onReversePayment} />
+
+        <SectionTitle size="small" className="mb-2.5 mt-6">
+          Streams
+        </SectionTitle>
+        <StreamHistoryCards streams={streamHistory} />
+      </div>
+    )
+  }
+
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 pb-10 pt-5 sm:px-6 md:gap-7 md:px-8 md:pb-12 md:pt-7">
+    <div className="mx-auto max-w-240 px-8 pb-12 pt-7">
       <CreatorDetailHeader
         creator={creator}
         campaignName={campaignName}
@@ -73,34 +149,30 @@ export function CreatorDetailScreen({
         onEditCreator={onEditCreator}
       />
 
-      <CreatorDetailStatStrip
-        creator={creator}
-        targetCostPerInstallInCents={targetCostPerInstallInCents}
-      />
+      <div className="mb-7 mt-5.5">
+        <CreatorDetailStatStrip
+          creator={creator}
+          targetCostPerInstallInCents={targetCostPerInstallInCents}
+        />
+      </div>
 
-      <section className="flex flex-col gap-2.5">
-        <SectionTitle>Stream history</SectionTitle>
-        <StreamHistoryTable streams={streamHistory} />
-      </section>
+      <SectionTitle className="mb-2.5">Stream history</SectionTitle>
+      <StreamHistoryTable streams={streamHistory} />
 
-      <section className="flex flex-col gap-2.5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <SectionTitle>Payment history</SectionTitle>
+      <div className="mb-2.5 mt-8 flex items-center justify-between gap-3">
+        <SectionTitle>Payment history</SectionTitle>
+        <Button
+          variant="primary"
+          size="compact"
+          disabled={recordPayment === undefined}
+          onClick={recordPayment}
+        >
+          + Record payment
+        </Button>
+      </div>
 
-          <Button
-            variant="primary"
-            disabled={onRecordPayment === undefined}
-            onClick={onRecordPayment ? () => onRecordPayment(creator) : undefined}
-          >
-            + Record payment
-          </Button>
-        </div>
-
-        <div>
-          <PaymentProgressPanel creator={creator} />
-          <PaymentHistoryTable creator={creator} onReversePayment={onReversePayment} />
-        </div>
-      </section>
+      <PaymentProgressPanel creator={creator} />
+      <PaymentHistoryTable creator={creator} onReversePayment={onReversePayment} />
     </div>
   )
 }

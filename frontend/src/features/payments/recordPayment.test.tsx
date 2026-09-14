@@ -67,7 +67,8 @@ describe('recording a payment', () => {
     )
 
     expect(screen.getByText('$100.49')).toBeTruthy()
-    expect(screen.getByText(/\$3,300\.49 of \$4,800\.00 paid/)).toBeTruthy()
+    // Cents appear where a figure has them, and a whole agreement stays whole.
+    expect(screen.getByText(/\$3,300\.49 of \$4,800 paid/)).toBeTruthy()
   })
 
   it('says what the balance becomes before anything is saved', async () => {

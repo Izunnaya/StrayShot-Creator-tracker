@@ -9,7 +9,14 @@ import {
 } from '@/domain/campaigns'
 import { joinClassNames } from '@/lib/classNames'
 import { formatMoney } from '@/lib/format'
-import { Button, Label, Modal } from '@/ui'
+import {
+  Button,
+  dialogActionsClasses,
+  emphasisedFieldInputClasses,
+  fieldInputClasses,
+  FormField,
+  Modal,
+} from '@/ui'
 
 /**
  * Creating a campaign, and editing one that exists.
@@ -89,66 +96,58 @@ export function CampaignModal({
   return (
     <Modal
       title={editing ? 'Edit campaign' : 'Create campaign'}
-      subtitle={
-        editing
-          ? 'Everyone on this campaign follows the changes.'
-          : 'The dashboard filters by campaign, so this is what creators get grouped under.'
-      }
       labelId="campaign-modal-title"
+      width="narrow"
       onClose={onClose}
       footer={
-        <div className="flex flex-wrap justify-end gap-3">
-          <Button variant="secondary" onClick={onClose}>
+        <div className={dialogActionsClasses}>
+          <Button variant="cancel" size="sheet" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleSave}>
+          <Button variant="primary" size="sheet" onClick={handleSave}>
             {editing ? 'Save changes' : 'Create campaign'}
           </Button>
         </div>
       }
     >
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <Label className="mb-1.5">Campaign name</Label>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-3.5 md:mt-0.5 md:gap-x-4.5 md:gap-y-4">
+        <FormField label="Campaign name" className="col-span-2">
           <input
             value={draft.name}
             onChange={(event) => update('name')(event.target.value)}
             placeholder="e.g. Winter Offensive"
             aria-label="Campaign name"
-            className="w-full border border-hair bg-sunk px-3 py-2.5 text-[14px] text-ink"
+            className={fieldInputClasses}
           />
-        </div>
+        </FormField>
 
-        <div>
-          <Label className="mb-1.5">Starts</Label>
+        <FormField label="Start date">
           <input
             type="date"
             value={draft.startDate}
             onChange={(event) => update('startDate')(event.target.value)}
             aria-label="Start date"
-            className="w-full border border-hair bg-sunk px-3 py-2.5 text-[14px] text-ink"
+            className={fieldInputClasses}
           />
-        </div>
+        </FormField>
 
-        <div>
-          <Label className="mb-1.5">Ends</Label>
+        <FormField label="End date">
           <input
             type="date"
             value={draft.endDate}
             onChange={(event) => update('endDate')(event.target.value)}
             aria-label="End date"
-            className="w-full border border-hair bg-sunk px-3 py-2.5 text-[14px] text-ink"
+            className={fieldInputClasses}
           />
-        </div>
+        </FormField>
 
-        <div>
-          <Label className="mb-1.5">Total budget ($)</Label>
+        <FormField label="Total budget ($)">
           <input
             value={draft.totalBudget}
             onChange={(event) => update('totalBudget')(event.target.value)}
             inputMode="decimal"
             aria-label="Total budget in dollars"
-            className="w-full border border-hair bg-sunk px-3 py-2.5 text-[14px] text-ink"
+            className={fieldInputClasses}
           />
           {committed !== null && (
             <p
@@ -163,23 +162,25 @@ export function CampaignModal({
               {describeCommitment(committed, review.totalBudgetInCents)}
             </p>
           )}
-        </div>
+        </FormField>
 
-        <div>
-          <Label className="mb-1.5">Target cost / install ($)</Label>
+        <FormField
+          label={
+            <>
+              <span className="md:hidden">Target CPI ($)</span>
+              <span className="hidden md:inline">Target cost / install ($)</span>
+            </>
+          }
+        >
           <input
             value={draft.targetCostPerInstall}
             onChange={(event) => update('targetCostPerInstall')(event.target.value)}
             inputMode="decimal"
             aria-label="Target cost per install in dollars"
-            className="w-full border border-amber bg-sunk px-3 py-2.5 text-[14px] font-semibold text-amber"
+            className={emphasisedFieldInputClasses}
           />
-        </div>
+        </FormField>
       </div>
-
-      <p className="mt-4 text-[13px] text-ink-muted" role="status">
-        The target sets where cost per install turns green or red for everyone on this campaign.
-      </p>
 
       {showProblems && (
         <ul className="mt-3 list-none text-[13px] text-bad" role="alert">

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
   DEFAULT_SORT_SELECTION,
+  nextPhoneSort,
   selectionAfterColumnClick,
   type CreatorSortSelection,
   type CreatorTableColumnKey,
@@ -19,5 +20,10 @@ export function useCreatorSortSelection() {
     setSelection((current) => selectionAfterColumnClick(current, column))
   }
 
-  return { selection, handleColumnClick }
+  /** The phone cards' sort button: one step along the fixed cycle. */
+  function stepPhoneSort() {
+    setSelection(nextPhoneSort)
+  }
+
+  return { selection, handleColumnClick, stepPhoneSort }
 }

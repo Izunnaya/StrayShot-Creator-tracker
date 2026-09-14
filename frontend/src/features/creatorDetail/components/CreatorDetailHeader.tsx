@@ -1,5 +1,5 @@
 import type { Creator } from '@/data/types'
-import { Button, Label, PlatformTag } from '@/ui'
+import { Button, PlatformTag } from '@/ui'
 
 /**
  * Who this creator is, and the code everything about them is tracked by.
@@ -7,6 +7,9 @@ import { Button, Label, PlatformTag } from '@/ui'
  * The code gets its own amber-framed box rather than sitting in the meta row:
  * it is the one value on this screen the team reads out loud to someone, and
  * the design gives it that weight everywhere it appears.
+ *
+ * The wide layout's header. On a phone the masthead carries the way back and
+ * the screen draws its own, shorter header.
  */
 export function CreatorDetailHeader({
   creator,
@@ -18,23 +21,18 @@ export function CreatorDetailHeader({
   /** Looked up by the screen: a creator holds only the campaign's id. */
   campaignName: string
   onBack: () => void
-  /**
-   * Opens the add/edit creator modal, prefilled. That modal is Module 4, so
-   * until it exists the control renders disabled — see task 3.13.
-   */
+  /** Opens the add/edit creator modal, prefilled. Disabled when absent. */
   onEditCreator?: (creator: Creator) => void
 }) {
   return (
-    <div className="flex flex-col gap-5">
-      <div>
-        <Button variant="text" onClick={onBack} className="px-0">
-          ← All creators
-        </Button>
-      </div>
+    <div>
+      <Button variant="text" onClick={onBack} className="mb-5">
+        ← All creators
+      </Button>
 
       <div className="flex flex-wrap items-start justify-between gap-5">
         <div>
-          <h1 className="font-display text-[30px] uppercase leading-none tracking-[1px] text-ink text-shadow-stencil sm:text-[36px] md:text-[42px]">
+          <h1 className="font-display text-[42px] uppercase leading-none tracking-[1px] text-ink text-shadow-stencil">
             {creator.name}
           </h1>
 
@@ -55,7 +53,7 @@ export function CreatorDetailHeader({
 
         <div className="flex items-center gap-3">
           <div className="border border-amber px-4.5 py-2.5 text-center">
-            <Label>Code</Label>
+            <div className="text-[10px] uppercase tracking-[2px] text-ink-muted">Code</div>
             <div className="font-head text-[22px] font-semibold tracking-[3px] text-amber">
               {creator.creatorCode}
             </div>

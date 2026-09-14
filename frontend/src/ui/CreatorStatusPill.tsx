@@ -14,11 +14,19 @@ const statusClasses: Record<CreatorLifecycleStatus, string> = {
   completed: 'text-good border border-good/45',
 }
 
-export function CreatorStatusPill({ status }: { status: CreatorLifecycleStatus }) {
+export function CreatorStatusPill({
+  status,
+  size = 'regular',
+}: {
+  status: CreatorLifecycleStatus
+  /** "small" on the phone cards and the phone creator screen. */
+  size?: 'regular' | 'small'
+}) {
   return (
     <span
       className={joinClassNames(
-        'px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[1px] whitespace-nowrap',
+        'shrink-0 whitespace-nowrap font-semibold uppercase tracking-[1px]',
+        size === 'small' ? 'px-2 py-0.75 text-[10px]' : 'px-2 py-0.5 text-[11px]',
         statusClasses[status],
       )}
     >

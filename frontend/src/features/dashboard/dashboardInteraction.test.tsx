@@ -57,6 +57,62 @@ describe('filtering the dashboard by campaign', () => {
   })
 })
 
+describe('searching the dashboard', () => {
+  const searchBox = () => screen.getByRole('searchbox', { name: 'Search creators by name or code' })
+
+  it('finds a creator by the code they were given', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    // LOTUS is IronLotus's code; nothing in the name says so.
+    await user.type(searchBox(), 'lotus')
+
+    expect(creatorNamesInTableOrder()).toEqual(['IronLotus'])
+  })
+
+  it('finds a creator by part of their name, whatever the case', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(searchBox(), '  NOVA ')
+
+    expect(creatorNamesInTableOrder()).toEqual(['NovaKess'])
+  })
+
+  it('narrows within the campaign rather than looking outside it', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    // NovaKess is on Season 2 Launch, so Clan Wars has no match for NOVA.
+    await user.click(screen.getByRole('button', { name: /Clan Wars Update/ }))
+    await user.type(searchBox(), 'NOVA')
+
+    expect(creatorTable().getByText('No creators match this filter.')).toBeTruthy()
+  })
+
+  it('leaves the headline figures and chip counts describing the campaign', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(searchBox(), 'LOTUS')
+
+    expect(screen.getByText('$47,000')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /^Active/ }).textContent).toContain('8')
+  })
+
+  it('is still applied after a trip to the creator it found', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(searchBox(), 'LOTUS')
+    await user.click(creatorTable().getByRole('button', { name: 'IronLotus' }))
+    await user.click(screen.getByRole('button', { name: /All creators/ }))
+
+    expect((searchBox() as HTMLInputElement).value).toBe('LOTUS')
+    expect(creatorNamesInTableOrder()).toEqual(['IronLotus'])
+  })
+})
+
 describe('sorting the creator table', () => {
   it('reorders by the clicked column and records the direction for assistive technology', async () => {
     const user = userEvent.setup()

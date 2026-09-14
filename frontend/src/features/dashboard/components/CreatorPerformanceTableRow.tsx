@@ -69,14 +69,16 @@ export function CreatorPerformanceTableRow({
       <td className={joinClassNames(cell, 'font-semibold')}>
         {formatNumber(creator.installsAttributed)}
       </td>
-      <td className={cell}>
-        <div className="mb-1.25 text-[13px]">
-          <div className="whitespace-nowrap">
+      {/* One line, paid against agreed on the left and what that leaves on
+          the right, above the bar -- as the design sets the cell. */}
+      <td className={joinClassNames(cell, 'pr-5.5')}>
+        <div className="mb-1.25 flex justify-between gap-2.5 text-[13px]">
+          <span className="whitespace-nowrap">
             {formatMoney(amountPaid)} / {formatMoney(creator.contractedAmountInCents)}
-          </div>
-          <div className="whitespace-nowrap text-ink-muted">
+          </span>
+          <span className="whitespace-nowrap text-ink-muted">
             {outstandingBalance > 0 ? formatMoney(outstandingBalance) + ' open' : 'Settled'}
-          </div>
+          </span>
         </div>
         <ProgressBar percentComplete={getPaymentProgressPercent(creator)} />
       </td>

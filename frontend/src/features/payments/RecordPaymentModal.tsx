@@ -14,7 +14,15 @@ import {
 } from '@/domain/paymentRecording'
 import { joinClassNames } from '@/lib/classNames'
 import { formatMoney, formatPaymentAmount } from '@/lib/format'
-import { Button, Label, Modal, ProgressBar } from '@/ui'
+import {
+  Button,
+  dialogActionsClasses,
+  fieldInputClasses,
+  FormField,
+  Modal,
+  monoFieldInputClasses,
+  ProgressBar,
+} from '@/ui'
 
 /**
  * Recording a payment against a creator's deal.
@@ -84,106 +92,107 @@ export function RecordPaymentModal({
     <Modal
       title="Record payment"
       subtitle={
+        /* The phone sheet names the creator only; the campaign is a second
+           thing to read on a screen with no room for it. */
         <>
-          {creator.name} · {campaignName}
+          <span className="md:hidden">{creator.name}</span>
+          <span className="hidden md:inline">
+            {creator.name} · {campaignName}
+          </span>
         </>
       }
       onClose={onClose}
       footer={
-        <div className="flex flex-wrap justify-end gap-3">
-          <Button variant="secondary" onClick={onClose}>
+        <div className={dialogActionsClasses}>
+          <Button variant="cancel" size="sheet" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleSave}>
+          <Button variant="primary" size="sheet" onClick={handleSave}>
             Save payment
           </Button>
         </div>
       }
     >
-      <div className="mb-5 border border-hair bg-sunk px-4 py-3.5">
-        <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-[13px] text-ink-muted">
+      <div className="mb-4.5 border border-hair bg-sunk-2 px-3.5 py-3 md:mb-5 md:px-4 md:py-3.5">
+        <div className="flex justify-between gap-2 text-[12px] text-ink-muted md:text-[13px]">
           <span>Agreed {formatMoney(creator.contractedAmountInCents)}</span>
           <span>Paid {formatMoney(amountPaid)}</span>
           <span className={outstanding > 0 ? 'text-bad' : 'text-good'}>
             {outstanding > 0 ? `Open ${formatMoney(outstanding)}` : 'Settled'}
           </span>
         </div>
-        <div className="mt-2.5">
+        <div className="mt-2.25 md:mt-2.5">
           <ProgressBar percentComplete={getPaymentProgressPercent(creator)} heightInPixels={5} />
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <Label className="mb-1.5">Amount paid ($)</Label>
+      {/* Two columns from md up. On a phone one, with the reference ahead of
+          who recorded it, as the phone design orders them. */}
+      <div className="grid gap-3.5 md:grid-cols-2 md:gap-x-4.5 md:gap-y-4">
+        <FormField label="Amount paid ($)">
           <input
             value={draft.amount}
             onChange={(event) => update('amount')(event.target.value)}
             inputMode="decimal"
             autoComplete="off"
             aria-label="Amount paid in dollars"
-            className="w-full border border-amber bg-sunk px-3 py-2.5 text-[18px] font-semibold text-amber"
+            className="min-h-13 w-full border border-amber bg-sunk px-3.5 py-3 text-[22px] font-semibold text-amber md:min-h-0 md:px-3 md:py-2.5 md:text-[18px]"
           />
           {outstanding > 0 && (
             <button
               type="button"
               onClick={() => update('amount')((outstanding / 100).toFixed(2))}
-              className="mt-2 cursor-pointer border border-hair px-2.5 py-1.5 text-[11px] uppercase tracking-[1px] text-ink-muted hover:border-amber hover:text-amber focus-visible:outline-2 focus-visible:outline-amber"
+              aria-label={`Pay full balance of ${formatMoney(getAmountToSettle(creator))}`}
+              className="mt-2 min-h-10 cursor-pointer border border-hair bg-transparent px-3 py-2.25 text-[12px] uppercase tracking-[1px] text-ink-muted hover:border-amber hover:text-amber focus-visible:outline-2 focus-visible:outline-amber md:mt-1.75 md:min-h-0 md:px-2.25 md:py-1.25 md:text-[11px]"
             >
-              Pay full balance ({formatMoney(getAmountToSettle(creator))})
+              Pay full balance
             </button>
           )}
-        </div>
+        </FormField>
 
-        <div>
-          <Label className="mb-1.5">Date paid</Label>
+        <FormField label="Date paid">
           <input
             type="date"
             value={draft.paidOn}
             max={today}
             onChange={(event) => update('paidOn')(event.target.value)}
             aria-label="Date paid"
-            className="w-full border border-hair bg-sunk px-3 py-2.5 text-[14px] text-ink"
+            className={fieldInputClasses}
           />
-        </div>
+        </FormField>
 
-        <div>
-          <Label className="mb-1.5">Method</Label>
+        <FormField label="Method">
           <select
             value={draft.method}
             onChange={(event) => update('method')(event.target.value)}
             aria-label="Payment method"
-            className="w-full border border-hair bg-sunk px-3 py-2.5 text-[14px] text-ink"
+            className={fieldInputClasses}
           >
             {PAYMENT_METHODS.map((method) => (
               <option key={method}>{method}</option>
             ))}
           </select>
-        </div>
+        </FormField>
 
-        <div>
-          <Label className="mb-1.5">Recorded by</Label>
+        <FormField label="Recorded by" className="order-last md:order-0">
           {/* Stamped from the session rather than typed — see DECISIONS.md, Q4. */}
-          <div className="border border-hair bg-panel-head px-3 py-2.5 text-[14px] text-ink-muted">
-            {currentTeamMember.name}
-          </div>
-        </div>
+          <div className={fieldInputClasses}>{currentTeamMember.name}</div>
+        </FormField>
 
-        <div className="sm:col-span-2">
-          <Label className="mb-1.5">Reference or transaction ID</Label>
+        <FormField label="Reference / transaction ID" className="md:col-span-2">
           <input
             value={draft.reference}
             onChange={(event) => update('reference')(event.target.value)}
             placeholder="e.g. WISE-8842-B"
             aria-label="Reference or transaction ID"
-            className="w-full border border-hair bg-sunk px-3 py-2.5 font-mono text-[13px] tracking-[0.5px] text-ink"
+            className={monoFieldInputClasses}
           />
-        </div>
+        </FormField>
       </div>
 
       <p
         className={joinClassNames(
-          'mt-4 text-[13px]',
+          'mt-3.5 text-[12px] md:mt-4',
           review.overpaymentAfterInCents > 0 ? 'text-amber' : 'text-ink-muted',
         )}
         role="status"

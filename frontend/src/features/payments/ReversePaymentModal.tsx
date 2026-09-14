@@ -2,7 +2,7 @@ import { currentTeamMember, teamMembers } from '@/data/session'
 import type { Creator, Payment } from '@/data/types'
 import { getAmountPaid } from '@/domain/creatorCalculations'
 import { getTeamMemberName } from '@/domain/teamMembers'
-import { Button, Modal } from '@/ui'
+import { Button, dialogActionsClasses, Modal } from '@/ui'
 import { formatDate, formatPaymentAmount } from '@/lib/format'
 
 /**
@@ -41,17 +41,17 @@ export function ReversePaymentModal({
       labelId="reverse-payment-title"
       onClose={onClose}
       footer={
-        <div className="flex flex-wrap justify-end gap-3">
-          <Button variant="secondary" onClick={onClose}>
+        <div className={dialogActionsClasses}>
+          <Button variant="cancel" size="sheet" onClick={onClose}>
             Keep it
           </Button>
-          <Button variant="primary" onClick={onConfirm}>
+          <Button variant="primary" size="sheet" onClick={onConfirm}>
             Reverse payment
           </Button>
         </div>
       }
     >
-      <dl className="border border-hair bg-sunk px-4 py-3.5 text-[14px]">
+      <dl className="border border-hair bg-sunk-2 px-4 py-3.5 text-[14px]">
         <div className="flex justify-between gap-4 py-1">
           <dt className="text-ink-muted">Amount</dt>
           <dd className="font-semibold">{formatPaymentAmount(payment.amountInCents)}</dd>

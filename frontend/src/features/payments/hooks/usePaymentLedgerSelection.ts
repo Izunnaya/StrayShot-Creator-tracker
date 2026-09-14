@@ -33,6 +33,8 @@ export function usePaymentLedgerSelection() {
     setSearchText: (searchText: string) => update({ searchText }),
     setPaidFrom: (paidFrom: string) => update({ paidFrom }),
     setPaidTo: (paidTo: string) => update({ paidTo }),
+    /** Campaign and dates back to everything. The search is left as typed. */
+    clearFilters: () => update({ campaign: UNFILTERED_LEDGER.campaign, paidFrom: '', paidTo: '' }),
     handleColumnClick: (column: LedgerSortColumn) =>
       setSort((current) => ledgerSortAfterColumnClick(current, column)),
     stepSort: () => setSort(nextLedgerSort),

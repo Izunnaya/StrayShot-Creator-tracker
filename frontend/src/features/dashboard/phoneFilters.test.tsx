@@ -82,3 +82,39 @@ describe('filtering creators on a phone', () => {
     expect(sheet().getByRole('button', { name: 'Show 14 creators' })).toBeTruthy()
   })
 })
+
+describe('filtering payments on a phone', () => {
+  async function openTheLedger() {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Payments' }))
+    return user
+  }
+
+  const filterButton = () => screen.getByRole('button', { name: /^Filter payments\./ })
+
+  it('narrows the ledger to a campaign from the sheet', async () => {
+    const user = await openTheLedger()
+
+    await user.click(filterButton())
+    await user.click(sheet().getByRole('button', { name: 'Clan Wars Update' }))
+    await user.click(sheet().getByRole('button', { name: 'Show 7 payments' }))
+
+    expect(filterButton().getAttribute('aria-label')).toBe('Filter payments. Clan Wars Update')
+    expect(screen.getByText('7 payments')).toBeTruthy()
+  })
+
+  it('clears the dates along with the campaign', async () => {
+    const user = await openTheLedger()
+
+    await user.type(screen.getByLabelText('Paid From'), '2026-08-20')
+    await user.click(filterButton())
+    await user.click(sheet().getByRole('button', { name: 'Season 2 Launch' }))
+    expect(sheet().getByRole('button', { name: 'Show 2 payments' })).toBeTruthy()
+
+    await user.click(sheet().getByRole('button', { name: 'Clear all' }))
+
+    expect(sheet().getByRole('button', { name: 'Show 18 payments' })).toBeTruthy()
+    expect((screen.getByLabelText('Paid From') as HTMLInputElement).value).toBe('')
+  })
+})

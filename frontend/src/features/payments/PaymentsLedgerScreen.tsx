@@ -1,6 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { teamMembers } from '@/data/session'
 import type { Campaign, Creator } from '@/data/types'
+import { EVERY_CAMPAIGN } from '@/domain/creatorFiltering'
 import {
   buildPaymentLedger,
   filterLedger,
@@ -10,7 +11,8 @@ import {
 } from '@/domain/paymentLedger'
 import { CampaignFilterChipRow } from '@/features/dashboard/components/CampaignFilterChipRow'
 import { usePhoneLayout } from '@/lib/usePhoneLayout'
-import { SearchField } from '@/ui'
+import { FilterSheetButton, SearchField } from '@/ui'
+import { LedgerFilterSheet } from './components/LedgerFilterSheet'
 import { PaidDateRangeFields } from './components/PaidDateRangeFields'
 import { PaymentLedgerTable } from './components/PaymentLedgerTable'
 import type { usePaymentLedgerSelection } from './hooks/usePaymentLedgerSelection'
@@ -51,6 +53,7 @@ export function PaymentsLedgerScreen({
 }) {
   const { filter, sort } = selectionState
   const isPhone = usePhoneLayout()
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
 
   const entries = useMemo(
     () =>
@@ -67,19 +70,79 @@ export function PaymentsLedgerScreen({
     ? 'The From date is after the To date, so no payment can fall between them.'
     : 'No payments match this filter.'
 
-  return (
-    <div className="mx-auto max-w-295 px-4 pt-3.5 sm:px-6 md:px-8 md:pb-12 md:pt-7">
-      {/* On a phone the masthead already says Ledger. */}
-      {!isPhone && (
-        <div className="mb-4.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h1 className="font-display text-[28px] uppercase tracking-[1px] text-ink">
-            Payment <span className="text-amber">ledger</span>
-          </h1>
-          <div className="text-[13px] text-ink-muted">
-            Every recorded payment across all creators
-          </div>
+  const searchField = (
+    <SearchField
+      label="Search payments by creator or reference"
+      placeholder="Search creator or reference"
+      value={filter.searchText}
+      onValueChange={selectionState.setSearchText}
+    />
+  )
+  const dateRangeFields = (
+    <PaidDateRangeFields
+      paidFrom={filter.paidFrom}
+      paidTo={filter.paidTo}
+      onChangePaidFrom={selectionState.setPaidFrom}
+      onChangePaidTo={selectionState.setPaidTo}
+    />
+  )
+  const table = (
+    <PaymentLedgerTable
+      entries={entries}
+      netTotalInCents={totals.netInCents}
+      sortSelection={sort}
+      onColumnHeadingClick={selectionState.handleColumnClick}
+      onStepSort={selectionState.stepSort}
+      emptyMessage={emptyMessage}
+      onSelectCreator={onSelectCreator}
+    />
+  )
+
+  if (isPhone) {
+    /* The phone design swaps the campaign chips for a button that names the
+       campaign in view and opens a sheet of them. The masthead already says
+       Ledger, so there is no title. */
+    const campaignName = campaigns.find((campaign) => campaign.id === filter.campaign)?.name
+
+    return (
+      <div className="px-4 pt-3.5 sm:px-6">
+        {searchField}
+
+        <div className="mt-3">
+          <FilterSheetButton
+            label="Filter payments"
+            summary={campaignName ?? 'All campaigns'}
+            isFiltered={filter.campaign !== EVERY_CAMPAIGN}
+            onClick={() => setIsFilterSheetOpen(true)}
+          />
         </div>
-      )}
+
+        <div className="mb-4 mt-3">{dateRangeFields}</div>
+
+        {table}
+
+        {isFilterSheetOpen && (
+          <LedgerFilterSheet
+            campaigns={campaigns}
+            selectedCampaign={filter.campaign}
+            onSelectCampaign={selectionState.selectCampaign}
+            onClearAll={selectionState.clearFilters}
+            matchingPaymentCount={entries.length}
+            onClose={() => setIsFilterSheetOpen(false)}
+          />
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="mx-auto max-w-295 px-8 pb-12 pt-7">
+      <div className="mb-4.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h1 className="font-display text-[28px] uppercase tracking-[1px] text-ink">
+          Payment <span className="text-amber">ledger</span>
+        </h1>
+        <div className="text-[13px] text-ink-muted">Every recorded payment across all creators</div>
+      </div>
 
       <div className="mb-4">
         <CampaignFilterChipRow
@@ -87,34 +150,12 @@ export function PaymentsLedgerScreen({
           selectedCampaign={filter.campaign}
           onSelectCampaign={selectionState.selectCampaign}
           canEditSelectedCampaign={false}
-          leading={
-            <SearchField
-              label="Search payments by creator or reference"
-              placeholder="Search creator or reference"
-              value={filter.searchText}
-              onValueChange={selectionState.setSearchText}
-            />
-          }
-          trailing={
-            <PaidDateRangeFields
-              paidFrom={filter.paidFrom}
-              paidTo={filter.paidTo}
-              onChangePaidFrom={selectionState.setPaidFrom}
-              onChangePaidTo={selectionState.setPaidTo}
-            />
-          }
+          leading={searchField}
+          trailing={dateRangeFields}
         />
       </div>
 
-      <PaymentLedgerTable
-        entries={entries}
-        netTotalInCents={totals.netInCents}
-        sortSelection={sort}
-        onColumnHeadingClick={selectionState.handleColumnClick}
-        onStepSort={selectionState.stepSort}
-        emptyMessage={emptyMessage}
-        onSelectCreator={onSelectCreator}
-      />
+      {table}
     </div>
   )
 }

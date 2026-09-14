@@ -72,10 +72,16 @@ describe('when no installs have landed yet', () => {
       />,
     )
 
-    // Deriving the scale from a peak of zero would leave every tick NaN.
+    // Deriving the scale from a peak of zero would leave every coordinate NaN.
     const svg = screen.getByRole('img')
-    const tickLabels = [...svg.querySelectorAll('text')].map((tick) => tick.textContent)
-    expect(tickLabels).toEqual(['0', '1', '2', '3', '4'])
+    const coordinates = [
+      ...[...svg.querySelectorAll('line')].flatMap((line) => [
+        line.getAttribute('y1'),
+        line.getAttribute('y2'),
+      ]),
+      svg.querySelector('polyline')?.getAttribute('points'),
+    ]
+    expect(coordinates.join(' ')).not.toContain('NaN')
   })
 
   it('says so plainly when nobody streamed either', () => {
@@ -117,11 +123,14 @@ describe('when installs have landed', () => {
       />,
     )
 
-    // 905 rounds up to four intervals of 300, so the axis tops out at 1,200.
+    // 905 rounds up to four intervals of 300, so the scale tops out at 1,200.
     const svg = screen.getByRole('img')
-    const tickLabels = [...svg.querySelectorAll('text')].map((tick) => tick.textContent)
-    expect(tickLabels).toEqual(['0', '300', '600', '900', '1,200'])
-    expect(svg.getAttribute('aria-label')).toContain('Peak 905 installs')
+    expect(svg.getAttribute('aria-label')).toBe(
+      'Daily installs for selected creators. Peak 905 installs; vertical scale zero to 1,200.',
+    )
+    // The peak day reaches 905/1200 of the plot's 175-unit height above the baseline at 190.
+    const points = svg.querySelector('polyline')?.getAttribute('points')?.split(' ')
+    expect(Number(points?.[1]?.split(',')[1])).toBeCloseTo(190 - (905 / 1200) * 175)
     expect(screen.queryByRole('status')).toBeNull()
   })
 })

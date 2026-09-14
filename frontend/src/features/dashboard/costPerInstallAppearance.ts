@@ -13,3 +13,11 @@ export const costPerInstallClasses: Record<CostPerInstallRating, string> = {
   'over-target': 'text-bad bg-bad/10',
   'not-measurable': 'text-ink-muted',
 }
+
+/** The same verdicts as a text colour alone, for the figures on a phone card. */
+export const costPerInstallTextClasses: Record<CostPerInstallRating, string> = {
+  'under-target': 'text-good',
+  acceptable: 'text-ink',
+  'over-target': 'text-bad',
+  'not-measurable': 'text-ink-dim',
+}

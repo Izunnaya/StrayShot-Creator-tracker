@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Campaign } from '@/data/types'
 import { EVERY_CAMPAIGN, type CampaignFilter } from '@/domain/creatorFiltering'
+import { usePhoneLayout } from '@/lib/usePhoneLayout'
 import { Button, FilterChip, Label } from '@/ui'
 
 /**
@@ -12,9 +13,12 @@ import { Button, FilterChip, Label } from '@/ui'
  * the screen can handle it -- the ledger filters by campaign without owning
  * them, and a button that does nothing when pressed is worse than no button.
  *
- * The search leads the row and the ledger's date range follows it, both as
- * items of this same wrapping row rather than rows of their own, so on a wide
- * screen they sit in one line with the chips as the design lays them out.
+ * From md up the search leads the row, the chips follow, and the ledger's
+ * date range comes after, all as items of one wrapping row as the design
+ * lays them out. On a phone the search takes a line of its own, the chips a
+ * row that scrolls sideways without its caption, and the dates a line after.
+ * The chip scroller is `display: contents` from md up, which is what lets
+ * its chips rejoin the wrapping row there.
  */
 export function CampaignFilterChipRow({
   campaigns,
@@ -37,38 +41,46 @@ export function CampaignFilterChipRow({
   /** Placed after the chips and their controls. */
   trailing?: ReactNode
 }) {
+  const isPhone = usePhoneLayout()
+
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:gap-2">
       {leading}
 
-      <Label className="mr-1.5">Campaign</Label>
+      <div className="scroll-x -mx-4 flex gap-2 px-4 sm:-mx-6 sm:px-6 md:contents">
+        <Label className="mr-1.5 hidden md:block">Campaign</Label>
 
-      <FilterChip
-        label="All campaigns"
-        isSelected={selectedCampaign === EVERY_CAMPAIGN}
-        onClick={() => onSelectCampaign(EVERY_CAMPAIGN)}
-      />
-
-      {campaigns.map((campaign) => (
         <FilterChip
-          key={campaign.id}
-          label={campaign.name}
-          isSelected={selectedCampaign === campaign.id}
-          onClick={() => onSelectCampaign(campaign.id)}
+          label="All campaigns"
+          isSelected={selectedCampaign === EVERY_CAMPAIGN}
+          onClick={() => onSelectCampaign(EVERY_CAMPAIGN)}
         />
-      ))}
 
-      {onCreateCampaign && (
-        <Button variant="addNew" onClick={onCreateCampaign}>
-          + New campaign
-        </Button>
-      )}
+        {campaigns.map((campaign) => (
+          <FilterChip
+            key={campaign.id}
+            label={campaign.name}
+            isSelected={selectedCampaign === campaign.id}
+            onClick={() => onSelectCampaign(campaign.id)}
+          />
+        ))}
 
-      {canEditSelectedCampaign && onEditSelectedCampaign && (
-        <Button variant="text" onClick={onEditSelectedCampaign}>
-          Edit campaign
-        </Button>
-      )}
+        {onCreateCampaign && (
+          <Button variant="addNew" onClick={onCreateCampaign} className="shrink-0">
+            {isPhone ? '+ Campaign' : '+ New campaign'}
+          </Button>
+        )}
+
+        {canEditSelectedCampaign && onEditSelectedCampaign && (
+          <Button
+            variant="text"
+            onClick={onEditSelectedCampaign}
+            className="shrink-0 md:px-1 md:py-1.5 md:text-[12px]"
+          >
+            Edit campaign
+          </Button>
+        )}
+      </div>
 
       {trailing}
     </div>

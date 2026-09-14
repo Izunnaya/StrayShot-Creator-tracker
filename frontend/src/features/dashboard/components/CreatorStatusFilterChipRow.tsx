@@ -8,6 +8,9 @@ import { FilterChip, Label } from '@/ui'
  * Each chip carries the number of creators it would reveal. Those counts
  * respect the campaign filter but ignore the status filter, so every chip
  * stays informative rather than only the selected one showing a figure.
+ *
+ * On a phone the row scrolls sideways and drops its caption, as the campaign
+ * chips above it do.
  */
 const statusChips: { status: CreatorLifecycleStatus; label: string }[] = [
   { status: 'prospect', label: 'Prospect' },
@@ -26,8 +29,8 @@ export function CreatorStatusFilterChipRow({
   countsByStatus: Record<CreatorLifecycleStatus, number> & { total: number }
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Label className="mr-1.5">Status</Label>
+    <div className="scroll-x -mx-4 flex gap-2 px-4 pb-1 sm:-mx-6 sm:px-6 md:mx-0 md:flex-wrap md:items-center md:overflow-visible md:px-0 md:pb-0">
+      <Label className="mr-1.5 hidden md:block">Status</Label>
 
       <FilterChip
         label="All"

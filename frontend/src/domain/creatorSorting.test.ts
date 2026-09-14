@@ -3,7 +3,9 @@ import { creators as fixtureCreators } from '@/data/fixtures'
 import { createTestCreator, createTestPayment } from '@/testing/createTestCreator'
 import {
   DEFAULT_SORT_SELECTION,
+  describePhoneSort,
   getInitialDirectionForColumn,
+  nextPhoneSort,
   selectionAfterColumnClick,
   sortCreators,
 } from './creatorSorting'
@@ -177,5 +179,50 @@ describe('the fixture data in the table', () => {
       'BLUNT',
       'STORM',
     ])
+  })
+})
+
+describe('the phone sort button', () => {
+  it('steps through installs, cost per install, open balance and name, then round again', () => {
+    let current: Parameters<typeof nextPhoneSort>[0] = {
+      column: 'installsAttributed',
+      direction: 'descending',
+    }
+    const seen = [describePhoneSort(current)]
+    for (let step = 0; step < 4; step++) {
+      current = nextPhoneSort(current)
+      seen.push(describePhoneSort(current))
+    }
+
+    expect(seen).toEqual(['Installs', 'Cost / install', 'Open balance', 'Name', 'Installs'])
+  })
+
+  it('starts the cycle over from a heading order that is not one of its steps', () => {
+    expect(nextPhoneSort({ column: 'totalViews', direction: 'descending' })).toEqual({
+      column: 'installsAttributed',
+      direction: 'descending',
+    })
+  })
+
+  it('puts whoever is owed the most first when sorting by open balance', () => {
+    const owedMore = createTestCreator({
+      id: 10,
+      name: 'Owed more',
+      contractedAmountInCents: 500_000,
+      payments: [createTestPayment({ amountInCents: 100_000 })],
+    })
+    const owedLess = createTestCreator({
+      id: 11,
+      name: 'Owed less',
+      contractedAmountInCents: 200_000,
+      payments: [createTestPayment({ amountInCents: 100_000 })],
+    })
+
+    expect(
+      sortCreators([owedLess, owedMore], {
+        column: 'outstandingBalance',
+        direction: 'descending',
+      }).map((creator) => creator.name),
+    ).toEqual(['Owed more', 'Owed less'])
   })
 })

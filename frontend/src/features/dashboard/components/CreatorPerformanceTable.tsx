@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import type { Creator } from '@/data/types'
-import type { CreatorSortSelection, CreatorTableColumnKey } from '@/domain/creatorSorting'
+import {
+  describePhoneSort,
+  type CreatorSortSelection,
+  type CreatorTableColumnKey,
+} from '@/domain/creatorSorting'
 import { joinClassNames } from '@/lib/classNames'
+import { useNarrowLayout } from '@/lib/usePhoneLayout'
 import {
   CREATOR_TABLE_COLUMNS,
   CREATOR_TABLE_MINIMUM_WIDTH_PX,
@@ -14,32 +19,63 @@ export function CreatorPerformanceTable({
   creators,
   sortSelection,
   onColumnHeadingClick,
+  onStepPhoneSort,
   targetCostPerInstallInCents,
   onSelectCreator,
+  onRecordPayment,
 }: {
   creators: Creator[]
   sortSelection: CreatorSortSelection
   onColumnHeadingClick: (column: CreatorTableColumnKey) => void
+  /** The cards have no headings to click; one button steps through the orders. */
+  onStepPhoneSort?: () => void
   targetCostPerInstallInCents: number
   onSelectCreator?: (creator: Creator) => void
+  /** Offered on the cards, which carry the outstanding panel's action. */
+  onRecordPayment?: (creator: Creator) => void
 }) {
   const totalColumnWeight = CREATOR_TABLE_COLUMN_WEIGHTS.reduce((sum, value) => sum + value, 0)
   const scrollArea = useRef<HTMLDivElement>(null)
-  const canScrollSideways = useHorizontalOverflow(scrollArea)
+  const isNarrow = useNarrowLayout()
+  // Measured again when the table appears, having been cards a moment before.
+  const canScrollSideways = useHorizontalOverflow(scrollArea, isNarrow)
 
-  return (
-    <div className="border border-hair bg-panel">
-      {/* Cards below lg, the full table from lg up. Only one is ever
-          displayed, so assistive technology only ever sees one of them. */}
-      <div className="lg:hidden">
+  /* Cards below lg, the full table from lg up. Only one is ever rendered. */
+  if (isNarrow) {
+    const sortLabel =
+      describePhoneSort(sortSelection) ??
+      CREATOR_TABLE_COLUMNS.find((column) => column.key === sortSelection.column)?.heading
+
+    return (
+      <div>
+        <div className="flex items-center justify-between pb-2 pt-0.5">
+          <span className="text-[11px] uppercase tracking-[1.5px] text-ink-muted">
+            {creators.length} {creators.length === 1 ? 'creator' : 'creators'}
+          </span>
+          {onStepPhoneSort && (
+            <button
+              type="button"
+              onClick={onStepPhoneSort}
+              aria-label={`Sorted by ${sortLabel}. Change order`}
+              className="min-h-10 cursor-pointer whitespace-nowrap border border-hair bg-transparent px-3 py-2 text-[12px] uppercase tracking-[1px] text-ink-muted hover:border-amber hover:text-amber focus-visible:outline-2 focus-visible:outline-amber"
+            >
+              Sort · {sortLabel}
+            </button>
+          )}
+        </div>
         <CreatorPerformanceCardList
           creators={creators}
           targetCostPerInstallInCents={targetCostPerInstallInCents}
           onSelectCreator={onSelectCreator}
+          onRecordPayment={onRecordPayment}
         />
       </div>
+    )
+  }
 
-      <div ref={scrollArea} className="hidden overflow-x-auto lg:block">
+  return (
+    <div className="border border-hair bg-panel">
+      <div ref={scrollArea} className="overflow-x-auto">
         <table
           className="w-full table-fixed border-collapse text-left"
           style={{ minWidth: CREATOR_TABLE_MINIMUM_WIDTH_PX }}
@@ -122,7 +158,10 @@ export function CreatorPerformanceTable({
  * moves, and telling someone to scroll a table that already fits is worse
  * than saying nothing.
  */
-function useHorizontalOverflow(elementRef: RefObject<HTMLElement | null>): boolean {
+function useHorizontalOverflow(
+  elementRef: RefObject<HTMLElement | null>,
+  layoutKey: unknown,
+): boolean {
   const [overflows, setOverflows] = useState(false)
 
   useEffect(() => {
@@ -139,7 +178,7 @@ function useHorizontalOverflow(elementRef: RefObject<HTMLElement | null>): boole
     const observer = new ResizeObserver(measure)
     observer.observe(element)
     return () => observer.disconnect()
-  }, [elementRef])
+  }, [elementRef, layoutKey])
 
   return overflows
 }

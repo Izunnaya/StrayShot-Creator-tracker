@@ -1,5 +1,10 @@
 import type { Creator } from '@/data/types'
-import { getAmountPaid, getCostPerInstall, getLifecycleStatus } from './creatorCalculations'
+import {
+  getAmountPaid,
+  getCostPerInstall,
+  getLifecycleStatus,
+  getOutstandingBalance,
+} from './creatorCalculations'
 
 /**
  * Sorting for the creator table. The column keys here are the sortable
@@ -18,6 +23,8 @@ export type CreatorTableColumnKey =
   | 'installsAttributed'
   | 'amountPaid'
   | 'costPerInstall'
+  /** Not a column: the phone cards' sort button offers it. */
+  | 'outstandingBalance'
 
 export type SortDirection = 'ascending' | 'descending'
 
@@ -71,6 +78,8 @@ function getSortValue(creator: Creator, column: CreatorTableColumnKey): string |
       return getAmountPaid(creator)
     case 'costPerInstall':
       return getCostPerInstall(creator)
+    case 'outstandingBalance':
+      return getOutstandingBalance(creator)
   }
 }
 
@@ -123,4 +132,33 @@ export function selectionAfterColumnClick(
     column: clickedColumn,
     direction: currentSelection.direction === 'ascending' ? 'descending' : 'ascending',
   }
+}
+
+/**
+ * The orders the phone cards' single sort button steps through, as the phone
+ * design names them. Each runs the way that column is best read: most
+ * installs, cheapest install, most owed, then A to Z.
+ */
+export const PHONE_SORT_ORDERS: { selection: CreatorSortSelection; label: string }[] = [
+  { selection: { column: 'installsAttributed', direction: 'descending' }, label: 'Installs' },
+  { selection: { column: 'costPerInstall', direction: 'ascending' }, label: 'Cost / install' },
+  { selection: { column: 'outstandingBalance', direction: 'descending' }, label: 'Open balance' },
+  { selection: { column: 'name', direction: 'ascending' }, label: 'Name' },
+]
+
+/**
+ * What the phone sort button moves to next. A selection made in the table's
+ * headings that is not one of the four steps starts the cycle from the top.
+ */
+export function nextPhoneSort(current: CreatorSortSelection): CreatorSortSelection {
+  const index = PHONE_SORT_ORDERS.findIndex(
+    ({ selection }) =>
+      selection.column === current.column && selection.direction === current.direction,
+  )
+  return PHONE_SORT_ORDERS[(index + 1) % PHONE_SORT_ORDERS.length]!.selection
+}
+
+/** The button's caption for a selection, or undefined for a column off the cycle. */
+export function describePhoneSort(current: CreatorSortSelection): string | undefined {
+  return PHONE_SORT_ORDERS.find(({ selection }) => selection.column === current.column)?.label
 }

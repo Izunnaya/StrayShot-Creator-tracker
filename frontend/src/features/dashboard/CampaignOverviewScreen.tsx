@@ -12,6 +12,7 @@ import {
   filterCreatorsByCampaign,
 } from '@/domain/creatorFiltering'
 import { sortCreators } from '@/domain/creatorSorting'
+import { usePhoneLayout } from '@/lib/usePhoneLayout'
 import { Panel, SearchField, SectionTitle } from '@/ui'
 import { CampaignBudgetPanel } from './components/CampaignBudgetPanel'
 import { CampaignFilterChipRow } from './components/CampaignFilterChipRow'
@@ -65,7 +66,8 @@ export function CampaignOverviewScreen({
     selectLifecycleStatus,
     setSearchText,
   } = filterState
-  const { selection: sortSelection, handleColumnClick } = sortState
+  const { selection: sortSelection, handleColumnClick, stepPhoneSort } = sortState
+  const isPhone = usePhoneLayout()
 
   /** The one campaign in view, or undefined with every campaign at once. */
   const selectedCampaign = campaigns.find((campaign) => campaign.id === filterSelection.campaign)
@@ -141,11 +143,15 @@ export function CampaignOverviewScreen({
   const targetCostPerInstallInCents =
     selectedCampaign?.targetCostPerInstallInCents ?? DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS
 
+  /* The phone design is the roster alone: figures, search, filters and the
+     cards. The chart, the budget and the two follow-up panels have no room
+     beside a single column, and the one action they carry -- recording a
+     payment -- moves onto the cards of the creators who are owed. */
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 pb-10 pt-5 sm:px-6 md:gap-6 md:px-8 md:pb-12 md:pt-7">
+    <div className="mx-auto flex max-w-7xl flex-col gap-3.5 px-4 pb-6 sm:px-6 md:gap-6 md:px-8 md:pb-12 md:pt-7">
       <DashboardSummaryStrip summary={summary} />
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2.5 md:gap-4">
         <CampaignFilterChipRow
           campaigns={campaigns}
           selectedCampaign={filterSelection.campaign}
@@ -172,7 +178,7 @@ export function CampaignOverviewScreen({
         />
       </div>
 
-      {selectedCampaign && (
+      {selectedCampaign && !isPhone && (
         <CampaignBudgetPanel campaign={selectedCampaign} creators={allCreators} />
       )}
 
@@ -180,40 +186,44 @@ export function CampaignOverviewScreen({
         creators={creatorsInTable}
         sortSelection={sortSelection}
         onColumnHeadingClick={handleColumnClick}
+        onStepPhoneSort={stepPhoneSort}
         targetCostPerInstallInCents={targetCostPerInstallInCents}
         onSelectCreator={onSelectCreator}
+        onRecordPayment={isPhone ? onRecordPayment : undefined}
       />
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1.55fr_1fr]">
-        <Panel className="px-4 py-4 sm:px-5.5 sm:py-5">
-          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <SectionTitle>
-              Installs <span className="text-amber">over time</span>
-            </SectionTitle>
-            <div className="text-[12px] text-ink-muted">
-              Dashed lines mark stream days · last 6 weeks
+      {!isPhone && (
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+          <Panel className="px-5.5 py-5">
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <SectionTitle>
+                Installs <span className="text-amber">over time</span>
+              </SectionTitle>
+              <div className="text-[12px] text-ink-muted">
+                Dashed lines mark stream days · last 6 weeks
+              </div>
             </div>
+
+            <InstallsOverTimeChart
+              dailyInstallCounts={chart.dailyInstallCounts}
+              streamDayMarkers={chart.streamDayMarkers}
+              weekLabels={chart.weekLabels}
+            />
+          </Panel>
+
+          <div className="grid gap-6">
+            <DeliveredPaymentOpenPanel
+              onRecordPayment={onRecordPayment}
+              creators={creatorsAwaitingPayment}
+              totalOutstandingBalanceInCents={
+                calculateCampaignSummary(creatorsAwaitingPayment).totalOutstandingBalanceInCents
+              }
+            />
+
+            <PaidNotDeliveredPanel creators={creatorsPaidButUndelivered} />
           </div>
-
-          <InstallsOverTimeChart
-            dailyInstallCounts={chart.dailyInstallCounts}
-            streamDayMarkers={chart.streamDayMarkers}
-            weekLabels={chart.weekLabels}
-          />
-        </Panel>
-
-        <div className="grid gap-6">
-          <DeliveredPaymentOpenPanel
-            onRecordPayment={onRecordPayment}
-            creators={creatorsAwaitingPayment}
-            totalOutstandingBalanceInCents={
-              calculateCampaignSummary(creatorsAwaitingPayment).totalOutstandingBalanceInCents
-            }
-          />
-
-          <PaidNotDeliveredPanel creators={creatorsPaidButUndelivered} />
         </div>
-      </div>
+      )}
     </div>
   )
 }

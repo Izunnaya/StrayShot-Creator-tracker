@@ -93,8 +93,8 @@ export function InstallsOverTimeChart({
               formatNumber(maximum) +
               '.'
             : 'No installs for selected creators in this period. ' +
-              markers.length +
-              (markers.length === 1 ? ' stream day marked.' : ' stream days marked.')
+              codesByDay.size +
+              (codesByDay.size === 1 ? ' stream day marked.' : ' stream days marked.')
         }
       >
         <title>Installs per day; dashed lines mark stream days</title>

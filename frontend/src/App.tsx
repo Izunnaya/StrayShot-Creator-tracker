@@ -127,15 +127,17 @@ export default function App() {
    */
   function saveCreator(draft: CreatorDraft, options: { sendInvite?: boolean } = {}) {
     const editing = creatorBeingEdited !== 'new' ? creatorBeingEdited : null
+    // A new creator is invited exactly as an edited one is.
+    const withInvite = (saved: Creator) => (options.sendInvite ? asInvited(saved) : saved)
 
     setCreators((current) =>
       editing
-        ? current.map((creator) => {
-            if (creator.id !== editing.id) return creator
-            const saved = applyDraftToCreator(creator, draft, { campaigns })
-            return options.sendInvite ? asInvited(saved) : saved
-          })
-        : [...current, buildCreator(draft, { id: nextCreatorId(current), campaigns })],
+        ? current.map((creator) =>
+            creator.id === editing.id
+              ? withInvite(applyDraftToCreator(creator, draft, { campaigns }))
+              : creator,
+          )
+        : [...current, withInvite(buildCreator(draft, { id: nextCreatorId(current), campaigns }))],
     )
     setCreatorBeingEditedId(null)
   }

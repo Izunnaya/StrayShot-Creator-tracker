@@ -5,13 +5,13 @@ import {
   getAmountPaid,
   getCostPerInstall,
   getLifecycleStatus,
-  getOutstandingBalance,
   getPaymentProgressPercent,
   isAwaitingPayment,
 } from '@/domain/creatorCalculations'
 import { costPerInstallTextClasses } from '@/features/dashboard/costPerInstallAppearance'
 import { joinClassNames } from '@/lib/classNames'
 import { formatCostPerInstall, formatCountCompact, formatMoney } from '@/lib/format'
+import { PaymentNote } from './PaymentNote'
 import { Button, CreatorStatusPill, ProgressBar } from '@/ui'
 
 /**
@@ -77,7 +77,6 @@ function CreatorPerformanceCard({
   onRecordPayment?: (creator: Creator) => void
 }) {
   const amountPaid = getAmountPaid(creator)
-  const outstandingBalance = getOutstandingBalance(creator)
   const costPerInstall = getCostPerInstall(creator)
   const rating = rateCostPerInstall(costPerInstall, targetCostPerInstallInCents)
 
@@ -134,9 +133,7 @@ function CreatorPerformanceCard({
           <span className="whitespace-nowrap font-mono text-ink-quiet">
             {formatMoney(amountPaid)} / {formatMoney(creator.contractedAmountInCents)}
           </span>
-          <span className="whitespace-nowrap text-ink-muted">
-            {outstandingBalance > 0 ? formatMoney(outstandingBalance) + ' open' : 'Settled'}
-          </span>
+          <PaymentNote creator={creator} />
         </div>
         <ProgressBar percentComplete={getPaymentProgressPercent(creator)} heightInPixels={5} />
       </div>

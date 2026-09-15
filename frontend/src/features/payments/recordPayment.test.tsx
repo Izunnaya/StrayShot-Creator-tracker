@@ -80,6 +80,27 @@ describe('recording a payment', () => {
     expect(dialog().getByRole('status').textContent).toMatch(/still open/)
   })
 
+  it('shows an overpayment on the creator afterwards, rather than calling them settled', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const creatorTable = () => within(screen.getByRole('table', { name: 'Creator performance' }))
+
+    // NovaKess has $1,600 open on a $4,800 deal; $2,000 pays $400 past it.
+    await user.click(creatorTable().getByRole('button', { name: 'NovaKess' }))
+    await user.click(screen.getByRole('button', { name: '+ Record payment' }))
+    await user.type(dialog().getByLabelText('Amount paid in dollars'), '2000')
+    await user.click(dialog().getByRole('button', { name: 'Save payment' }))
+
+    expect(screen.getByText('$400 overpaid')).toBeTruthy()
+    expect(screen.getByText('Overpaid')).toBeTruthy()
+    expect(screen.queryByText(/open$/)).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: /All creators/ }))
+    const novaRow = creatorTable().getByRole('button', { name: 'NovaKess' }).closest('tr')!
+    expect(within(novaRow).getByText('$400 overpaid')).toBeTruthy()
+    expect(within(novaRow).queryByText('Settled')).toBeNull()
+  })
+
   it('warns about an overpayment but still allows it', async () => {
     const user = await openTheFirstOutstandingRow()
 

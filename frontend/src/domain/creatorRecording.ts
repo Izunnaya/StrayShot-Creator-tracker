@@ -250,7 +250,16 @@ export function getContractedAmountInCents(
 ): number {
   if (agreedRateInCents === null) return 0
   if (rateModel === 'flat-fee') return agreedRateInCents
-  return streamsCommitted === null ? 0 : agreedRateInCents * streamsCommitted
+
+  if (rateModel === 'per-stream') {
+    return streamsCommitted === null ? 0 : agreedRateInCents * streamsCommitted
+  }
+
+  /* Unreachable with the two rate models that exist, and deliberately left:
+     per view has no agreed total until the views land (Q9), so whatever is
+     added next has to say what its total is here rather than inheriting the
+     per-stream arithmetic by falling through to it. */
+  return 0
 }
 
 /**
@@ -447,7 +456,8 @@ function parseDollarsToCents(typed: string): number | null {
   if (!/^\$?\s*(?:(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?|\.\d{1,2})$/.test(trimmed)) return null
 
   const asNumber = Number(trimmed.replace(/[$,\s]/g, ''))
-  return Number.isFinite(asNumber) ? Math.round(asNumber * 100) : null
+  const cents = Math.round(asNumber * 100)
+  return Number.isFinite(asNumber) && Number.isSafeInteger(cents) ? cents : null
 }
 
 function parseWholeNumber(typed: string): number | null {

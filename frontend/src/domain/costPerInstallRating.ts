@@ -22,13 +22,6 @@ export type CostPerInstallRating =
  */
 export const OVER_TARGET_MULTIPLIER = 1.6
 
-/**
- * Target used when the dashboard is showing every campaign at once and no
- * single campaign target applies, in cents. Open question Q21 — the
- * alternative is to suppress the rating entirely at that level.
- */
-export const DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS = 350
-
 export function rateCostPerInstall(
   costPerInstall: number,
   /** null where no campaign target applies to this creator. */

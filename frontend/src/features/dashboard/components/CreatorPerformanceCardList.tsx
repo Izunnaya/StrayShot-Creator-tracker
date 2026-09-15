@@ -33,12 +33,13 @@ import { Button, CreatorStatusPill, ProgressBar } from '@/ui'
  */
 export function CreatorPerformanceCardList({
   creators,
-  targetCostPerInstallInCents,
+  getTargetCostPerInstall,
   onSelectCreator,
   onRecordPayment,
 }: {
   creators: Creator[]
-  targetCostPerInstallInCents: number
+  /** Each creator's own campaign target, or null where they have none. */
+  getTargetCostPerInstall: (creator: Creator) => number | null
   onSelectCreator?: (creator: Creator) => void
   onRecordPayment?: (creator: Creator) => void
 }) {
@@ -56,7 +57,7 @@ export function CreatorPerformanceCardList({
         <CreatorPerformanceCard
           key={creator.id}
           creator={creator}
-          targetCostPerInstallInCents={targetCostPerInstallInCents}
+          targetCostPerInstallInCents={getTargetCostPerInstall(creator)}
           onSelectCreator={onSelectCreator}
           onRecordPayment={onRecordPayment}
         />
@@ -72,7 +73,7 @@ function CreatorPerformanceCard({
   onRecordPayment,
 }: {
   creator: Creator
-  targetCostPerInstallInCents: number
+  targetCostPerInstallInCents: number | null
   onSelectCreator?: (creator: Creator) => void
   onRecordPayment?: (creator: Creator) => void
 }) {

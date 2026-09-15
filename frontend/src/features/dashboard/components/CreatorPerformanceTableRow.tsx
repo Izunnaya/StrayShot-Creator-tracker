@@ -18,7 +18,8 @@ export function CreatorPerformanceTableRow({
   onSelectCreator,
 }: {
   creator: Creator
-  targetCostPerInstallInCents: number
+  /** The target of the campaign this creator is on, or null with none to judge against. */
+  targetCostPerInstallInCents: number | null
   onSelectCreator?: (creator: Creator) => void
 }) {
   const amountPaid = getAmountPaid(creator)

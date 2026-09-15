@@ -3,7 +3,7 @@ import { buildInstallChart } from '@/domain/installChart'
 import type { Campaign, Creator } from '@/data/types'
 import { dailyInstalls, chartStartDate, chartDayCount, streams } from '@/data/fixtures'
 import { calculateCampaignSummary } from '@/domain/campaignSummary'
-import { DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS } from '@/domain/costPerInstallRating'
+import { findCampaign } from '@/domain/campaigns'
 import { isAwaitingPayment, isPaidButUndelivered } from '@/domain/creatorCalculations'
 import {
   countCreatorsByLifecycleStatus,
@@ -139,12 +139,13 @@ export function CampaignOverviewScreen({
   const creatorsPaidButUndelivered = creatorsInCampaign.filter(isPaidButUndelivered)
 
   /**
-   * Each campaign sets its own target. With every campaign in view there is
-   * no single target, so the figures fall back to a default — open question
-   * Q21.
+   * Each creator is judged against the target of the campaign they are on,
+   * whichever campaign the screen is narrowed to -- with every campaign in
+   * view that is still their own, so a colour means the same thing at either
+   * level. A creator with no campaign has no target and gets no verdict. Q21.
    */
-  const targetCostPerInstallInCents =
-    selectedCampaign?.targetCostPerInstallInCents ?? DEFAULT_TARGET_COST_PER_INSTALL_IN_CENTS
+  const getTargetCostPerInstall = (creator: Creator) =>
+    findCampaign(campaigns, creator.campaignId)?.targetCostPerInstallInCents ?? null
 
   /* The phone design is the roster alone: figures, search, filters and the
      cards. The chart, the budget and the two follow-up panels have no room
@@ -205,7 +206,7 @@ export function CampaignOverviewScreen({
             sortSelection={sortSelection}
             onColumnHeadingClick={handleColumnClick}
             onStepPhoneSort={stepPhoneSort}
-            targetCostPerInstallInCents={targetCostPerInstallInCents}
+            getTargetCostPerInstall={getTargetCostPerInstall}
             onSelectCreator={onSelectCreator}
             onRecordPayment={onRecordPayment}
           />
@@ -265,7 +266,7 @@ export function CampaignOverviewScreen({
         sortSelection={sortSelection}
         onColumnHeadingClick={handleColumnClick}
         onStepPhoneSort={stepPhoneSort}
-        targetCostPerInstallInCents={targetCostPerInstallInCents}
+        getTargetCostPerInstall={getTargetCostPerInstall}
         onSelectCreator={onSelectCreator}
       />
 

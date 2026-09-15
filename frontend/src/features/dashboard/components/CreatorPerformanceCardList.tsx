@@ -5,13 +5,13 @@ import {
   getAmountPaid,
   getCostPerInstall,
   getLifecycleStatus,
-  getOutstandingBalance,
   getPaymentProgressPercent,
   isAwaitingPayment,
 } from '@/domain/creatorCalculations'
 import { costPerInstallTextClasses } from '@/features/dashboard/costPerInstallAppearance'
 import { joinClassNames } from '@/lib/classNames'
 import { formatCostPerInstall, formatCountCompact, formatMoney } from '@/lib/format'
+import { PaymentNote } from './PaymentNote'
 import { Button, CreatorStatusPill, ProgressBar } from '@/ui'
 
 /**
@@ -33,12 +33,13 @@ import { Button, CreatorStatusPill, ProgressBar } from '@/ui'
  */
 export function CreatorPerformanceCardList({
   creators,
-  targetCostPerInstallInCents,
+  getTargetCostPerInstall,
   onSelectCreator,
   onRecordPayment,
 }: {
   creators: Creator[]
-  targetCostPerInstallInCents: number
+  /** Each creator's own campaign target, or null where they have none. */
+  getTargetCostPerInstall: (creator: Creator) => number | null
   onSelectCreator?: (creator: Creator) => void
   onRecordPayment?: (creator: Creator) => void
 }) {
@@ -56,7 +57,7 @@ export function CreatorPerformanceCardList({
         <CreatorPerformanceCard
           key={creator.id}
           creator={creator}
-          targetCostPerInstallInCents={targetCostPerInstallInCents}
+          targetCostPerInstallInCents={getTargetCostPerInstall(creator)}
           onSelectCreator={onSelectCreator}
           onRecordPayment={onRecordPayment}
         />
@@ -72,12 +73,11 @@ function CreatorPerformanceCard({
   onRecordPayment,
 }: {
   creator: Creator
-  targetCostPerInstallInCents: number
+  targetCostPerInstallInCents: number | null
   onSelectCreator?: (creator: Creator) => void
   onRecordPayment?: (creator: Creator) => void
 }) {
   const amountPaid = getAmountPaid(creator)
-  const outstandingBalance = getOutstandingBalance(creator)
   const costPerInstall = getCostPerInstall(creator)
   const rating = rateCostPerInstall(costPerInstall, targetCostPerInstallInCents)
 
@@ -134,9 +134,7 @@ function CreatorPerformanceCard({
           <span className="whitespace-nowrap font-mono text-ink-quiet">
             {formatMoney(amountPaid)} / {formatMoney(creator.contractedAmountInCents)}
           </span>
-          <span className="whitespace-nowrap text-ink-muted">
-            {outstandingBalance > 0 ? formatMoney(outstandingBalance) + ' open' : 'Settled'}
-          </span>
+          <PaymentNote creator={creator} />
         </div>
         <ProgressBar percentComplete={getPaymentProgressPercent(creator)} heightInPixels={5} />
       </div>

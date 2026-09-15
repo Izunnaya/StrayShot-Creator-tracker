@@ -4,8 +4,8 @@ Answers to open questions from the master checklist, with the reasoning behind
 them. Each entry says what was ruled out as well as what was chosen, so a later
 reader can tell a deliberate trade-off from an oversight.
 
-The first five were delegated rather than answered directly; Q7 and Q20 were
-answered by the team. Any of them can be overruled — the cost of doing so is
+The first five were delegated rather than answered directly; Q7, Q20 and Q21
+were answered by the team. Any of them can be overruled — the cost of doing so is
 noted in each.
 
 ---
@@ -136,6 +136,27 @@ denominator the filtered table is being read against.
 shown should be what is totalled.
 **Reversible:** yes, one call site — `filterCreatorsByCampaign` back to
 `filterCreators`.
+
+## Q21 — Each creator is judged against their own campaign's target
+
+**Decided:** cost per install is coloured against the target of the campaign
+the creator is on, whether the dashboard shows one campaign or all of them. A
+creator with no campaign gets no colour. The $3.50 fallback is gone.
+
+With every campaign in view there is no single target, and the prototype
+filled the gap with a design-tool value. But every row already belongs to a
+campaign with a target of its own, so a stand-in was never needed: it only
+ever disagreed with the real one. MiraPlays shows why it mattered — $3.33 an
+install on a $3.00 campaign read as under target against $3.50, and turned
+over target the moment their campaign was selected. A verdict that changes
+with the filter is not a verdict about the creator.
+
+The headline blended figure is not coloured at either level, so it needs no
+target.
+
+**Ruled out:** a fixed team-wide default; suppressing the colour when all
+campaigns are shown, which would hide a real verdict to avoid a fake one.
+**Reversible:** yes, one call site in the overview.
 
 ## Q8 — One settlement currency, money stored in minor units
 

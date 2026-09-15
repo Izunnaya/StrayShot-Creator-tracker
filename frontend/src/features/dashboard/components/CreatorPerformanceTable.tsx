@@ -20,7 +20,7 @@ export function CreatorPerformanceTable({
   sortSelection,
   onColumnHeadingClick,
   onStepPhoneSort,
-  targetCostPerInstallInCents,
+  getTargetCostPerInstall,
   onSelectCreator,
   onRecordPayment,
 }: {
@@ -29,7 +29,11 @@ export function CreatorPerformanceTable({
   onColumnHeadingClick: (column: CreatorTableColumnKey) => void
   /** The cards have no headings to click; one button steps through the orders. */
   onStepPhoneSort?: () => void
-  targetCostPerInstallInCents: number
+  /**
+   * The target each creator is judged against: that of the campaign they are
+   * on, whether or not the table is narrowed to it. Null where they have none.
+   */
+  getTargetCostPerInstall: (creator: Creator) => number | null
   onSelectCreator?: (creator: Creator) => void
   /** Offered on the cards, which carry the outstanding panel's action. */
   onRecordPayment?: (creator: Creator) => void
@@ -65,7 +69,7 @@ export function CreatorPerformanceTable({
         </div>
         <CreatorPerformanceCardList
           creators={creators}
-          targetCostPerInstallInCents={targetCostPerInstallInCents}
+          getTargetCostPerInstall={getTargetCostPerInstall}
           onSelectCreator={onSelectCreator}
           onRecordPayment={onRecordPayment}
         />
@@ -122,7 +126,7 @@ export function CreatorPerformanceTable({
               <CreatorPerformanceTableRow
                 key={creator.id}
                 creator={creator}
-                targetCostPerInstallInCents={targetCostPerInstallInCents}
+                targetCostPerInstallInCents={getTargetCostPerInstall(creator)}
                 onSelectCreator={onSelectCreator}
               />
             ))}

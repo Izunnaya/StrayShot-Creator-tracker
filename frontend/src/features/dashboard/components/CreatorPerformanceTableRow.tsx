@@ -4,11 +4,11 @@ import {
   getAmountPaid,
   getCostPerInstall,
   getLifecycleStatus,
-  getOutstandingBalance,
   getPaymentProgressPercent,
 } from '@/domain/creatorCalculations'
 import { joinClassNames } from '@/lib/classNames'
 import { formatCostPerInstall, formatMoney, formatNumber } from '@/lib/format'
+import { PaymentNote } from './PaymentNote'
 import { CreatorStatusPill, PlatformTag, ProgressBar } from '@/ui'
 import { costPerInstallClasses } from '@/features/dashboard/costPerInstallAppearance'
 
@@ -18,11 +18,11 @@ export function CreatorPerformanceTableRow({
   onSelectCreator,
 }: {
   creator: Creator
-  targetCostPerInstallInCents: number
+  /** The target of the campaign this creator is on, or null with none to judge against. */
+  targetCostPerInstallInCents: number | null
   onSelectCreator?: (creator: Creator) => void
 }) {
   const amountPaid = getAmountPaid(creator)
-  const outstandingBalance = getOutstandingBalance(creator)
   const costPerInstall = getCostPerInstall(creator)
   const rating = rateCostPerInstall(costPerInstall, targetCostPerInstallInCents)
   const cell = 'px-2 py-3.25'
@@ -76,9 +76,7 @@ export function CreatorPerformanceTableRow({
           <span className="whitespace-nowrap">
             {formatMoney(amountPaid)} / {formatMoney(creator.contractedAmountInCents)}
           </span>
-          <span className="whitespace-nowrap text-ink-muted">
-            {outstandingBalance > 0 ? formatMoney(outstandingBalance) + ' open' : 'Settled'}
-          </span>
+          <PaymentNote creator={creator} />
         </div>
         <ProgressBar percentComplete={getPaymentProgressPercent(creator)} />
       </td>

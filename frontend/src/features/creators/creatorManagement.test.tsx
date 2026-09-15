@@ -43,6 +43,37 @@ describe('adding a creator', () => {
     expect(screen.getByRole('button', { name: /^Prospect/ }).textContent).toMatch(/1/)
   })
 
+  it('records the invite as sent when it is saved and sent in one step', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await openTheAddForm(user)
+
+    await fillIdentity(user)
+    await user.click(dialog().getByRole('button', { name: 'Save and send invite' }))
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+
+    // Reopening the record is the only place the invite state is shown.
+    await user.click(creatorTable().getByRole('button', { name: 'AshFall' }))
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+    expect(dialog().getByText('sent')).toBeTruthy()
+    expect(dialog().getByRole('button', { name: 'Resend' })).toBeTruthy()
+  })
+
+  it('refuses to save and send without an email, since that is where the invite goes', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await openTheAddForm(user)
+
+    await user.type(dialog().getByLabelText('Creator name'), 'AshFall')
+    await user.click(dialog().getByRole('button', { name: 'Save and send invite' }))
+
+    expect(screen.getByRole('dialog')).toBeTruthy()
+    expect(dialog().getByRole('alert').textContent).toMatch(/invite is sent there/)
+    expect(creatorTable().queryByRole('button', { name: 'AshFall' })).toBeNull()
+  })
+
   it('refuses to save without an email, since that is where the invite goes', async () => {
     const user = userEvent.setup()
     render(<App />)

@@ -134,25 +134,26 @@ Vitest discovers both .test.ts and .test.tsx files.
 
 Public and creator portal routes, persistence, authentication, and platform
 integrations remain unimplemented. Loading and network-error states will be
-needed when the screens consume API data. Navigation currently uses component
-state rather than shareable URLs.
+needed when the screens consume API data.
 
 Campaign management, creator recording, recording and reversing a payment, and
 the payments ledger are built, against the fixture data the shell holds in
-memory. Sorting the creator table is unavailable below the lg breakpoint, where
-the table becomes cards and the column headings it lives in are gone; the
-ledger has no sorting to lose, being ordered by date throughout.
+memory. Below the lg breakpoint the creator table becomes cards with a single
+sort button, and the ledger does the same.
 
-One product decision is still open: the cost-per-install target when all
-campaigns are selected (currently 350 cents, and used only there — a creator
-with no campaign is left unrated rather than judged against it). Whether status
-filters the headline figures and whether commitments may exceed a campaign
-budget are settled in DECISIONS.md as Q20 and Q7. The four payment decisions — who is recorded, how
-overpayment behaves, how a mistake is corrected, and the money unit — are
-settled in DECISIONS.md at the repository root. One piece of the overpayment
-decision is still outstanding: the record payment modal warns and allows it,
-but a creator who has been overpaid does not yet show that figure on their own
-screen.
+Each screen has its own address — `/`, `/payments` and `/creators/:id` — read
+and written by `src/lib/router.ts` on the History API, so screens can be
+linked, bookmarked and reloaded. A static host must answer those paths with
+`index.html`; Vite's dev server already does. Filters and sort orders are held
+by the shell rather than the URL.
+
+The team-side product decisions are settled in DECISIONS.md at the repository
+root: who is recorded on a payment, how overpayment behaves, how a mistake is
+corrected, the money unit, the rate models (Q4–Q9), whether status filters the
+headline figures (Q20), whether commitments may exceed a budget (Q7), and the
+cost-per-install target, which is each creator's own campaign's at every level
+(Q21). An overpaid creator shows the figure on their own screen and in the
+table, rather than reading as settled.
 
 Unfiltered reference totals remain $47,000 paid of $55,200 committed,
 $8,200 outstanding across five creators, and 25,545 installs from 2,275,000 views.

@@ -1,6 +1,11 @@
 import { teamMembers } from '@/data/session'
 import type { Creator, Payment } from '@/data/types'
-import { getOutstandingBalance, hasOutstandingBalance } from '@/domain/creatorCalculations'
+import {
+  getOutstandingBalance,
+  getOverpaymentAmount,
+  hasOutstandingBalance,
+  isOverpaid,
+} from '@/domain/creatorCalculations'
 import { sortPaymentsNewestFirst } from '@/domain/paymentHistory'
 import { canReverse, hasBeenReversed, isReversal } from '@/domain/paymentRecording'
 import { getTeamMemberName } from '@/domain/teamMembers'
@@ -111,6 +116,23 @@ export function PaymentHistoryTable({
         </div>
       )}
 
+      {isOverpaid(creator) && (
+        <div
+          className={`grid items-center border-t border-hair bg-open-row px-4.5 py-3 text-[14px] ${PAYMENT_TABLE_COLUMNS}`}
+        >
+          <div className="text-[12px] font-semibold uppercase tracking-[1px] text-amber">
+            Overpaid
+          </div>
+          <div className="col-span-3 text-ink-muted">
+            Paid beyond the {formatPaymentAmount(creator.contractedAmountInCents)} agreement, to
+            reconcile
+          </div>
+          <div className="whitespace-nowrap text-right font-semibold text-amber">
+            {formatPaymentAmount(getOverpaymentAmount(creator))}
+          </div>
+        </div>
+      )}
+
       {payments.length === 0 && (
         <div className="border-t border-hair-4 px-4.5 py-4.5 text-[14px] text-ink-muted">
           No payments recorded yet.
@@ -185,6 +207,17 @@ export function PaymentHistoryCards({
           </span>
           <span className="font-mono text-[16px] text-bad">
             {formatPaymentAmount(getOutstandingBalance(creator))}
+          </span>
+        </div>
+      )}
+
+      {isOverpaid(creator) && (
+        <div className="flex items-baseline justify-between gap-2.5 border border-amber/30 bg-open-row px-3.75 py-3.25">
+          <span className="text-[12px] font-semibold uppercase tracking-[1px] text-amber">
+            Overpaid
+          </span>
+          <span className="font-mono text-[16px] text-amber">
+            {formatPaymentAmount(getOverpaymentAmount(creator))}
           </span>
         </div>
       )}

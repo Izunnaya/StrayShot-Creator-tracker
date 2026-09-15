@@ -12,6 +12,7 @@ export default defineConfig({
     // `// @vitest-environment jsdom` docblock.
     environment: 'node',
     include: ['src/**/*.test.{ts,tsx}'],
+    setupFiles: ['src/testing/resetLocation.ts'],
     /* The rendered tests drive the whole application through user-event,
        which types a character at a time and re-renders between each one. A
        few of them run close to five seconds on a loaded machine, so the

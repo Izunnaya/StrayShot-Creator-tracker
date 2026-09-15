@@ -3,6 +3,7 @@ import type { Creator } from '@/data/types'
 import {
   getAmountPaid,
   getOutstandingBalance,
+  getOverpaymentAmount,
   getPaymentProgressPercent,
   hasOutstandingBalance,
 } from '@/domain/creatorCalculations'
@@ -32,6 +33,7 @@ export function PaymentProgressPanel({
 }) {
   const amountPaid = getAmountPaid(creator)
   const outstandingBalance = getOutstandingBalance(creator)
+  const overpayment = getOverpaymentAmount(creator)
   // Reversed pairs are still in the record, but nobody counts them as payments.
   const paymentCount = getStandingPayments(creator.payments).length
   const isPhone = layout === 'phone'
@@ -56,16 +58,24 @@ export function PaymentProgressPanel({
             ` paid across ${paymentCount} ${paymentCount === 1 ? 'payment' : 'payments'}`}
         </div>
 
+        {/* Open, overpaid, or square -- three different facts, and the team
+            acts on each differently: chase, reconcile, nothing. See Q5. */}
         <div
           className={joinClassNames(
             'whitespace-nowrap font-head font-semibold',
             isPhone ? 'text-[14px]' : 'text-[15px] tracking-[1px]',
-            hasOutstandingBalance(creator) ? 'text-bad' : 'text-good',
+            hasOutstandingBalance(creator)
+              ? 'text-bad'
+              : overpayment > 0
+                ? 'text-amber'
+                : 'text-good',
           )}
         >
           {hasOutstandingBalance(creator)
             ? `${formatPaymentAmount(outstandingBalance)} open`
-            : 'Fully settled'}
+            : overpayment > 0
+              ? `${formatPaymentAmount(overpayment)} overpaid`
+              : 'Fully settled'}
         </div>
       </div>
 

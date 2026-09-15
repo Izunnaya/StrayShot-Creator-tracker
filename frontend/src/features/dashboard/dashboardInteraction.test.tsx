@@ -164,6 +164,31 @@ describe('returning from a creator', () => {
   })
 })
 
+describe('judging cost per install', () => {
+  /* MiraPlays costs $3.33 an install on Clan Wars Update, whose target is
+     $3.00. Against a one-size $3.50 they would have read as under target. */
+  const miraCostCell = () =>
+    within(creatorTable().getByRole('button', { name: 'MiraPlays' }).closest('tr')!).getByText(
+      '$3.33',
+    )
+
+  it('holds each creator to their own campaign target with every campaign in view', () => {
+    render(<App />)
+
+    expect(miraCostCell().className).not.toContain('text-good')
+  })
+
+  it('gives the same verdict once their campaign is selected', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const allCampaignsVerdict = miraCostCell().className
+
+    await user.click(screen.getByRole('button', { name: /Clan Wars Update/ }))
+
+    expect(miraCostCell().className).toBe(allCampaignsVerdict)
+  })
+})
+
 describe('what the headline figures answer', () => {
   /* Campaign is a scope and status is a lens: the figures say which campaign
      they are for, and the table below says which creators are being looked

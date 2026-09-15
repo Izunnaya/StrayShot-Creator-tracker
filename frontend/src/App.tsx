@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AppMasthead, type AppTab } from './components/layout/AppMasthead'
 import { campaigns as seedCampaigns, creators as seedCreators } from './data/fixtures'
 import { currentTeamMember } from './data/session'
@@ -21,6 +21,7 @@ import { CampaignModal } from './features/campaigns/CampaignModal'
 import { CreatorModal } from './features/creators/CreatorModal'
 import { RecordPaymentModal } from './features/payments/RecordPaymentModal'
 import { ReversePaymentModal } from './features/payments/ReversePaymentModal'
+import { navigate, useRoute } from './lib/router'
 
 /**
  * The application shell.
@@ -32,19 +33,19 @@ import { ReversePaymentModal } from './features/payments/ReversePaymentModal'
  * cache the API fills, and the screens below do not change either way, since
  * they already take what to show as props.
  *
- * Which screen is showing is state rather than a router: with no shareable
- * URLs yet, that is the honest amount of machinery. A creator's own screen
- * covers whichever tab it was opened from and goes back to it, so following a
- * payment to the person it went to does not lose the ledger behind it.
+ * Which screen is showing lives in the URL (see lib/router), so a creator or
+ * the ledger can be linked, bookmarked and reloaded, and the browser's Back
+ * works. A creator's own screen remembers the tab it was opened from and goes
+ * back to it, so following a payment to the person it went to does not lose
+ * the ledger behind it. Filters are not in the URL: they survive a trip to a
+ * creator and back because the shell holds them, not the address.
  *
  * The detail screen is looked up by id rather than held as an object, so it
  * cannot show a stale copy of a creator who was just paid.
  */
 export default function App() {
-  const [tab, setTab] = useState<AppTab>('overview')
   const [campaigns, setCampaigns] = useState<Campaign[]>(seedCampaigns)
   const [creators, setCreators] = useState<Creator[]>(seedCreators)
-  const [selectedCreatorId, setSelectedCreatorId] = useState<number | null>(null)
   const [creatorBeingPaidId, setCreatorBeingPaidId] = useState<number | null>(null)
   const [paymentBeingReversed, setPaymentBeingReversed] = useState<Payment | null>(null)
   /** null while closed; a campaign while editing; 'new' while creating. */
@@ -57,7 +58,33 @@ export default function App() {
   const filterState = useCreatorFilterSelection()
   const sortState = useCreatorSortSelection()
 
+  const { route, from } = useRoute()
+  /** The tab in the masthead: the one showing, or the one a creator was opened from. */
+  const tab: AppTab =
+    route.screen === 'payments'
+      ? 'payments'
+      : route.screen === 'creator'
+        ? (from ?? 'overview')
+        : 'overview'
+  const selectedCreatorId = route.screen === 'creator' ? route.creatorId : null
+
   const creatorInDetail = creators.find((creator) => creator.id === selectedCreatorId) ?? null
+
+  /* An address for a creator who does not exist -- mistyped, or a stale
+     bookmark -- goes to the overview instead of showing nothing. Replaced
+     rather than pushed, so Back does not return to the dead link. */
+  const isMissingCreator = route.screen === 'creator' && creatorInDetail === null
+  useEffect(() => {
+    if (isMissingCreator) navigate({ screen: 'overview' }, { replace: true })
+  }, [isMissingCreator])
+
+  function openCreator(creatorId: number) {
+    navigate({ screen: 'creator', creatorId }, { from: tab })
+  }
+
+  function openTab(next: AppTab) {
+    navigate({ screen: next })
+  }
   const creatorBeingPaid = creators.find((creator) => creator.id === creatorBeingPaidId) ?? null
 
   /**
@@ -159,15 +186,12 @@ export default function App() {
     <div className="grain min-h-screen pb-24 md:pb-0">
       <AppMasthead
         phoneTitle={creatorInDetail ? 'Creator' : tab === 'payments' ? 'Ledger' : 'Roster'}
-        onBack={creatorInDetail ? () => setSelectedCreatorId(null) : undefined}
+        onBack={creatorInDetail ? () => openTab(tab) : undefined}
         activeTab={tab}
-        onSelectTab={(next) => {
-          /* Leaving a creator's screen is what choosing a tab means here --
-             otherwise the tab appears selected behind a screen that did not
-             change. */
-          setSelectedCreatorId(null)
-          setTab(next)
-        }}
+        /* Leaving a creator's screen is what choosing a tab means here --
+           otherwise the tab appears selected behind a screen that did not
+           change. */
+        onSelectTab={openTab}
         onAddCreator={() => setCreatorBeingEditedId('new')}
       />
 
@@ -175,7 +199,7 @@ export default function App() {
         <CreatorDetailScreen
           creator={creatorInDetail}
           campaign={findCampaign(campaigns, creatorInDetail.campaignId)}
-          onBack={() => setSelectedCreatorId(null)}
+          onBack={() => openTab(tab)}
           onEditCreator={(creator) => setCreatorBeingEditedId(creator.id)}
           onRecordPayment={(creator) => setCreatorBeingPaidId(creator.id)}
           onReversePayment={setPaymentBeingReversed}
@@ -185,13 +209,13 @@ export default function App() {
           campaigns={campaigns}
           creators={creators}
           selectionState={ledgerSelectionState}
-          onSelectCreator={setSelectedCreatorId}
+          onSelectCreator={openCreator}
         />
       ) : (
         <CampaignOverviewScreen
           campaigns={campaigns}
           creators={creators}
-          onSelectCreator={(creator) => setSelectedCreatorId(creator.id)}
+          onSelectCreator={(creator) => openCreator(creator.id)}
           onRecordPayment={(creator) => setCreatorBeingPaidId(creator.id)}
           onCreateCampaign={() => setCampaignBeingEdited('new')}
           onEditCampaign={setCampaignBeingEdited}

@@ -160,5 +160,8 @@ export function nextPhoneSort(current: CreatorSortSelection): CreatorSortSelecti
 
 /** The button's caption for a selection, or undefined for a column off the cycle. */
 export function describePhoneSort(current: CreatorSortSelection): string | undefined {
-  return PHONE_SORT_ORDERS.find(({ selection }) => selection.column === current.column)?.label
+  return PHONE_SORT_ORDERS.find(
+    ({ selection }) =>
+      selection.column === current.column && selection.direction === current.direction,
+  )?.label
 }

@@ -566,7 +566,7 @@ export function CreatorModal({
               >
                 {inviteState}
               </span>
-              {editing && onSendInvite && (
+              {editing && onSendInvite ? (
                 /* An edited form is saved before the invite goes, and the
                    button says so. Sending from the record as it stands would
                    address the invite to the email being corrected -- which is
@@ -578,6 +578,14 @@ export function CreatorModal({
                   }
                 >
                   {inviteButtonLabel(editing.portalInviteState, isEdited)}
+                </Button>
+              ) : (
+                /* A creator who does not exist yet has nowhere to send an
+                   invite from, so saving and sending is one action. It
+                   refuses like any other save if the email is missing, which
+                   is the address the invite would have gone to. */
+                <Button variant="outline" onClick={() => handleSave({ sendInvite: true })}>
+                  Save and send invite
                 </Button>
               )}
             </div>

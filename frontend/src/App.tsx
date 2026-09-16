@@ -163,6 +163,17 @@ export default function App() {
     setCreatorBeingEditedId(null)
   }
 
+  /**
+   * Throws a creator record away, and leaves their screen -- it is about to
+   * be a screen for a creator who does not exist. Only a record nothing has
+   * happened to can get here; the rule and the confirmation are in
+   * DiscardCreatorModal. Q51.
+   */
+  function discardCreator(creator: Creator) {
+    setCreators((current) => current.filter((entry) => entry.id !== creator.id))
+    openTab(tab)
+  }
+
   /** Sending is Module 8's work; this records that it went. */
   function sendInvite(creator: Creator) {
     setCreators((current) =>
@@ -203,6 +214,7 @@ export default function App() {
           onEditCreator={(creator) => setCreatorBeingEditedId(creator.id)}
           onRecordPayment={(creator) => setCreatorBeingPaidId(creator.id)}
           onReversePayment={setPaymentBeingReversed}
+          onDiscardCreator={discardCreator}
         />
       ) : tab === 'payments' ? (
         <PaymentsLedgerScreen

@@ -1,10 +1,11 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { streams as allStreams } from '@/data/fixtures'
 import type { Campaign, Creator, Payment } from '@/data/types'
 import { getLifecycleStatus } from '@/domain/creatorCalculations'
 import { getStreamHistoryForCreator } from '@/domain/streamHistory'
 import { usePhoneLayout } from '@/lib/usePhoneLayout'
 import { Button, CreatorStatusPill, SectionTitle } from '@/ui'
+import { DiscardCreatorModal } from '@/features/creators/DiscardCreatorModal'
 import { CreatorDetailHeader } from './components/CreatorDetailHeader'
 import { CreatorDetailStatStrip } from './components/CreatorDetailStatStrip'
 import { PaymentHistoryCards, PaymentHistoryTable } from './components/PaymentHistoryTable'
@@ -35,6 +36,7 @@ export function CreatorDetailScreen({
   onEditCreator,
   onRecordPayment,
   onReversePayment,
+  onDiscardCreator,
 }: {
   creator: Creator
   /**
@@ -52,8 +54,11 @@ export function CreatorDetailScreen({
   onRecordPayment?: (creator: Creator) => void
   /** Offers to undo one of this creator's payments. */
   onReversePayment?: (payment: Payment) => void
+  /** Removes the record. Only a creator nothing has happened to may go — Q51. */
+  onDiscardCreator?: (creator: Creator) => void
 }) {
   const isPhone = usePhoneLayout()
+  const [isDiscarding, setIsDiscarding] = useState(false)
   const streamHistory = useMemo(
     () => getStreamHistoryForCreator(allStreams, creator.id),
     [creator.id],
@@ -73,6 +78,20 @@ export function CreatorDetailScreen({
   const campaignName = campaign?.name ?? 'No campaign'
 
   const recordPayment = onRecordPayment ? () => onRecordPayment(creator) : undefined
+
+  /* Rendered by both layouts, so the rule and its explanation live in one
+     place rather than in each of them. */
+  const discardModal = isDiscarding && onDiscardCreator && (
+    <DiscardCreatorModal
+      creator={creator}
+      streamCount={streamHistory.length}
+      onConfirm={() => {
+        setIsDiscarding(false)
+        onDiscardCreator(creator)
+      }}
+      onClose={() => setIsDiscarding(false)}
+    />
+  )
 
   if (isPhone) {
     return (
@@ -136,6 +155,16 @@ export function CreatorDetailScreen({
           Streams
         </SectionTitle>
         <StreamHistoryCards streams={streamHistory} />
+
+        <div className="mt-6 flex flex-col gap-2.5">
+          {onDiscardCreator && (
+            <Button variant="dangerOutline" size="block" onClick={() => setIsDiscarding(true)}>
+              Discard creator
+            </Button>
+          )}
+        </div>
+
+        {discardModal}
       </div>
     )
   }
@@ -147,6 +176,7 @@ export function CreatorDetailScreen({
         campaignName={campaignName}
         onBack={onBack}
         onEditCreator={onEditCreator}
+        onDiscardCreator={onDiscardCreator ? () => setIsDiscarding(true) : undefined}
       />
 
       <div className="mb-7 mt-5.5">
@@ -173,6 +203,8 @@ export function CreatorDetailScreen({
 
       <PaymentProgressPanel creator={creator} />
       <PaymentHistoryTable creator={creator} onReversePayment={onReversePayment} />
+
+      {discardModal}
     </div>
   )
 }

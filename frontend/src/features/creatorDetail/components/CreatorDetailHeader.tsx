@@ -16,6 +16,7 @@ export function CreatorDetailHeader({
   campaignName,
   onBack,
   onEditCreator,
+  onDiscardCreator,
 }: {
   creator: Creator
   /** Looked up by the screen: a creator holds only the campaign's id. */
@@ -23,6 +24,8 @@ export function CreatorDetailHeader({
   onBack: () => void
   /** Opens the add/edit creator modal, prefilled. Disabled when absent. */
   onEditCreator?: (creator: Creator) => void
+  /** Offers to throw the record away. Whether it can go is Q51's rule. */
+  onDiscardCreator?: () => void
 }) {
   return (
     <div>
@@ -66,6 +69,15 @@ export function CreatorDetailHeader({
           >
             Edit
           </Button>
+
+          {/* Red rather than grey, because it destroys a record -- but an
+              outline rather than a fill, because it is an offer, not the
+              confirmation. The solid red is on the dialog it opens. */}
+          {onDiscardCreator && (
+            <Button variant="dangerOutline" onClick={onDiscardCreator}>
+              Discard
+            </Button>
+          )}
         </div>
       </div>
     </div>

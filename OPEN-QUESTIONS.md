@@ -9,45 +9,6 @@ Nothing here is decided. Where a recommendation appears it is marked as one.
 
 ---
 
-## Q51 — What happens to a creator who should not be in the roster?
-
-**The gap.** Nothing in the application removes a creator. Campaigns have
-archiving in the plan (task 1.6); creators have no equivalent, and neither
-brief asks for one. A creator added twice, or typed in as a test, stays in the
-table, in the status chip counts, and in the campaign's committed total for as
-long as the record exists.
-
-**Why it is not simply a delete button.** A creator is a financial record.
-Payments hang off them, and installs are attributed through their code, so
-deleting one takes money out of the ledger and installs out of the totals —
-the ledger would stop reconciling against the bank statement, which is the one
-thing it exists to do. The same reasoning settled Q6 (payments are reversed,
-never edited) and Q4 (team members are deactivated, never deleted).
-
-**The options.**
-
-- **Archive.** The creator leaves the table by default and keeps everything
-  they carry: payments stay in the ledger, installs stay in the campaign
-  totals. Reversible. Needs a decision on whether an archived creator still
-  counts toward committed budget, and what their portal shows if they log in.
-- **Discard, narrowly.** A real delete, allowed only while nothing has
-  happened: no payments, no streams detected, no invite claimed. It covers the
-  duplicate and the test entry without ever removing a financial record. Needs
-  a decision on whether a sent-but-unclaimed invite blocks it.
-- **Both**, which is the shape most finance tools end up with.
-- **Neither.** Wrong records are corrected by editing and otherwise left in
-  place. Honest, and cheap to build — it is what exists today — but the roster
-  accumulates records nobody can act on.
-
-**Recommended:** archive, plus discard while a creator is untouched. Together
-they cover both real cases without a control that can destroy a payment.
-
-**Blocks:** a creator archive/discard task in Module 4, the roster's default
-filter, and the creator endpoints in Phase 4 (which should not offer DELETE
-until this is settled).
-
----
-
 ## Q52 — Can a sent invite be revoked?
 
 **The gap.** An invite can be sent and resent, and the record shows not sent /

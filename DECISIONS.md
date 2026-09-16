@@ -137,6 +137,65 @@ shown should be what is totalled.
 **Reversible:** yes, one call site — `filterCreatorsByCampaign` back to
 `filterCreators`.
 
+## Q51 — A creator is archived when they are finished, discarded only while untouched
+
+**Decided:** both, because they answer different questions. Archiving takes a
+creator out of the roster once the work is over and keeps everything they
+carry. Discarding throws the record away, and is refused the moment the record
+is evidence of anything: money recorded against them, a stream detected, or a
+claimed portal account. Correcting a record is editing, which already covers
+every field.
+
+Discarding exists for the two cases that actually occur: the same creator
+entered twice, and the test entry someone made while learning the form. Both
+are records of nothing, and leaving them in place inflates the roster, the
+status chip counts, and a campaign's committed budget.
+
+What it refuses is the more important half. Payments are in the ledger and
+installs are attributed through the creator's code, so removing a creator who
+has either would take money out of a total that has to reconcile against a
+bank statement — the same reasoning that made payments append-only (Q6) and
+the team directory deactivate-only (Q4). A reversed payment still counts as
+money recorded: the pair sums to nothing but is two rows in the ledger, and
+the ledger is what would lose them.
+
+An invite that has been sent does not block it; one that has been claimed
+does. Until it is claimed nothing exists but an email, and Q52 asks whether
+that email can be revoked.
+
+**Archiving hides, and hides nothing else.** An archived creator leaves the
+roster and the status chips, and that is the whole of it. Their payments stay
+in the ledger, their installs and spend stay in the campaign's figures, and
+they still count toward committed budget. The alternative — money that leaves
+the totals when a record is tidied away — is the same break a delete would
+cause, arriving quietly a month later instead of at the click. Archiving is a
+view, not an accounting event: the table is what the team works from day to
+day, and last season's finished creators crowd it.
+
+Archiving is refused while an outstanding balance stands. Archiving says the
+work is finished, a debt says it is not, and the roster is where anyone would
+go looking for someone to pay. An overpaid creator can be archived: nothing is
+owed to them. The way through is to record the payment that settles them, or
+reverse what was agreed — both already exist.
+
+Restoring is a button on the creator's own screen, reached through the
+Archived filter, and nothing restores by itself. A creator who is archived and
+then earns a new stream stays archived; the team put them there.
+
+The counts follow the same line. "All 14" and the chips beneath it describe
+the roster, so they drop when someone is archived, and an Archived chip
+appears beside them carrying its own count — shown only when there is
+something on the shelf, so the row stays quiet on a fresh campaign.
+
+**Ruled out:** a plain delete, which would break the ledger; archiving that
+also withdraws a creator from the campaign's figures, which would make the
+totals depend on who had been tidied up; and an automatic archive on
+completion, which would move records nobody asked to move. What an archived
+creator's portal shows is left to the portal work — the record is unchanged,
+so the honest default is that it keeps working.
+**Reversible:** yes. Both rules are one function each, `getDiscardBlockers`
+and `getArchiveBlockers`, and archiving is a single `archivedOn` date.
+
 ## Q21 — Each creator is judged against their own campaign's target
 
 **Decided:** cost per install is coloured against the target of the campaign

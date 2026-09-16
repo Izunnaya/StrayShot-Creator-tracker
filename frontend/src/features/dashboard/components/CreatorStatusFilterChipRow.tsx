@@ -1,5 +1,5 @@
 import type { CreatorLifecycleStatus } from '@/data/types'
-import { EVERY_STATUS, type LifecycleStatusFilter } from '@/domain/creatorFiltering'
+import { ARCHIVED_ONLY, EVERY_STATUS, type LifecycleStatusFilter } from '@/domain/creatorFiltering'
 import { FilterChip, Label } from '@/ui'
 
 /**
@@ -26,7 +26,7 @@ export function CreatorStatusFilterChipRow({
 }: {
   selectedStatus: LifecycleStatusFilter
   onSelectStatus: (status: LifecycleStatusFilter) => void
-  countsByStatus: Record<CreatorLifecycleStatus, number> & { total: number }
+  countsByStatus: Record<CreatorLifecycleStatus, number> & { total: number; archived: number }
 }) {
   return (
     <div className="flex flex-wrap gap-2 md:items-center">
@@ -48,6 +48,17 @@ export function CreatorStatusFilterChipRow({
           onClick={() => onSelectStatus(chip.status)}
         />
       ))}
+
+      {/* Offered only once something is on the shelf: a chip reading zero
+          would be asking about a place nobody has put anything. */}
+      {countsByStatus.archived > 0 && (
+        <FilterChip
+          label="Archived"
+          count={countsByStatus.archived}
+          isSelected={selectedStatus === ARCHIVED_ONLY}
+          onClick={() => onSelectStatus(ARCHIVED_ONLY)}
+        />
+      )}
     </div>
   )
 }

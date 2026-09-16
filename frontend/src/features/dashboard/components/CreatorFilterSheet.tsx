@@ -1,5 +1,6 @@
 import type { Campaign, CreatorLifecycleStatus } from '@/data/types'
 import {
+  ARCHIVED_ONLY,
   EVERY_CAMPAIGN,
   EVERY_STATUS,
   type CampaignFilter,
@@ -42,7 +43,7 @@ export function CreatorFilterSheet({
   onSelectCampaign: (campaign: CampaignFilter) => void
   selectedStatus: LifecycleStatusFilter
   onSelectStatus: (status: LifecycleStatusFilter) => void
-  countsByStatus: Record<CreatorLifecycleStatus, number> & { total: number }
+  countsByStatus: Record<CreatorLifecycleStatus, number> & { total: number; archived: number }
   /** How many creators the filters leave in the list, search included. */
   matchingCreatorCount: number
   /**
@@ -122,6 +123,16 @@ export function CreatorFilterSheet({
             onClick={() => onSelectStatus(option.status)}
           />
         ))}
+
+        {/* The shelf, once anything is on it. */}
+        {countsByStatus.archived > 0 && (
+          <FilterSheetOption
+            label="Archived"
+            count={countsByStatus.archived}
+            isSelected={selectedStatus === ARCHIVED_ONLY}
+            onClick={() => onSelectStatus(ARCHIVED_ONLY)}
+          />
+        )}
       </FilterSheetSection>
     </Modal>
   )

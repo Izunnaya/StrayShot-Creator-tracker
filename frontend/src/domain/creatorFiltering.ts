@@ -1,4 +1,5 @@
 import type { Creator, CreatorLifecycleStatus } from '@/data/types'
+import { filterArchived, filterOutArchived } from './creatorArchive'
 import { getLifecycleStatus } from './creatorCalculations'
 
 /**
@@ -10,12 +11,19 @@ import { getLifecycleStatus } from './creatorCalculations'
 
 export const EVERY_CAMPAIGN = 'every-campaign'
 export const EVERY_STATUS = 'every-status'
+/**
+ * Archived creators are out of the roster, so they are not part of "every
+ * status" — they are their own selection, and the only way back to them.
+ * See DECISIONS.md, Q51.
+ */
+export const ARCHIVED_ONLY = 'archived'
 
 /** A campaign id, or the sentinel meaning no campaign filter is applied. */
 export type CampaignFilter = typeof EVERY_CAMPAIGN | number
 
-/** A lifecycle status, or the sentinel meaning no status filter is applied. */
-export type LifecycleStatusFilter = typeof EVERY_STATUS | CreatorLifecycleStatus
+/** A lifecycle status, the sentinel for all of them, or the archived shelf. */
+export type LifecycleStatusFilter =
+  typeof EVERY_STATUS | typeof ARCHIVED_ONLY | CreatorLifecycleStatus
 
 export interface CreatorFilterSelection {
   campaign: CampaignFilter
@@ -29,12 +37,19 @@ export function filterCreatorsByCampaign(creators: Creator[], campaign: Campaign
   return creators.filter((creator) => creator.campaignId === campaign)
 }
 
+/**
+ * Narrows to one point in the lifecycle — or to the archived shelf, which is
+ * the one selection that reaches creators the roster otherwise hides.
+ */
 export function filterCreatorsByLifecycleStatus(
   creators: Creator[],
   lifecycleStatus: LifecycleStatusFilter,
 ): Creator[] {
-  if (lifecycleStatus === EVERY_STATUS) return creators
-  return creators.filter((creator) => getLifecycleStatus(creator) === lifecycleStatus)
+  if (lifecycleStatus === ARCHIVED_ONLY) return filterArchived(creators)
+
+  const inRoster = filterOutArchived(creators)
+  if (lifecycleStatus === EVERY_STATUS) return inRoster
+  return inRoster.filter((creator) => getLifecycleStatus(creator) === lifecycleStatus)
 }
 
 /**
@@ -81,16 +96,20 @@ export function normaliseSearch(searchText: string): string {
 export function countCreatorsByLifecycleStatus(
   creators: Creator[],
   campaign: CampaignFilter,
-): Record<CreatorLifecycleStatus, number> & { total: number } {
+): Record<CreatorLifecycleStatus, number> & { total: number; archived: number } {
   const withinCampaign = filterCreatorsByCampaign(creators, campaign)
+  /* Every count but the archived one describes the roster, so that "All 14"
+     and the chips under it agree with the table they sit above. */
+  const inRoster = filterOutArchived(withinCampaign)
   const countWithStatus = (status: CreatorLifecycleStatus) =>
-    withinCampaign.filter((creator) => getLifecycleStatus(creator) === status).length
+    inRoster.filter((creator) => getLifecycleStatus(creator) === status).length
 
   return {
-    total: withinCampaign.length,
+    total: inRoster.length,
     prospect: countWithStatus('prospect'),
     contracted: countWithStatus('contracted'),
     active: countWithStatus('active'),
     completed: countWithStatus('completed'),
+    archived: filterArchived(withinCampaign).length,
   }
 }

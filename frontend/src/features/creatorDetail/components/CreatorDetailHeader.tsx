@@ -1,5 +1,16 @@
 import type { Creator } from '@/data/types'
+import { isArchived } from '@/domain/creatorArchive'
+import { formatDate } from '@/lib/format'
 import { Button, PlatformTag } from '@/ui'
+
+/** Says the record is off the roster, and since when. */
+export function ArchivedTag({ archivedOn }: { archivedOn?: string }) {
+  return (
+    <span className="border border-hair-6 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[1px] text-ink-dim">
+      Archived{archivedOn ? ` ${formatDate(archivedOn)}` : ''}
+    </span>
+  )
+}
 
 /**
  * Who this creator is, and the code everything about them is tracked by.
@@ -17,6 +28,8 @@ export function CreatorDetailHeader({
   onBack,
   onEditCreator,
   onDiscardCreator,
+  onArchiveCreator,
+  onRestoreCreator,
 }: {
   creator: Creator
   /** Looked up by the screen: a creator holds only the campaign's id. */
@@ -26,6 +39,10 @@ export function CreatorDetailHeader({
   onEditCreator?: (creator: Creator) => void
   /** Offers to throw the record away. Whether it can go is Q51's rule. */
   onDiscardCreator?: () => void
+  /** Offers to take them out of the roster, work finished. */
+  onArchiveCreator?: () => void
+  /** Puts an archived creator back. Present only while they are archived. */
+  onRestoreCreator?: () => void
 }) {
   return (
     <div>
@@ -40,6 +57,7 @@ export function CreatorDetailHeader({
           </h1>
 
           <div className="mt-3 flex flex-wrap items-center gap-4 text-[14px] text-ink-muted">
+            {isArchived(creator) && <ArchivedTag archivedOn={creator.archivedOn} />}
             <PlatformTag platform={creator.platform} />
             <span>{campaignName}</span>
             <span>{creator.audienceSize} subscribers</span>
@@ -69,6 +87,18 @@ export function CreatorDetailHeader({
           >
             Edit
           </Button>
+
+          {onArchiveCreator && (
+            <Button variant="secondary" onClick={onArchiveCreator}>
+              Archive
+            </Button>
+          )}
+
+          {onRestoreCreator && (
+            <Button variant="outline" onClick={onRestoreCreator}>
+              Restore
+            </Button>
+          )}
 
           {/* Red rather than grey, because it destroys a record -- but an
               outline rather than a fill, because it is an offer, not the

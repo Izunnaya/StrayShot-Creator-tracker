@@ -5,8 +5,10 @@ import { getLifecycleStatus } from '@/domain/creatorCalculations'
 import { getStreamHistoryForCreator } from '@/domain/streamHistory'
 import { usePhoneLayout } from '@/lib/usePhoneLayout'
 import { Button, CreatorStatusPill, SectionTitle } from '@/ui'
+import { isArchived } from '@/domain/creatorArchive'
+import { ArchiveCreatorModal } from '@/features/creators/ArchiveCreatorModal'
 import { DiscardCreatorModal } from '@/features/creators/DiscardCreatorModal'
-import { CreatorDetailHeader } from './components/CreatorDetailHeader'
+import { ArchivedTag, CreatorDetailHeader } from './components/CreatorDetailHeader'
 import { CreatorDetailStatStrip } from './components/CreatorDetailStatStrip'
 import { PaymentHistoryCards, PaymentHistoryTable } from './components/PaymentHistoryTable'
 import { PaymentProgressPanel } from './components/PaymentProgressPanel'
@@ -37,6 +39,8 @@ export function CreatorDetailScreen({
   onRecordPayment,
   onReversePayment,
   onDiscardCreator,
+  onArchiveCreator,
+  onRestoreCreator,
 }: {
   creator: Creator
   /**
@@ -56,9 +60,15 @@ export function CreatorDetailScreen({
   onReversePayment?: (payment: Payment) => void
   /** Removes the record. Only a creator nothing has happened to may go — Q51. */
   onDiscardCreator?: (creator: Creator) => void
+  /** Takes them out of the roster, keeping everything they carry — Q51. */
+  onArchiveCreator?: (creator: Creator) => void
+  /** Puts an archived creator back in the roster. */
+  onRestoreCreator?: (creator: Creator) => void
 }) {
   const isPhone = usePhoneLayout()
   const [isDiscarding, setIsDiscarding] = useState(false)
+  const [isArchiving, setIsArchiving] = useState(false)
+  const archived = isArchived(creator)
   const streamHistory = useMemo(
     () => getStreamHistoryForCreator(allStreams, creator.id),
     [creator.id],
@@ -81,6 +91,17 @@ export function CreatorDetailScreen({
 
   /* Rendered by both layouts, so the rule and its explanation live in one
      place rather than in each of them. */
+  const archiveModal = isArchiving && onArchiveCreator && (
+    <ArchiveCreatorModal
+      creator={creator}
+      onConfirm={() => {
+        setIsArchiving(false)
+        onArchiveCreator(creator)
+      }}
+      onClose={() => setIsArchiving(false)}
+    />
+  )
+
   const discardModal = isDiscarding && onDiscardCreator && (
     <DiscardCreatorModal
       creator={creator}
@@ -100,6 +121,7 @@ export function CreatorDetailScreen({
           {creator.name}
         </h1>
         <div className="mt-2.5 flex flex-wrap items-center gap-2.5 text-[13px] text-ink-muted">
+          {archived && <ArchivedTag archivedOn={creator.archivedOn} />}
           <CreatorStatusPill status={getLifecycleStatus(creator)} size="small" />
           <span>{creator.platform}</span>
           <span>{campaignName}</span>
@@ -157,6 +179,18 @@ export function CreatorDetailScreen({
         <StreamHistoryCards streams={streamHistory} />
 
         <div className="mt-6 flex flex-col gap-2.5">
+          {onArchiveCreator && !archived && (
+            <Button variant="secondary" size="block" onClick={() => setIsArchiving(true)}>
+              Archive creator
+            </Button>
+          )}
+
+          {onRestoreCreator && archived && (
+            <Button variant="outline" size="block" onClick={() => onRestoreCreator(creator)}>
+              Restore creator
+            </Button>
+          )}
+
           {onDiscardCreator && (
             <Button variant="dangerOutline" size="block" onClick={() => setIsDiscarding(true)}>
               Discard creator
@@ -164,6 +198,7 @@ export function CreatorDetailScreen({
           )}
         </div>
 
+        {archiveModal}
         {discardModal}
       </div>
     )
@@ -177,6 +212,10 @@ export function CreatorDetailScreen({
         onBack={onBack}
         onEditCreator={onEditCreator}
         onDiscardCreator={onDiscardCreator ? () => setIsDiscarding(true) : undefined}
+        onArchiveCreator={onArchiveCreator && !archived ? () => setIsArchiving(true) : undefined}
+        onRestoreCreator={
+          onRestoreCreator && archived ? () => onRestoreCreator(creator) : undefined
+        }
       />
 
       <div className="mb-7 mt-5.5">
@@ -204,6 +243,7 @@ export function CreatorDetailScreen({
       <PaymentProgressPanel creator={creator} />
       <PaymentHistoryTable creator={creator} onReversePayment={onReversePayment} />
 
+      {archiveModal}
       {discardModal}
     </div>
   )

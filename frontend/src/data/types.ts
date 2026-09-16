@@ -117,6 +117,13 @@ export interface Creator {
   channelUrl: string
   portalInviteState: PortalInviteState
 
+  /**
+   * The day this creator was archived, or absent while they are in the
+   * roster. A date rather than a flag: "when did we stop working with them"
+   * is the question asked about an archived record. See DECISIONS.md, Q51.
+   */
+  archivedOn?: string
+
   /* Everything below comes from steps 2 and 3 of the add creator form, both
      of which are skippable — a prospect is a creator with none of it. */
 

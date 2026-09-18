@@ -102,31 +102,35 @@ to read the counts and stream-day creator codes as a table.
 
 ## Validation
 
-The suite contains 291 tests in 23 files. `npm test` is the source of truth
+The suite contains 381 tests in 29 files. `npm test` is the source of truth
 for that count; the split below is what each group is for.
 
-**Unit tests, 204, running in node.** Fourteen files covering the domain layer and
-the formatters: calculations, filtering, sorting, the campaign summary, the
-cost-per-install rating, campaign and creator recording rules, payment history,
-the payment recording rules, the ledger, the campaign budget position and the
-team-member lookup, plus src/lib/format.test.ts, which holds money to exact
-cents.
+**Unit tests, 253, running in node.** Seventeen files covering the domain layer
+and lib/: calculations, filtering, sorting, the campaign summary, the
+cost-per-install rating, campaign and creator recording rules, archiving and
+discarding, payment history, the payment recording rules, the ledger, the
+campaign budget position, stream history and the team-member lookup, plus
+src/lib/format.test.ts, which holds money to exact cents, and
+src/lib/router.test.ts, which parses and builds every address.
 
-**Rendered tests, 87, running in jsdom.** Nine files, each opting in with a
+**Rendered tests, 128, running in jsdom.** Twelve files, each opting in with a
 `// @vitest-environment jsdom` docblock so the unit suite keeps running in node
 and keeps its speed:
 
-| File                                                         | Tests | What it covers                                                                         |
-| ------------------------------------------------------------ | ----- | -------------------------------------------------------------------------------------- |
-| ui/Modal.test.tsx                                            | 15    | The dialog shell: focus in, no Tab out from anywhere, Escape, focus back to the opener |
-| features/creators/creatorManagement.test.tsx                 | 15    | Adding and editing a creator across the three steps, and where the invite goes         |
-| features/campaigns/campaignManagement.test.tsx               | 13    | Creating and editing a campaign, a rename reaching every creator, and the budget line  |
-| features/payments/recordPayment.test.tsx                     | 10    | Recording a payment through the modal, and every reason it refuses to save             |
-| features/payments/paymentsLedger.test.tsx                    | 8     | The ledger gathering every payment, money entered elsewhere reaching it, attribution   |
-| features/payments/reversePayment.test.tsx                    | 7     | Reversing a payment, and that dismissing the confirmation changes nothing              |
-| features/dashboard/components/InstallsOverTimeChart.test.tsx | 7     | The chart component, including a zero-install series keeping its stream markers        |
-| features/dashboard/dashboardInteraction.test.tsx             | 10    | Filtering and sorting reaching the table, what the headline figures follow, the budget |
-| features/creatorDetail/CreatorDetailScreen.test.tsx          | 2     | A creator with no campaign showing a figure without a verdict                          |
+| File                                                         | Tests | What it covers                                                                          |
+| ------------------------------------------------------------ | ----- | --------------------------------------------------------------------------------------- |
+| features/payments/paymentsLedger.test.tsx                    | 20    | Gathering every payment, search, the date range, sorting, the filtered total, reversals |
+| features/creators/creatorManagement.test.tsx                 | 19    | Adding and editing a creator across the three steps, the invite, and discarding         |
+| features/dashboard/dashboardInteraction.test.tsx             | 17    | Filtering, search and sorting reaching the table, what the figures follow, the budget   |
+| ui/Modal.test.tsx                                            | 15    | The dialog shell: focus in, no Tab out from anywhere, Escape, focus back to the opener  |
+| features/campaigns/campaignManagement.test.tsx               | 13    | Creating and editing a campaign, a rename reaching every creator, and the budget line   |
+| features/payments/recordPayment.test.tsx                     | 11    | Recording a payment through the modal, and every reason it refuses to save              |
+| features/payments/reversePayment.test.tsx                    | 7     | Reversing a payment, and that dismissing the confirmation changes nothing               |
+| features/dashboard/components/InstallsOverTimeChart.test.tsx | 7     | The chart component, including a zero-install series keeping its stream markers         |
+| features/creators/creatorArchiving.test.tsx                  | 6     | Archiving and restoring, money staying in the figures, the always-present Archived chip |
+| features/navigation.test.tsx                                 | 6     | Each screen's address, opening one directly, and Back returning to the right tab        |
+| features/dashboard/phoneFilters.test.tsx                     | 5     | The phone filter sheets for the roster and the ledger, with a stubbed matchMedia        |
+| features/creatorDetail/CreatorDetailScreen.test.tsx          | 2     | A creator with no campaign showing a figure without a verdict                           |
 
 Vitest discovers both .test.ts and .test.tsx files.
 
@@ -136,8 +140,9 @@ Public and creator portal routes, persistence, authentication, and platform
 integrations remain unimplemented. Loading and network-error states will be
 needed when the screens consume API data.
 
-Campaign management, creator recording, recording and reversing a payment, and
-the payments ledger are built, against the fixture data the shell holds in
+Campaign management, creator recording, recording and reversing a payment,
+archiving and discarding a creator (DECISIONS Q51), and the payments ledger are
+built, against the fixture data the shell holds in
 memory. Below the lg breakpoint the creator table becomes cards with a single
 sort button, and the ledger does the same.
 

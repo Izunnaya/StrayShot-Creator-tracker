@@ -1,6 +1,7 @@
 # Stray Shot Creator Tracker — API
 
-The backend half of the creator tracker. Separate repo from the frontend.
+The backend half of the creator tracker. It lives beside `frontend/` in this
+repository (Q50).
 
 **Stack:** Node + Express + TypeScript, PostgreSQL via Prisma.
 

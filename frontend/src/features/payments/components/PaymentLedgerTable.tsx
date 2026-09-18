@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react'
 import type { LedgerEntry, LedgerSortColumn, LedgerSortSelection } from '@/domain/paymentLedger'
 import { joinClassNames } from '@/lib/classNames'
 import { formatDate, formatNumber, formatPaymentAmount } from '@/lib/format'
@@ -219,11 +220,24 @@ function PaymentLedgerTableRow({
   const { payment } = entry
   const cancelled = entry.isReversal || entry.wasReversed
 
+  /* The row lights up under the pointer, so the whole row opens the creator,
+     as a card does on a phone. The name stays the one control a keyboard or
+     screen reader reaches; this is the larger target for a mouse. A click that
+     ends a text selection is left alone: copying a reference out of the row is
+     how a payment is matched to a statement line. */
+  const handleRowClick = (event: MouseEvent<HTMLTableRowElement>) => {
+    if (!onSelectCreator) return
+    if ((event.target as Element).closest('button')) return
+    if (window.getSelection()?.toString()) return
+    onSelectCreator(entry.creatorId)
+  }
+
   return (
     <tr
+      onClick={onSelectCreator ? handleRowClick : undefined}
       className={joinClassNames(
         'border-t border-hair-5 align-baseline text-[13px]',
-        onSelectCreator && 'hover:bg-row-hover',
+        onSelectCreator && 'cursor-pointer hover:bg-row-hover',
       )}
     >
       <td className="whitespace-nowrap px-2 py-2.25 pl-5 font-mono text-[12px] text-ink-quiet">

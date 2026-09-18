@@ -36,17 +36,20 @@ export function CreatorPerformanceCardList({
   getTargetCostPerInstall,
   onSelectCreator,
   onRecordPayment,
+  emptyMessage = 'No creators match this filter.',
 }: {
   creators: Creator[]
   /** Each creator's own campaign target, or null where they have none. */
   getTargetCostPerInstall: (creator: Creator) => number | null
   onSelectCreator?: (creator: Creator) => void
   onRecordPayment?: (creator: Creator) => void
+  /** Shown in place of the cards when nothing is left. */
+  emptyMessage?: string
 }) {
   if (creators.length === 0) {
     return (
       <p className="border border-hair bg-panel px-4 py-6 text-[14px] text-ink-muted">
-        No creators match this filter.
+        {emptyMessage}
       </p>
     )
   }

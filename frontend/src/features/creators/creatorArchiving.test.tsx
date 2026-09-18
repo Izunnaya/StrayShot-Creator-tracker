@@ -26,6 +26,36 @@ async function archiveRazeHavoc(user: ReturnType<typeof userEvent.setup>) {
   await user.click(dialog().getByRole('button', { name: 'Archive creator' }))
 }
 
+describe('reaching the archived creators', () => {
+  it('offers the shelf before anything is on it, and says it is empty', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Archived 0' }))
+
+    expect(creatorTable().getByText('No creators have been archived.')).toBeTruthy()
+    // Not the wording for a filter that matched nothing.
+    expect(creatorTable().queryByText('No creators match this filter.')).toBeNull()
+  })
+
+  it('keeps the chip there after the last archived creator is restored', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await archiveRazeHavoc(user)
+    await user.click(screen.getByRole('button', { name: /All creators/ }))
+    await user.click(screen.getByRole('button', { name: 'Archived 1' }))
+    await user.click(creatorTable().getByRole('button', { name: 'RazeHavoc' }))
+    await user.click(screen.getByRole('button', { name: 'Restore' }))
+    await user.click(screen.getByRole('button', { name: /All creators/ }))
+
+    // Still standing on the shelf, which is now empty -- and still able to
+    // see where they are, rather than a filter whose chip has vanished.
+    expect(screen.getByRole('button', { name: 'Archived 0' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'All 14' })).toBeTruthy()
+  })
+})
+
 describe('archiving a creator', () => {
   it('takes them out of the roster and its counts', async () => {
     const user = userEvent.setup()
@@ -64,7 +94,7 @@ describe('archiving a creator', () => {
 
     await archiveRazeHavoc(user)
     await user.click(screen.getByRole('button', { name: /All creators/ }))
-    await user.click(screen.getByRole('button', { name: /^Archived/ }))
+    await user.click(screen.getByRole('button', { name: 'Archived 1' }))
 
     expect(creatorTable().getByRole('button', { name: 'RazeHavoc' })).toBeTruthy()
 

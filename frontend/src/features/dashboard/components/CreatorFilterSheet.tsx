@@ -124,15 +124,14 @@ export function CreatorFilterSheet({
           />
         ))}
 
-        {/* The shelf, once anything is on it. */}
-        {countsByStatus.archived > 0 && (
-          <FilterSheetOption
-            label="Archived"
-            count={countsByStatus.archived}
-            isSelected={selectedStatus === ARCHIVED_ONLY}
-            onClick={() => onSelectStatus(ARCHIVED_ONLY)}
-          />
-        )}
+        {/* The shelf, listed whether or not anything is on it -- it is the
+            only way to reach an archived creator. */}
+        <FilterSheetOption
+          label="Archived"
+          count={countsByStatus.archived}
+          isSelected={selectedStatus === ARCHIVED_ONLY}
+          onClick={() => onSelectStatus(ARCHIVED_ONLY)}
+        />
       </FilterSheetSection>
     </Modal>
   )

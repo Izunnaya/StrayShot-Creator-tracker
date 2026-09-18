@@ -182,10 +182,18 @@ Restoring is a button on the creator's own screen, reached through the
 Archived filter, and nothing restores by itself. A creator who is archived and
 then earns a new stream stays archived; the team put them there.
 
-The counts follow the same line. "All 14" and the chips beneath it describe
-the roster, so they drop when someone is archived, and an Archived chip
-appears beside them carrying its own count — shown only when there is
-something on the shelf, so the row stays quiet on a fresh campaign.
+The counts follow the same line. "All 14" and the chips beside it describe the
+roster, so they drop when someone is archived, and an Archived chip carries its
+own count at the end of the row, behind a divider that says it is a place
+rather than another point in the lifecycle.
+
+That chip is always there, reading zero when the shelf is empty. Hiding it
+until the first creator was archived was tried and was wrong twice over: it
+left the only route to an archived creator invisible to anyone who had not
+already used it, and it took the chip away underneath someone who had just
+restored the last creator on the shelf, leaving them standing in a filter with
+no way back to it. An empty shelf says "No creators have been archived", not
+that a filter matched nothing.
 
 **Ruled out:** a plain delete, which would break the ledger; archiving that
 also withdraws a creator from the campaign's figures, which would make the

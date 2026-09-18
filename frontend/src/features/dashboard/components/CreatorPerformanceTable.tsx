@@ -23,6 +23,7 @@ export function CreatorPerformanceTable({
   getTargetCostPerInstall,
   onSelectCreator,
   onRecordPayment,
+  emptyMessage = 'No creators match this filter.',
 }: {
   creators: Creator[]
   sortSelection: CreatorSortSelection
@@ -37,6 +38,12 @@ export function CreatorPerformanceTable({
   onSelectCreator?: (creator: Creator) => void
   /** Offered on the cards, which carry the outstanding panel's action. */
   onRecordPayment?: (creator: Creator) => void
+  /**
+   * Shown in place of the rows when nothing is left. The default reads as a
+   * filter that matched nothing, which is what it usually is -- the archived
+   * shelf passes its own, because an empty shelf is not a failed search.
+   */
+  emptyMessage?: string
 }) {
   const totalColumnWeight = CREATOR_TABLE_COLUMN_WEIGHTS.reduce((sum, value) => sum + value, 0)
   const scrollArea = useRef<HTMLDivElement>(null)
@@ -72,6 +79,7 @@ export function CreatorPerformanceTable({
           getTargetCostPerInstall={getTargetCostPerInstall}
           onSelectCreator={onSelectCreator}
           onRecordPayment={onRecordPayment}
+          emptyMessage={emptyMessage}
         />
       </div>
     )
@@ -136,7 +144,7 @@ export function CreatorPerformanceTable({
                   colSpan={CREATOR_TABLE_COLUMNS.length}
                   className="px-4.5 py-6 text-[14px] text-ink-muted"
                 >
-                  No creators match this filter.
+                  {emptyMessage}
                 </td>
               </tr>
             )}

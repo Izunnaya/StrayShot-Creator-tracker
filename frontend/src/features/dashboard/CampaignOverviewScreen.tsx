@@ -6,6 +6,7 @@ import { calculateCampaignSummary } from '@/domain/campaignSummary'
 import { findCampaign } from '@/domain/campaigns'
 import { isAwaitingPayment, isPaidButUndelivered } from '@/domain/creatorCalculations'
 import {
+  ARCHIVED_ONLY,
   countCreatorsByLifecycleStatus,
   EVERY_CAMPAIGN,
   filterCreators,
@@ -71,6 +72,16 @@ export function CampaignOverviewScreen({
   const { selection: sortSelection, handleColumnClick, stepPhoneSort } = sortState
   const isPhone = usePhoneLayout()
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
+
+  /**
+   * What an empty table says. On the archived shelf it is not a filter that
+   * matched nothing -- it is a shelf with nothing on it, which is the ordinary
+   * state and should not read like a failed search.
+   */
+  const emptyTableMessage =
+    filterSelection.lifecycleStatus === ARCHIVED_ONLY
+      ? 'No creators have been archived.'
+      : 'No creators match this filter.'
 
   /** The one campaign in view, or undefined with every campaign at once. */
   const selectedCampaign = campaigns.find((campaign) => campaign.id === filterSelection.campaign)
@@ -209,6 +220,7 @@ export function CampaignOverviewScreen({
             getTargetCostPerInstall={getTargetCostPerInstall}
             onSelectCreator={onSelectCreator}
             onRecordPayment={onRecordPayment}
+            emptyMessage={emptyTableMessage}
           />
         </div>
 
@@ -268,6 +280,7 @@ export function CampaignOverviewScreen({
         onStepPhoneSort={stepPhoneSort}
         getTargetCostPerInstall={getTargetCostPerInstall}
         onSelectCreator={onSelectCreator}
+        emptyMessage={emptyTableMessage}
       />
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">

@@ -49,16 +49,19 @@ export function CreatorStatusFilterChipRow({
         />
       ))}
 
-      {/* Offered only once something is on the shelf: a chip reading zero
-          would be asking about a place nobody has put anything. */}
-      {countsByStatus.archived > 0 && (
-        <FilterChip
-          label="Archived"
-          count={countsByStatus.archived}
-          isSelected={selectedStatus === ARCHIVED_ONLY}
-          onClick={() => onSelectStatus(ARCHIVED_ONLY)}
-        />
-      )}
+      {/* Always offered, even reading zero. It is the only route to the
+          archived creators, so hiding it until one exists would leave the
+          feature undiscoverable -- and would take the chip away underneath
+          anyone who restored the last creator on the shelf. The divider says
+          it is a place rather than another point in the lifecycle. */}
+      <span aria-hidden className="mx-1 hidden h-4 w-px self-center bg-hair-6 md:block" />
+
+      <FilterChip
+        label="Archived"
+        count={countsByStatus.archived}
+        isSelected={selectedStatus === ARCHIVED_ONLY}
+        onClick={() => onSelectStatus(ARCHIVED_ONLY)}
+      />
     </div>
   )
 }

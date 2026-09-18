@@ -67,3 +67,65 @@ only option where a correction cannot cost a creator their installs.
 
 **Blocks:** 17.1 (code format and generation), 18.2 (tracking links), and the
 attribution rules in Module 19.
+
+---
+
+## Q54 — Does a payment need a details view of its own?
+
+**The gap.** Clicking a payment in the ledger opens the creator it went to.
+Nothing shows one payment on its own, the way a bank statement opens a single
+transaction. Neither brief asks for it and the design has no such screen.
+
+Today it would mostly repeat the row: the desktop ledger already shows every
+field a payment stores. It becomes worth having once there is something the
+row cannot carry:
+
+- **The reversal pair together.** The two halves of a cancelled payment are
+  tagged separately in the list; nothing shows "reversed on 14 Aug by K. Osei"
+  beside the payment it undid, with a link between them.
+- **An address for one payment**, such as `/payments/1042`, to paste into a
+  reconciliation sheet or a message to finance.
+- **Audit detail from the API:** when the payment was entered, as distinct from
+  the date the money went out, and the reason for a reversal (Q55).
+
+**The options.**
+
+- **A details panel or dialog** opened from a ledger row and from the creator's
+  payment history, with its own address, the reversal pair, and Reverse.
+- **Richer rows instead.** Link a reversal to its original in the list, and
+  leave one-payment views out.
+- **Leave it.** The row and the creator's screen are enough.
+
+**Recommended:** a details view, built after the payments endpoint exists
+(tasks 6.15–6.18), when it has entry times and audit data to show. It needs a
+design in the Claude Design project first.
+
+**Depends on:** Q55 for the reversal reason. **Blocks:** nothing yet; it would
+be a new task in Module 7.
+
+---
+
+## Q55 — Should a reversal record why?
+
+**The gap.** Reversing a payment records the negative amount, the date and who
+reversed it (Q6), but not the reason. A year later, a reversal in the ledger
+says that a payment was cancelled and never why: a typo in the amount, the
+wrong creator, a bounced transfer, a duplicate entry. For a finance record,
+"why was this undone" is the first question an auditor asks.
+
+A second, smaller gap: a reversal's date is the day it was entered, stored in
+the same `paidOn` field as a payment's, though no money moved that day.
+
+**The options.**
+
+- **A required reason**, chosen from a short list (wrong amount, wrong
+  creator, duplicate, transfer failed, other) with a free-text note for
+  "other". Consistent and reportable.
+- **An optional free-text note.** Cheap, and will mostly be left empty.
+- **Leave it.** The team explains reversals outside the tool.
+
+**Recommended:** a required reason from a short list, with a note, and the
+reversal's date named for what it is (`reversedOn`) when the schema is
+written. The reversal dialog gains one field.
+
+**Blocks:** the payment schema (6.15) and Q54's details view.

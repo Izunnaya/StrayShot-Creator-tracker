@@ -26,6 +26,42 @@ async function fillIdentity(user: ReturnType<typeof userEvent.setup>) {
   await user.type(dialog().getByLabelText('Email'), 'ash@creators.gg')
 }
 
+describe('discarding a creator', () => {
+  it('throws away a record nothing has happened to, and leaves their screen', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await openTheAddForm(user)
+    await fillIdentity(user)
+    await user.click(dialog().getByRole('button', { name: 'Save as prospect' }))
+
+    await user.click(creatorTable().getByRole('button', { name: 'AshFall' }))
+    await user.click(screen.getByRole('button', { name: 'Discard' }))
+    await user.click(dialog().getByRole('button', { name: 'Discard creator' }))
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(creatorTable().queryByRole('button', { name: 'AshFall' })).toBeNull()
+    // The status chips count the roster: back to the fourteen fixtures.
+    expect(screen.getByRole('button', { name: 'All 14' })).toBeTruthy()
+  })
+
+  it('refuses one who has been paid, and says why', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    // NovaKess has two payments and three detected streams.
+    await user.click(creatorTable().getByRole('button', { name: 'NovaKess' }))
+    await user.click(screen.getByRole('button', { name: 'Discard' }))
+
+    expect(dialog().getByText(/Money has been recorded against them/)).toBeTruthy()
+    expect(dialog().getByText(/Streams have been detected/)).toBeTruthy()
+    expect(dialog().queryByRole('button', { name: 'Discard creator' })).toBeNull()
+
+    await user.click(dialog().getByRole('button', { name: 'Close' }))
+    await user.click(screen.getByRole('button', { name: /All creators/ }))
+    expect(creatorTable().getByRole('button', { name: 'NovaKess' })).toBeTruthy()
+  })
+})
+
 describe('adding a creator', () => {
   it('saves from step one alone, as a prospect', async () => {
     const user = userEvent.setup()

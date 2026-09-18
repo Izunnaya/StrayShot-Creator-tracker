@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { creators as fixtureCreators } from '@/data/fixtures'
 import { createTestCreator, createTestPayment } from '@/testing/createTestCreator'
+import { archiveCreator } from './creatorArchive'
 import {
+  ARCHIVED_ONLY,
   countCreatorsByLifecycleStatus,
   EVERY_CAMPAIGN,
   EVERY_STATUS,
@@ -79,6 +81,29 @@ describe('filterCreatorsByLifecycleStatus', () => {
 
   it('returns nothing when no creator is at that point yet', () => {
     expect(filterCreatorsByLifecycleStatus(testCreators, 'prospect')).toEqual([])
+  })
+})
+
+describe('archived creators through the status filter', () => {
+  const withArchived = [...testCreators, archiveCreator(completedOnSummer, '2026-09-16')]
+
+  it('hides them from every status, because they are out of the roster', () => {
+    expect(filterCreatorsByLifecycleStatus(withArchived, EVERY_STATUS)).toHaveLength(3)
+    expect(filterCreatorsByLifecycleStatus(withArchived, 'completed')).toHaveLength(1)
+  })
+
+  it('shows only them, and all of them, under the archived selection', () => {
+    const archived = filterCreatorsByLifecycleStatus(withArchived, ARCHIVED_ONLY)
+
+    expect(archived.map((creator) => creator.name)).toEqual(['Completed Summer'])
+  })
+
+  it('counts them beside the roster rather than within it', () => {
+    const counts = countCreatorsByLifecycleStatus(withArchived, EVERY_CAMPAIGN)
+
+    expect(counts.total).toBe(3)
+    expect(counts.completed).toBe(1)
+    expect(counts.archived).toBe(1)
   })
 })
 
@@ -160,6 +185,7 @@ describe('countCreatorsByLifecycleStatus', () => {
       contracted: 1,
       active: 1,
       completed: 0,
+      archived: 0,
     })
   })
 
@@ -192,12 +218,26 @@ describe('the fixture data through the filters', () => {
   it('counts 8 active and 6 completed overall', () => {
     const counts = countCreatorsByLifecycleStatus(fixtureCreators, EVERY_CAMPAIGN)
 
-    expect(counts).toEqual({ total: 14, prospect: 0, contracted: 0, active: 8, completed: 6 })
+    expect(counts).toEqual({
+      total: 14,
+      prospect: 0,
+      contracted: 0,
+      active: 8,
+      completed: 6,
+      archived: 0,
+    })
   })
 
   it('counts 3 active and 4 completed within Season 2 Launch', () => {
     const counts = countCreatorsByLifecycleStatus(fixtureCreators, SEASON_2_LAUNCH)
 
-    expect(counts).toEqual({ total: 7, prospect: 0, contracted: 0, active: 3, completed: 4 })
+    expect(counts).toEqual({
+      total: 7,
+      prospect: 0,
+      contracted: 0,
+      active: 3,
+      completed: 4,
+      archived: 0,
+    })
   })
 })

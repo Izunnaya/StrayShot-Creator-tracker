@@ -23,6 +23,7 @@ export function describeCreatorFilters(
     const name = campaigns.find((campaign) => campaign.id === selectedCampaign)?.name
     return { summary: name ?? 'One campaign', isFiltered: true }
   }
+  // Covers the archived shelf too, which reads as "Archived".
   if (statusApplied) {
     return {
       summary: selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1),

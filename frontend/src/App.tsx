@@ -9,6 +9,7 @@ import {
   getCampaignName,
   type CampaignDraft,
 } from './domain/campaigns'
+import { archiveCreator, restoreCreator } from './domain/creatorArchive'
 import { applyDraftToCreator, buildCreator, type CreatorDraft } from './domain/creatorRecording'
 import { buildPayment, buildReversal, type PaymentDraft } from './domain/paymentRecording'
 import { CreatorDetailScreen } from './features/creatorDetail/CreatorDetailScreen'
@@ -163,6 +164,37 @@ export default function App() {
     setCreatorBeingEditedId(null)
   }
 
+  /**
+   * Throws a creator record away, and leaves their screen -- it is about to
+   * be a screen for a creator who does not exist. Only a record nothing has
+   * happened to can get here; the rule and the confirmation are in
+   * DiscardCreatorModal. Q51.
+   */
+  function discardCreator(creator: Creator) {
+    setCreators((current) => current.filter((entry) => entry.id !== creator.id))
+    openTab(tab)
+  }
+
+  /**
+   * Takes a creator out of the working roster, or puts them back. Nothing
+   * they carry moves: the ledger, the campaign figures and the budget all
+   * read the whole list. Q51.
+   *
+   * Their own screen stays open either way. Archiving is reversible, and the
+   * Restore control is right there — leaving would hide the way back.
+   */
+  function setCreatorArchived(creator: Creator, archived: boolean) {
+    setCreators((current) =>
+      current.map((entry) =>
+        entry.id === creator.id
+          ? archived
+            ? archiveCreator(entry, todayAsIsoDate())
+            : restoreCreator(entry)
+          : entry,
+      ),
+    )
+  }
+
   /** Sending is Module 8's work; this records that it went. */
   function sendInvite(creator: Creator) {
     setCreators((current) =>
@@ -203,6 +235,9 @@ export default function App() {
           onEditCreator={(creator) => setCreatorBeingEditedId(creator.id)}
           onRecordPayment={(creator) => setCreatorBeingPaidId(creator.id)}
           onReversePayment={setPaymentBeingReversed}
+          onDiscardCreator={discardCreator}
+          onArchiveCreator={(creator) => setCreatorArchived(creator, true)}
+          onRestoreCreator={(creator) => setCreatorArchived(creator, false)}
         />
       ) : tab === 'payments' ? (
         <PaymentsLedgerScreen

@@ -14,6 +14,10 @@ export type ButtonVariant =
   | 'secondary'
   /** Grey outline, grey text. Dismissing a dialog. */
   | 'cancel'
+  /** Solid red. Confirming the destruction of a record, and nothing else. */
+  | 'danger'
+  /** Red outline that fills on hover. Offering that destruction, before it is confirmed. */
+  | 'dangerOutline'
   /** Text only, no border. Low-emphasis actions such as Edit campaign. */
   | 'text'
   /** Dashed outline. Additive actions such as New campaign. */
@@ -43,6 +47,9 @@ const variantClasses: Record<ButtonVariant, string> = {
   secondary:
     'font-head uppercase bg-transparent border border-hair text-ink hover:border-amber hover:text-amber',
   cancel: 'font-head uppercase bg-transparent border border-hair text-ink-muted hover:text-ink',
+  danger: 'font-head font-semibold uppercase bg-bad text-ground border-none hover:bg-ink',
+  dangerOutline:
+    'font-head uppercase bg-transparent border border-bad/45 text-bad transition-colors duration-150 hover:border-bad hover:bg-bad hover:text-ground',
   text: 'font-body uppercase bg-transparent border-none text-ink-muted text-[13px] tracking-[1px] p-0 hover:text-amber',
   addNew:
     'font-body font-semibold bg-transparent border border-dashed border-hair-6 text-ink-muted text-[14px] px-3.5 py-2.25 min-h-10 md:min-h-0 md:text-[13px] md:tracking-[0.5px] md:py-1.5 hover:text-amber hover:border-amber',
@@ -99,7 +106,9 @@ export function Button({
         ? outlineSizeClasses[size]
         : variant === 'primary'
           ? primarySizeClasses[size]
-          : variant === 'secondary'
+          : /* Sized like the secondary button, so Discard stands the same
+               height as the Edit control it sits beside. */
+            variant === 'secondary' || variant === 'dangerOutline'
             ? secondarySizeClasses[size]
             : sizeClasses[size]
 

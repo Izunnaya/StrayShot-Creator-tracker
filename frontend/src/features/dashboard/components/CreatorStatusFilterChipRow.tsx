@@ -1,5 +1,5 @@
 import type { CreatorLifecycleStatus } from '@/data/types'
-import { EVERY_STATUS, type LifecycleStatusFilter } from '@/domain/creatorFiltering'
+import { ARCHIVED_ONLY, EVERY_STATUS, type LifecycleStatusFilter } from '@/domain/creatorFiltering'
 import { FilterChip, Label } from '@/ui'
 
 /**
@@ -26,7 +26,7 @@ export function CreatorStatusFilterChipRow({
 }: {
   selectedStatus: LifecycleStatusFilter
   onSelectStatus: (status: LifecycleStatusFilter) => void
-  countsByStatus: Record<CreatorLifecycleStatus, number> & { total: number }
+  countsByStatus: Record<CreatorLifecycleStatus, number> & { total: number; archived: number }
 }) {
   return (
     <div className="flex flex-wrap gap-2 md:items-center">
@@ -48,6 +48,20 @@ export function CreatorStatusFilterChipRow({
           onClick={() => onSelectStatus(chip.status)}
         />
       ))}
+
+      {/* Always offered, even reading zero. It is the only route to the
+          archived creators, so hiding it until one exists would leave the
+          feature undiscoverable -- and would take the chip away underneath
+          anyone who restored the last creator on the shelf. The divider says
+          it is a place rather than another point in the lifecycle. */}
+      <span aria-hidden className="mx-1 hidden h-4 w-px self-center bg-hair-6 md:block" />
+
+      <FilterChip
+        label="Archived"
+        count={countsByStatus.archived}
+        isSelected={selectedStatus === ARCHIVED_ONLY}
+        onClick={() => onSelectStatus(ARCHIVED_ONLY)}
+      />
     </div>
   )
 }

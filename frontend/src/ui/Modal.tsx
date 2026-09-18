@@ -9,8 +9,8 @@ import { joinClassNames } from '@/lib/classNames'
  * in each modal — three more are coming (campaign, creator, and this one's
  * siblings) and they should not each reinvent the frame.
  *
- * Behaviour that a dialog owes the person using it, in one place: Escape
- * closes it, clicking the ground outside closes it, focus moves into it on
+ * Behaviour that a dialog owes the person using it, in one place: Escape,
+ * the close button and a click on the ground outside all close it, focus moves into it on
  * open and cannot leave by Tab while it is open, and focus returns to
  * whatever opened it on close. The page behind does not scroll.
  */
@@ -55,10 +55,15 @@ export function Modal({
     const { overflow } = document.body.style
     document.body.style.overflow = 'hidden'
 
-    /* The panel itself is the fallback: a dialog whose body happens to hold
-       nothing focusable would otherwise leave focus on whatever opened it,
-       out on the page behind. */
-    const initialFocus = focusableWithin(panel.current)[0] ?? panel.current
+    /* Opening a dialog lands on its first control. The close button comes
+       first in the panel, but a form should open on the form, so the close
+       button takes focus only when nothing else can. The panel itself is the
+       last resort, so focus is never left on the page behind. */
+    const focusable = focusableWithin(panel.current)
+    const initialFocus =
+      focusable.find((element) => !element.hasAttribute('data-modal-close')) ??
+      focusable[0] ??
+      panel.current
     initialFocus?.focus()
 
     function handleKeyDown(event: KeyboardEvent) {
@@ -127,17 +132,40 @@ export function Modal({
       >
         <div aria-hidden="true" className="mx-auto mb-4 mt-1.5 h-1 w-10 bg-hair-6 md:hidden" />
 
-        <div className="flex items-baseline justify-between gap-4">
-          <h2
-            id={labelId}
-            className="font-display text-[21px] uppercase tracking-[1.5px] text-amber md:text-[22px]"
-          >
-            {title}
-          </h2>
-          {aside && <div className="hidden text-[12px] text-ink-muted md:block">{aside}</div>}
-          {titleAction}
+        <div
+          className={joinClassNames(
+            'flex justify-between gap-3.5 md:items-start md:gap-4',
+            subtitle ? 'items-start' : 'items-center',
+          )}
+        >
+          <div className="min-w-0">
+            <h2
+              id={labelId}
+              className="font-display text-[21px] uppercase tracking-[1.5px] text-amber md:text-[22px]"
+            >
+              {title}
+            </h2>
+            {subtitle && (
+              <div className="mt-0.75 text-[14px] text-ink-muted md:mt-1">{subtitle}</div>
+            )}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-3 md:gap-3.5">
+            {aside && <div className="hidden text-[12px] text-ink-muted md:block">{aside}</div>}
+            {titleAction}
+            {/* Escape and a click outside already close the dialog; this is the
+                one a person can see. A thumb-sized square on a phone. */}
+            <button
+              type="button"
+              aria-label="Close dialog"
+              data-modal-close=""
+              onClick={onClose}
+              className="flex size-11 shrink-0 cursor-pointer items-center justify-center border border-hair bg-transparent text-[19px] leading-none text-ink-muted transition-colors duration-150 hover:border-amber hover:text-amber focus-visible:outline-2 focus-visible:outline-amber md:size-8 md:text-[17px]"
+            >
+              ✕
+            </button>
+          </div>
         </div>
-        {subtitle && <div className="mt-0.75 text-[14px] text-ink-muted md:mt-1">{subtitle}</div>}
 
         <div className="mt-3.5 md:mt-4.5">{children}</div>
 

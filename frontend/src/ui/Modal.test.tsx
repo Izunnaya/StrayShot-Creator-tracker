@@ -9,11 +9,13 @@ import { Modal } from './Modal'
  * inherits: focus goes in, cannot leave by Tab, and comes back out to
  * whatever opened it.
  *
- * The case worth the most here is a dialog with nothing focusable in it.
- * None of today's modals are like that — they all have footer buttons — but
- * the shell is shared, and a content-only dialog would otherwise leave focus
- * stranded on the page behind while appearing to be modal.
+ * Every dialog carries a close button at the top, so it is always part of the
+ * Tab cycle: first in the panel, though a dialog opens on its first control
+ * rather than on it. A dialog with nothing else to focus falls back to it,
+ * rather than leaving focus stranded on the page behind.
  */
+
+const closeButton = () => screen.getByRole('button', { name: 'Close dialog' })
 
 afterEach(cleanup)
 
@@ -44,37 +46,42 @@ describe('a dialog with something to focus', () => {
     await user.tab() // Amount -> Save
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Save' }))
 
-    await user.tab() // Save -> back to Amount, not out to the page
+    await user.tab() // Save -> round to the close button, not out to the page
+    expect(document.activeElement).toBe(closeButton())
+
+    await user.tab() // close button -> Amount
     expect(document.activeElement).toBe(screen.getByLabelText('Amount'))
   })
 
-  it('cycles Shift+Tab from the first control back to the last', async () => {
+  it('cycles Shift+Tab back through the close button to the last control', async () => {
     const user = userEvent.setup()
     renderModal(<input aria-label="Amount" />, <button type="button">Save</button>)
 
-    await user.tab({ shift: true })
+    await user.tab({ shift: true }) // Amount -> the close button above it
+    expect(document.activeElement).toBe(closeButton())
 
+    await user.tab({ shift: true }) // close button -> round to Save
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Save' }))
   })
 })
 
-describe('a dialog with nothing focusable in it', () => {
-  it('focuses the dialog itself rather than leaving focus on the opener', () => {
-    const { panel } = renderModal(<p>Nothing here can take focus.</p>)
+describe('a dialog with no controls of its own', () => {
+  it('focuses its close button rather than leaving focus on the opener', () => {
+    renderModal(<p>Nothing here can take focus.</p>)
 
-    expect(document.activeElement).toBe(panel)
+    expect(document.activeElement).toBe(closeButton())
     expect(document.activeElement).not.toBe(screen.getByRole('button', { name: 'opener' }))
   })
 
   it('keeps Tab inside, instead of walking out to the page behind', async () => {
     const user = userEvent.setup()
-    const { panel } = renderModal(<p>Nothing here can take focus.</p>)
+    renderModal(<p>Nothing here can take focus.</p>)
 
     await user.tab()
-    expect(document.activeElement).toBe(panel)
+    expect(document.activeElement).toBe(closeButton())
 
     await user.tab({ shift: true })
-    expect(document.activeElement).toBe(panel)
+    expect(document.activeElement).toBe(closeButton())
   })
 })
 
@@ -123,17 +130,20 @@ describe('controls the browser will not focus', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Save' }))
 
     await user.tab()
+    expect(document.activeElement).toBe(closeButton())
+
+    await user.tab()
     expect(document.activeElement).toBe(screen.getByLabelText('Amount'))
   })
 
-  it('leaves a dialog holding nothing else as good as empty', async () => {
+  it('treats a dialog holding nothing else as having only its close button', async () => {
     const user = userEvent.setup()
-    const { panel } = renderModal(unreachable)
+    renderModal(unreachable)
 
-    expect(document.activeElement).toBe(panel)
+    expect(document.activeElement).toBe(closeButton())
 
     await user.tab()
-    expect(document.activeElement).toBe(panel)
+    expect(document.activeElement).toBe(closeButton())
   })
 })
 
@@ -144,7 +154,7 @@ describe('focus that is not on a control of its own', () => {
      at one: clicking the heading, a control disappearing from under focus,
      and the empty-dialog fallback. */
 
-  it('sends Tab from the panel itself to the first control', async () => {
+  it('sends Tab from the panel itself to the first control, the close button', async () => {
     const user = userEvent.setup()
     const { panel } = renderModal(
       <input aria-label="Amount" />,
@@ -154,7 +164,7 @@ describe('focus that is not on a control of its own', () => {
     panel.focus() // what clicking the heading or the dead space around it does
     await user.tab()
 
-    expect(document.activeElement).toBe(screen.getByLabelText('Amount'))
+    expect(document.activeElement).toBe(closeButton())
   })
 
   it('sends Shift+Tab from the panel itself to the last control', async () => {
@@ -181,7 +191,7 @@ describe('focus that is not on a control of its own', () => {
     await user.tab()
 
     expect(panel.contains(document.activeElement)).toBe(true)
-    expect(document.activeElement).toBe(screen.getByLabelText('Amount'))
+    expect(document.activeElement).toBe(closeButton())
   })
 
   it('carries on from a control the tab order skips, rather than starting over', async () => {
@@ -204,6 +214,15 @@ describe('focus that is not on a control of its own', () => {
 })
 
 describe('closing', () => {
+  it('closes from the close button', async () => {
+    const user = userEvent.setup()
+    const { onClose } = renderModal(<input aria-label="Amount" />)
+
+    await user.click(closeButton())
+
+    expect(onClose).toHaveBeenCalled()
+  })
+
   it('closes on Escape', async () => {
     const user = userEvent.setup()
     const { onClose } = renderModal(<input aria-label="Amount" />)

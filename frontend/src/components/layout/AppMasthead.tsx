@@ -41,7 +41,7 @@ export function AppMasthead({
   if (isPhone) {
     return (
       <>
-        <header className="grain-masthead sticky top-0 z-30 flex h-13.5 items-center justify-between border-b border-amber px-4">
+        <header className="masthead-ground sticky top-0 z-30 flex h-13.5 items-center justify-between border-b border-amber px-4">
           {onBack ? (
             <button
               type="button"
@@ -69,7 +69,7 @@ export function AppMasthead({
 
         <nav
           aria-label="Screens"
-          className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 border-t border-hair bg-[#0e0d0a]"
+          className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 border-t border-hair bg-tab-bar"
         >
           {tabs.map((tab) => {
             const active = tab.id === activeTab && !onBack
@@ -104,7 +104,7 @@ export function AppMasthead({
   }
 
   return (
-    <header className="grain-masthead flex h-16 items-center justify-between gap-6 border-b border-amber px-8">
+    <header className="masthead-ground flex h-16 items-center justify-between gap-6 border-b border-amber px-8">
       <div className="flex cursor-pointer items-baseline gap-3.5">
         <div className="whitespace-nowrap font-display text-[25px] uppercase tracking-[1px] text-amber text-shadow-stencil">
           Stray Shot

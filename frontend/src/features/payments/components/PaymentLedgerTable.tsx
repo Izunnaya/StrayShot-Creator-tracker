@@ -87,7 +87,7 @@ export function PaymentLedgerTable({
         </div>
 
         {/* Held above the phone's tab bar, which is 76px tall. */}
-        <div className="sticky bottom-19 -mx-4 flex items-center justify-between gap-2.5 border-t-2 border-amber bg-total-row px-4 py-3.5 sm:-mx-6 sm:px-6 md:bottom-0">
+        <div className="sticky bottom-19 -mx-4 flex items-center justify-between gap-2.5 border-t-2 border-amber bg-total-row-pinned px-4 py-3.5 sm:-mx-6 sm:px-6 md:bottom-0">
           <span className="text-[11px] uppercase tracking-[1.5px] text-ink-muted">
             Total in filter
           </span>
@@ -111,7 +111,7 @@ export function PaymentLedgerTable({
             <col key={column.key} style={{ width: (column.weight / totalWeight) * 100 + '%' }} />
           ))}
         </colgroup>
-        <thead className="border-b border-hair bg-[#111111]">
+        <thead className="border-b border-hair bg-panel-head">
           <tr>
             {COLUMNS.map((column) => {
               const alignRight = column.key === 'amount'

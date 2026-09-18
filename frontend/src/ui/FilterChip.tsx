@@ -42,7 +42,7 @@ export function FilterChip({
         <span
           className={joinClassNames(
             'ml-1.75 font-mono text-[12px] md:ml-2 md:text-[11px]',
-            isSelected ? 'text-ground/60' : 'text-ink-faint',
+            isSelected ? 'text-ground/60' : 'text-ink-muted',
           )}
         >
           {count}

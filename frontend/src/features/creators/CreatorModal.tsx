@@ -231,8 +231,8 @@ export function CreatorModal({
               className={joinClassNames(
                 'flex min-h-11.5 cursor-pointer flex-col items-center justify-center border-0 border-b-2 px-1.5 py-3.25 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-amber md:items-stretch md:px-3.5 md:py-3',
                 active
-                  ? 'border-amber bg-row-hover text-ink'
-                  : 'border-transparent bg-[#131313] text-ink-muted hover:bg-row-hover',
+                  ? 'border-amber bg-step-tab-active text-ink'
+                  : 'border-transparent bg-step-tab text-ink-muted hover:bg-row-hover',
               )}
             >
               <span className="flex items-center gap-1.75 md:gap-2">

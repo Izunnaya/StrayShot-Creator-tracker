@@ -147,7 +147,10 @@
           rgb(11 11 11 / 0.92) 45%,
           rgb(11 11 11 / 0.94) 100%
         ),
-        url('./assets/app-bg-desktop.jpg');
+        image-set(
+          url('./assets/app-bg-desktop.webp') type('image/webp'),
+          url('./assets/app-bg-desktop.jpg') type('image/jpeg')
+        );
       background-position:
         center,
         center top;

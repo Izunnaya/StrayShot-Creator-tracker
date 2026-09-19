@@ -93,5 +93,7 @@ it, reloading `/payments` or a creator's page would be a 404.
 ## Stack
 
 React 19, Vite 8, TypeScript 6 (strict), Tailwind CSS 4, Vitest 4 with Testing
-Library, oxlint and Prettier. The API is planned as Node, Express and
+Library, oxlint and Prettier. The API is planned as Node, Express, and
 TypeScript over PostgreSQL with Prisma.
+
+

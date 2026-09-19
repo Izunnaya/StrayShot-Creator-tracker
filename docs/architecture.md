@@ -155,6 +155,20 @@ Tailwind CSS 4. Every colour, typeface and rule width is a design token in
 Nothing outside that file hardcodes a hex value. The design uses four faces,
 hairline borders, no rounded corners, and a clipped corner on dialogs.
 
+Every screen sits over the game's key art. `App.tsx` renders one fixed,
+`aria-hidden` layer with the `.app-backdrop` class, which draws the image
+under a 90–94% dark wash. It is a fixed layer rather than
+`background-attachment: fixed`, which iOS Safari ignores. The images live in
+`src/assets/`: a portrait crop for phones and a landscape crop from 768px up,
+each as WebP with a JPEG fallback. So the picture reads through, panels,
+dialogs, sheets and table heads use translucent tokens (`--color-panel` at
+55%, `--color-panel-head` at 42%), while inputs and the boxes inside dialogs
+stay solid.
+
+If a new image is added while `npm run dev` is running and does not appear,
+restart the dev server: it caches a file that was missing when first asked
+for.
+
 ## Tests
 
 Vitest runs in two environments:

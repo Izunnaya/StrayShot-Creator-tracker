@@ -6,17 +6,24 @@
    in the screens comes from here; nothing hardcodes a hex outside this file.
 --------------------------------------------------------------------------- */
 @theme {
-  /* Grounds and panels */
+  /* Grounds and panels. Panels, table heads and the ledger total are
+     translucent so the background image reads through them; inputs and the
+     boxes inside a dialog stay solid, since text is typed and read there. */
   --color-ground: #0b0b0b;
-  --color-panel: #161616;
-  --color-panel-2: #141414;
+  --color-panel: rgb(11 11 11 / 0.55);
+  --color-panel-2: rgb(11 11 11 / 0.55);
   --color-panel-3: #171717;
-  --color-panel-head: #121212;
+  --color-panel-head: rgb(0 0 0 / 0.42);
   --color-sunk: #0f0f0f;
   --color-sunk-2: #101010;
   --color-row-hover: #1d1a14;
-  --color-total-row: #171512;
+  --color-total-row: rgb(28 22 10 / 0.6);
+  /* The phone ledger's total is pinned over scrolling rows, so it is denser. */
+  --color-total-row-pinned: rgb(28 22 10 / 0.88);
   --color-open-row: #1a1512;
+  --color-tab-bar: rgb(14 13 10 / 0.95);
+  --color-step-tab: rgb(0 0 0 / 0.3);
+  --color-step-tab-active: rgb(255 194 10 / 0.1);
 
   /* Hairlines, lightest to darkest */
   --color-hair: #2a2a2a;
@@ -104,35 +111,62 @@
 }
 
 @layer utilities {
-  /* Concrete-noise texture behind the dashboard */
-  .grain {
+  /* The picture behind every screen, held still while the page scrolls. It is
+     a fixed layer rather than background-attachment: fixed, which phones
+     (iOS Safari especially) ignore. The dark wash keeps small grey text
+     readable over it; the ground colour shows while the image loads. Phones
+     get a portrait crop centred, wider screens a landscape one from the top. */
+  .app-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
     background-color: var(--color-ground);
     background-image:
-      radial-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1.4px),
-      radial-gradient(rgba(0, 0, 0, 0.6) 1px, transparent 1.3px);
-    background-size:
-      6px 6px,
-      9px 9px;
-    background-position:
-      0 0,
-      3px 5px;
+      linear-gradient(
+        180deg,
+        rgb(11 11 11 / 0.9) 0%,
+        rgb(11 11 11 / 0.92) 45%,
+        rgb(11 11 11 / 0.94) 100%
+      ),
+      image-set(
+        url('./assets/app-bg-phone.webp') type('image/webp'),
+        url('./assets/app-bg-phone.jpg') type('image/jpeg')
+      );
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
   }
 
-  /* Heavier grain plus a vertical fall-off, for the masthead */
-  .grain-masthead {
-    background-color: #12100c;
-    background-image:
-      radial-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1.5px),
-      radial-gradient(rgba(0, 0, 0, 0.5) 1px, transparent 1.4px),
-      linear-gradient(180deg, #17140f 0%, #0e0d0a 100%);
-    background-size:
-      7px 7px,
-      11px 11px,
-      100% 100%;
-    background-position:
-      0 0,
-      4px 6px,
-      0 0;
+  @media (min-width: 768px) {
+    .app-backdrop {
+      background-image:
+        linear-gradient(
+          180deg,
+          rgb(11 11 11 / 0.9) 0%,
+          rgb(11 11 11 / 0.92) 45%,
+          rgb(11 11 11 / 0.94) 100%
+        ),
+        image-set(
+          url('./assets/app-bg-desktop.webp') type('image/webp'),
+          url('./assets/app-bg-desktop.jpg') type('image/jpeg')
+        );
+      background-position:
+        center,
+        center top;
+    }
+  }
+
+  /* The masthead lets the picture through faintly. The phone one is pinned
+     over scrolling content, so it is denser. */
+  .masthead-ground {
+    background-image: linear-gradient(180deg, rgb(23 20 15 / 0.92) 0%, rgb(14 13 10 / 0.95) 100%);
+  }
+
+  @media (min-width: 768px) {
+    .masthead-ground {
+      background-image: linear-gradient(180deg, rgb(23 20 15 / 0.86) 0%, rgb(14 13 10 / 0.92) 100%);
+    }
   }
 
   /* Angled amber fill for a part-settled progress bar */

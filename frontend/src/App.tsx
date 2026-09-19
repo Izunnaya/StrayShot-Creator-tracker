@@ -215,7 +215,8 @@ export default function App() {
   return (
     /* Room at the bottom on a phone for the fixed tab bar, so the last card
        can scroll clear of it. */
-    <div className="grain min-h-screen pb-24 md:pb-0">
+    <div className="min-h-screen pb-24 md:pb-0">
+      <div aria-hidden="true" className="app-backdrop" />
       <AppMasthead
         phoneTitle={creatorInDetail ? 'Creator' : tab === 'payments' ? 'Ledger' : 'Roster'}
         onBack={creatorInDetail ? () => openTab(tab) : undefined}

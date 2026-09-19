@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import App from '@/App'
@@ -239,6 +239,33 @@ describe('following a payment to the creator it went to', () => {
     // Back where it was left: the ledger, not the screen behind the tab.
     expect(screen.getByRole('table', { name: 'Payments' })).toBeTruthy()
     expect(screen.queryByRole('table', { name: 'Creator performance' })).toBeNull()
+  })
+
+  it('opens the creator from anywhere on the row, not only the name', async () => {
+    const user = await openTheLedger()
+
+    await user.click(ledger().getByText('WISE-7788-E'))
+
+    expect(screen.getByRole('button', { name: /Record payment/ })).toBeTruthy()
+    expect(screen.queryByRole('table', { name: 'Payments' })).toBeNull()
+  })
+
+  it('stays on the ledger when the click ends a text selection', async () => {
+    await openTheLedger()
+    const reference = ledger().getByText('WISE-7788-E')
+
+    // Selecting the reference to copy it must not navigate away. The click
+    // is fired directly: user-event's press would reset the selection first.
+    // The earlier clicks left a caret selection, and addRange is ignored
+    // while one exists, so it is cleared before the reference is selected.
+    const range = document.createRange()
+    range.selectNodeContents(reference)
+    window.getSelection()!.removeAllRanges()
+    window.getSelection()!.addRange(range)
+    fireEvent.click(reference)
+
+    expect(screen.getByRole('table', { name: 'Payments' })).toBeTruthy()
+    window.getSelection()!.removeAllRanges()
   })
 })
 

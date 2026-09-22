@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import type { Campaign, Creator } from '@/data/types'
 import {
   draftFromCreator,
@@ -12,15 +12,11 @@ import {
 } from '@/domain/creatorRecording'
 import { joinClassNames } from '@/lib/classNames'
 import { usePhoneLayout } from '@/lib/usePhoneLayout'
-import {
-  Button,
-  emphasisedFieldInputClasses,
-  fieldInputClasses,
-  FormField,
-  LabelNote,
-  Modal,
-  monoFieldInputClasses,
-} from '@/ui'
+import { CreatorDealStep } from './CreatorDealStep'
+import { CreatorIdentityStep } from './CreatorIdentityStep'
+import { CreatorPaymentStep } from './CreatorPaymentStep'
+import { PhoneText } from './PhoneText'
+import { Button, fieldInputClasses, FormField, LabelNote, Modal } from '@/ui'
 
 /**
  * Adding a creator, and editing one that exists.
@@ -68,17 +64,6 @@ const problemMessages: Record<CreatorProblem, string> = {
   'window-backwards': 'The delivery window ends before it starts.',
 }
 
-const LANGUAGES = ['English', 'Spanish', 'Portuguese', 'German', 'French', 'Japanese']
-const REGIONS = [
-  'United States',
-  'United Kingdom',
-  'Canada',
-  'Brazil',
-  'Germany',
-  'Japan',
-  'Philippines',
-]
-const PAYMENT_METHODS = ['Bank transfer', 'PayPal', 'Crypto', 'Other']
 /**
  * The payout currencies the design offers. Every figure in the tracker stays
  * in US dollars (DECISIONS.md, Q8); this is for whoever makes the transfer.
@@ -254,288 +239,18 @@ export function CreatorModal({
         })}
       </div>
 
-      {step === 'identity' && (
-        /* Two columns from md up. On a phone one, except platform and
-           language, which the phone design pairs on a row; the order classes
-           move language up beside platform there. */
-        <div className="grid grid-cols-2 gap-x-3 gap-y-3.5 md:gap-x-4.5 md:gap-y-3.75">
-          <FormField label="Creator name" className="order-1 col-span-2 md:order-0 md:col-span-1">
-            <input
-              value={draft.name}
-              onChange={(event) => update('name')(event.target.value)}
-              aria-label="Creator name"
-              className={fieldInputClasses}
-            />
-          </FormField>
-
-          <FormField
-            label={
-              <>
-                Email<LabelNote tone="accent">required</LabelNote>
-              </>
-            }
-            className="order-2 col-span-2 md:order-0 md:col-span-1"
-          >
-            <input
-              type="email"
-              value={draft.email}
-              onChange={(event) => update('email')(event.target.value)}
-              placeholder="invite is sent here"
-              aria-label="Email"
-              className={fieldInputClasses}
-            />
-          </FormField>
-
-          <FormField label="Platform" className="order-3 md:order-0">
-            <select
-              value={draft.platform}
-              onChange={(event) => update('platform')(event.target.value)}
-              aria-label="Platform"
-              className={fieldInputClasses}
-            >
-              <option value="YouTube">YouTube</option>
-              <option value="Twitch">Twitch</option>
-            </select>
-          </FormField>
-
-          <FormField
-            label="Channel URL or ID"
-            className="order-5 col-span-2 md:order-0 md:col-span-1"
-          >
-            <input
-              value={draft.channelUrl}
-              onChange={(event) => update('channelUrl')(event.target.value)}
-              aria-label="Channel URL or ID"
-              className={fieldInputClasses}
-            />
-          </FormField>
-
-          <FormField
-            label={<PhoneText wide="Preferred contact handle" phone="Contact handle" />}
-            className="order-6 col-span-2 md:order-0 md:col-span-1"
-          >
-            <input
-              value={draft.contactHandle}
-              onChange={(event) => update('contactHandle')(event.target.value)}
-              placeholder="Telegram or Discord"
-              aria-label="Preferred contact handle"
-              className={fieldInputClasses}
-            />
-          </FormField>
-
-          <FormField
-            label={<PhoneText wide="Content language" phone="Language" />}
-            className="order-4 md:order-0"
-          >
-            <select
-              value={draft.contentLanguage}
-              onChange={(event) => update('contentLanguage')(event.target.value)}
-              aria-label="Content language"
-              className={fieldInputClasses}
-            >
-              <option value="">—</option>
-              {LANGUAGES.map((language) => (
-                <option key={language}>{language}</option>
-              ))}
-            </select>
-          </FormField>
-
-          <FormField
-            label="Country or region"
-            className="order-7 col-span-2 md:order-0 md:col-span-1"
-          >
-            <select
-              value={draft.region}
-              onChange={(event) => update('region')(event.target.value)}
-              aria-label="Country or region"
-              className={fieldInputClasses}
-            >
-              <option value="">—</option>
-              {REGIONS.map((region) => (
-                <option key={region}>{region}</option>
-              ))}
-            </select>
-          </FormField>
-
-          {/* Not in the design's field list, but the creator screen shows it
-              beside the channel, so it has to be entered somewhere. */}
-          <FormField label="Audience size" className="order-8 col-span-2 md:order-0 md:col-span-1">
-            <input
-              value={draft.audienceSize}
-              onChange={(event) => update('audienceSize')(event.target.value)}
-              placeholder="e.g. 412K"
-              aria-label="Audience size"
-              className={fieldInputClasses}
-            />
-          </FormField>
-        </div>
-      )}
+      {step === 'identity' && <CreatorIdentityStep draft={draft} update={update} />}
 
       {step === 'deal' && (
-        /* Three columns from md up, as the design lays the deal out. On a
-           phone a six-track grid: whole rows, halves, and the design's row of
-           three for rate, currency and streams. */
-        <>
-          <div className="grid grid-cols-6 gap-x-3 gap-y-3.5 md:grid-cols-3 md:gap-x-4.5 md:gap-y-3.75">
-            <FormField label="Campaign" className="col-span-6 md:col-span-2">
-              <select
-                value={draft.campaignId}
-                onChange={(event) => update('campaignId')(event.target.value)}
-                aria-label="Campaign"
-                className={fieldInputClasses}
-              >
-                <option value="">—</option>
-                {campaigns.map((campaign) => (
-                  <option key={campaign.id} value={String(campaign.id)}>
-                    {campaign.name}
-                  </option>
-                ))}
-              </select>
-            </FormField>
-
-            <FormField label="Assigned code" className="col-span-3 md:col-span-1">
-              <input
-                value={draft.creatorCode}
-                onChange={(event) => update('creatorCode')(event.target.value.toUpperCase())}
-                aria-label="Assigned code"
-                className={joinClassNames(emphasisedFieldInputClasses, 'tracking-[2px]')}
-              />
-            </FormField>
-
-            <FormField label="Rate model" className="col-span-3 md:col-span-1">
-              <select
-                value={draft.rateModel}
-                onChange={(event) => update('rateModel')(event.target.value)}
-                aria-label="Rate model"
-                className={fieldInputClasses}
-              >
-                <option value="per-stream">Per stream</option>
-                <option value="flat-fee">Flat fee</option>
-              </select>
-            </FormField>
-
-            <FormField
-              label={
-                <PhoneText
-                  wide={draft.rateModel === 'flat-fee' ? 'Agreed fee' : 'Agreed rate'}
-                  phone={draft.rateModel === 'flat-fee' ? 'Fee' : 'Rate'}
-                />
-              }
-              className="col-span-2 md:col-span-1"
-            >
-              <input
-                value={draft.agreedRate}
-                onChange={(event) => update('agreedRate')(event.target.value)}
-                inputMode="decimal"
-                aria-label="Agreed rate in dollars"
-                className={fieldInputClasses}
-              />
-            </FormField>
-
-            <FormField
-              label={<PhoneText wide="Currency" phone="Cur." />}
-              className="col-span-2 md:col-span-1"
-            >
-              <select
-                value={draft.payoutCurrency}
-                onChange={(event) => update('payoutCurrency')(event.target.value)}
-                aria-label="Payout currency"
-                className={fieldInputClasses}
-              >
-                {currencies.map((currency) => (
-                  <option key={currency}>{currency}</option>
-                ))}
-              </select>
-            </FormField>
-
-            <FormField
-              label={<PhoneText wide="Streams committed" phone="Streams" />}
-              className="col-span-2 md:col-span-1"
-            >
-              <input
-                value={draft.streamsCommitted}
-                onChange={(event) => update('streamsCommitted')(event.target.value)}
-                inputMode="numeric"
-                aria-label="Streams committed"
-                className={fieldInputClasses}
-              />
-            </FormField>
-
-            <FormField label="Min duration (hrs)" className="col-span-6 md:col-span-1">
-              <input
-                value={draft.minimumStreamHours}
-                onChange={(event) => update('minimumStreamHours')(event.target.value)}
-                inputMode="decimal"
-                aria-label="Minimum duration in hours"
-                className={fieldInputClasses}
-              />
-            </FormField>
-
-            <FormField label="Window opens" className="col-span-3 md:col-span-1">
-              <input
-                type="date"
-                value={draft.deliveryWindowStart}
-                onChange={(event) => update('deliveryWindowStart')(event.target.value)}
-                aria-label="Delivery window opens"
-                className={fieldInputClasses}
-              />
-            </FormField>
-
-            <FormField label="Window closes" className="col-span-3 md:col-span-1">
-              <input
-                type="date"
-                value={draft.deliveryWindowEnd}
-                onChange={(event) => update('deliveryWindowEnd')(event.target.value)}
-                aria-label="Delivery window closes"
-                className={fieldInputClasses}
-              />
-            </FormField>
-
-            <FormField label="Additional requirements" className="col-span-6 md:col-span-3">
-              <textarea
-                value={draft.requirements}
-                onChange={(event) => update('requirements')(event.target.value)}
-                rows={2}
-                placeholder="Code on screen, link in description…"
-                aria-label="Additional requirements"
-                className={joinClassNames(fieldInputClasses, 'resize-y')}
-              />
-            </FormField>
-          </div>
-
-          <p className="mt-3 hidden text-[12px] text-ink-soft md:block">
-            Streams are auto-detected from the YouTube and Twitch APIs, so delivery is measured
-            against these numbers.
-          </p>
-        </>
+        <CreatorDealStep
+          draft={draft}
+          update={update}
+          campaigns={campaigns}
+          currencies={currencies}
+        />
       )}
 
-      {step === 'payment' && (
-        <div className="grid gap-3.5 md:grid-cols-[1fr_1.4fr] md:gap-x-4.5 md:gap-y-3.75">
-          <FormField label="Payment method">
-            <select
-              value={draft.paymentMethod}
-              onChange={(event) => update('paymentMethod')(event.target.value)}
-              aria-label="Payment method"
-              className={fieldInputClasses}
-            >
-              <option value="">—</option>
-              {PAYMENT_METHODS.map((method) => (
-                <option key={method}>{method}</option>
-              ))}
-            </select>
-          </FormField>
-
-          <FormField label="Payment details or reference">
-            <input
-              value={draft.paymentDetails}
-              onChange={(event) => update('paymentDetails')(event.target.value)}
-              aria-label="Payment details or reference"
-              className={monoFieldInputClasses}
-            />
-          </FormField>
-        </div>
-      )}
+      {step === 'payment' && <CreatorPaymentStep draft={draft} update={update} />}
 
       {/* Not a step: these belong to the creator, not to a stage of filling
           the form in, and the team refers to them from any of the three. */}
@@ -626,16 +341,6 @@ export function CreatorModal({
         </ul>
       )}
     </Modal>
-  )
-}
-
-/** Text the phone design words more briefly. Only one of the two is displayed. */
-function PhoneText({ wide, phone }: { wide: string; phone: string }): ReactNode {
-  return (
-    <>
-      <span className="md:hidden">{phone}</span>
-      <span className="hidden md:inline">{wide}</span>
-    </>
   )
 }
 

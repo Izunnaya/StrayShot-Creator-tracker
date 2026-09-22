@@ -139,7 +139,7 @@ export function selectionAfterColumnClick(
  * design names them. Each runs the way that column is best read: most
  * installs, cheapest install, most owed, then A to Z.
  */
-export const PHONE_SORT_ORDERS: { selection: CreatorSortSelection; label: string }[] = [
+const PHONE_SORT_ORDERS: { selection: CreatorSortSelection; label: string }[] = [
   { selection: { column: 'installsAttributed', direction: 'descending' }, label: 'Installs' },
   { selection: { column: 'costPerInstall', direction: 'ascending' }, label: 'Cost / install' },
   { selection: { column: 'outstandingBalance', direction: 'descending' }, label: 'Open balance' },

@@ -35,7 +35,8 @@ on every pull request, for this package and the frontend.
 
 ## Structure
 
-Model, view, controller, with the pieces Express needs around them.
+Controllers and models, with the pieces Express needs around them. There is no
+view layer here: the frontend is the view, and an endpoint answers with JSON.
 
 ```
 src/
@@ -43,16 +44,18 @@ src/
 ├── app.ts          Builds the Express app without listening, so tests can drive it
 ├── config/         Settings read from the environment, checked at boot
 ├── routes/         Which path and method reach which controller. Nothing else
-├── controllers/    Read the request, call the work, answer with a view
+├── controllers/    Read the request, call the work, answer
 ├── models/         The records and the rules that make them valid (from 0.15)
-├── views/          The shapes that go over the wire — the API's contract
 └── middlewares/    Work that wraps every request: not-found, errors, later auth
 ```
 
 The layers only point one way: routes name controllers, controllers call
-models and answer with views. A model never imports Express, which is what
-lets the same rule serve an endpoint, a seed script or a scheduled job, and be
-tested without a server.
+models. A model never imports Express, which is what lets the same rule serve
+an endpoint, a seed script or a scheduled job, and be tested without a server.
+
+A controller assembles its own response body. What a model hands back is not
+automatically what should go over the wire, and the shape that does is the
+API's contract: `frontend/src/data/types.ts` is what it has to satisfy.
 
 `createApp()` is kept apart from `server.ts` so a test can send a request
 through the whole stack — routes, middlewares and all — without opening a

@@ -84,20 +84,20 @@ render (`domain/paymentLedger.ts`), never stored.
 
 ## Backend layout
 
-Model, view, controller, plus the pieces Express needs. `server.ts` reads the
-environment and listens; `app.ts` builds the app without listening, so tests
-drive the whole stack through supertest without opening a port
+Controllers and models, plus the pieces Express needs. No view layer — the
+frontend is the view, and a controller assembles its own JSON. `server.ts`
+reads the environment and listens; `app.ts` builds the app without listening,
+so tests drive the whole stack through supertest without opening a port
 (`src/app.test.ts`). Under `src/`: `config/` (settings checked at boot),
 `routes/` (paths to controllers, nothing else), `controllers/` (read request,
-call work, answer with a view), `models/` (records and their rules, from
-0.15), `views/` (the shapes that go over the wire), `middlewares/`
-(not-found, errors, later auth and logging).
+call work, answer), `models/` (records and their rules, from 0.15),
+`middlewares/` (not-found, errors, later auth and logging).
 
-Layers point one way: routes name controllers, controllers call models and
-answer with views. A model never imports Express, so a rule can serve an
-endpoint, a seed script or a job, and be tested without a server. The rules it
-must enforce are the frontend's `src/domain/` rules; the contract it must
-satisfy is `frontend/src/data/types.ts`.
+Layers point one way: routes name controllers, controllers call models. A
+model never imports Express, so a rule can serve an endpoint, a seed script or
+a job, and be tested without a server. The rules it must enforce are the
+frontend's `src/domain/` rules; the contract it must satisfy is
+`frontend/src/data/types.ts`.
 
 Imports name the `.ts` file they mean (`rewriteRelativeImportExtensions`), not
 `./app.js`.

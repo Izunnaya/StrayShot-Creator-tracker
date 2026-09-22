@@ -99,6 +99,13 @@ export default function App() {
       ? 'new'
       : (creators.find((creator) => creator.id === creatorBeingEditedId) ?? null)
 
+  /** Replaces one creator with the result of `change`, leaving the rest alone. */
+  function updateCreator(creatorId: number, change: (creator: Creator) => Creator) {
+    setCreators((current) =>
+      current.map((creator) => (creator.id === creatorId ? change(creator) : creator)),
+    )
+  }
+
   function recordPayment(draft: PaymentDraft) {
     if (!creatorBeingPaid) return
 
@@ -152,15 +159,16 @@ export default function App() {
     // A new creator is invited exactly as an edited one is.
     const withInvite = (saved: Creator) => (options.sendInvite ? asInvited(saved) : saved)
 
-    setCreators((current) =>
-      editing
-        ? current.map((creator) =>
-            creator.id === editing.id
-              ? withInvite(applyDraftToCreator(creator, draft, { campaigns }))
-              : creator,
-          )
-        : [...current, withInvite(buildCreator(draft, { id: nextCreatorId(current), campaigns }))],
-    )
+    if (editing) {
+      updateCreator(editing.id, (creator) =>
+        withInvite(applyDraftToCreator(creator, draft, { campaigns })),
+      )
+    } else {
+      setCreators((current) => [
+        ...current,
+        withInvite(buildCreator(draft, { id: nextCreatorId(current), campaigns })),
+      ])
+    }
     setCreatorBeingEditedId(null)
   }
 
@@ -184,32 +192,21 @@ export default function App() {
    * Restore control is right there — leaving would hide the way back.
    */
   function setCreatorArchived(creator: Creator, archived: boolean) {
-    setCreators((current) =>
-      current.map((entry) =>
-        entry.id === creator.id
-          ? archived
-            ? archiveCreator(entry, todayAsIsoDate())
-            : restoreCreator(entry)
-          : entry,
-      ),
+    updateCreator(creator.id, (entry) =>
+      archived ? archiveCreator(entry, todayAsIsoDate()) : restoreCreator(entry),
     )
   }
 
   /** Sending is Module 8's work; this records that it went. */
   function sendInvite(creator: Creator) {
-    setCreators((current) =>
-      current.map((entry) => (entry.id === creator.id ? asInvited(entry) : entry)),
-    )
+    updateCreator(creator.id, asInvited)
   }
 
   function addPayment(creatorId: number, payment: Payment) {
-    setCreators((current) =>
-      current.map((creator) =>
-        creator.id === creatorId
-          ? { ...creator, payments: [...creator.payments, payment] }
-          : creator,
-      ),
-    )
+    updateCreator(creatorId, (creator) => ({
+      ...creator,
+      payments: [...creator.payments, payment],
+    }))
   }
 
   return (

@@ -5,10 +5,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project state
 
 Stray Shot Creator Tracker: a marketing team's tool for streamer campaigns
-(creators, deals, streams, payments, installs). Only `frontend/` has code — a
-React 19 + Vite 8 + TypeScript 6 + Tailwind 4 app running on in-memory fixture
-data. `backend/` is a README placeholder for a planned Express + Prisma +
-PostgreSQL API. No auth, no persistence, no creator portal or public page yet.
+(creators, deals, streams, payments, installs). `frontend/` is a React 19 +
+Vite 8 + TypeScript 6 + Tailwind 4 app running on in-memory fixture data.
+`backend/` is an Express 5 + TypeScript API, scaffolded in task 0.11 with a
+health route and nothing else. No database, no auth, no persistence, no
+creator portal or public page yet.
 
 Live on Vercel: https://stray-shot-creator-tracker-kappa.vercel.app. The Vercel
 project's Root Directory is `frontend`; `frontend/vercel.json` rewrites every
@@ -17,7 +18,11 @@ Pushing to `master` deploys production; every PR gets a preview.
 
 ## Commands
 
-All from `frontend/` (Node 22.12+ or 20.19+):
+Both packages take the same commands (Node 22.12+; the frontend also runs on
+20.19+), and a change must pass `build`, `lint`, `format:check` and `test` in
+whichever it touches. CI runs those four on both for every pull request.
+
+From `frontend/`:
 
 ```sh
 npm run dev                  # Vite dev server
@@ -29,9 +34,19 @@ npx vitest run src/domain/paymentLedger.test.ts          # one file
 npx vitest run src/domain/paymentLedger.test.ts -t "range"  # tests whose name matches
 ```
 
-A change must pass build, lint, format:check and test. Don't run `npm ci` while
-the user's `npm run dev` is running — on Windows a locked native binary aborts
-it halfway and leaves `node_modules` gutted; use `npm install` instead.
+From `backend/`:
+
+```sh
+npm run dev                  # tsx watch, http://localhost:4000
+npm run build                # tsc -b, emitting dist/
+npm start                    # run the compiled server
+npm test                     # vitest run
+```
+
+Don't run `npm ci` while the user's `npm run dev` is running — on Windows a
+locked native binary aborts it halfway and leaves `node_modules` gutted; use
+`npm install` instead. A dev server also caches a file that was missing when
+it first asked for it, so restart it after adding an asset.
 
 ## Architecture
 
@@ -66,6 +81,26 @@ without the screens changing.
 
 Payments live inside each `Creator`. The ledger is derived from them on every
 render (`domain/paymentLedger.ts`), never stored.
+
+## Backend layout
+
+Model, view, controller, plus the pieces Express needs. `server.ts` reads the
+environment and listens; `app.ts` builds the app without listening, so tests
+drive the whole stack through supertest without opening a port
+(`src/app.test.ts`). Under `src/`: `config/` (settings checked at boot),
+`routes/` (paths to controllers, nothing else), `controllers/` (read request,
+call work, answer with a view), `models/` (records and their rules, from
+0.15), `views/` (the shapes that go over the wire), `middlewares/`
+(not-found, errors, later auth and logging).
+
+Layers point one way: routes name controllers, controllers call models and
+answer with views. A model never imports Express, so a rule can serve an
+endpoint, a seed script or a job, and be tested without a server. The rules it
+must enforce are the frontend's `src/domain/` rules; the contract it must
+satisfy is `frontend/src/data/types.ts`.
+
+Imports name the `.ts` file they mean (`rewriteRelativeImportExtensions`), not
+`./app.js`.
 
 ## Domain rules that code must preserve
 

@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+# A new push to a branch makes the run already going on it pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    strategy:
+      # Both halves always report, so one failure does not hide the other.
+      fail-fast: false
+      matrix:
+        package: [frontend, backend]
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ matrix.package }}/package-lock.json
+
+      - run: npm ci
+
+      # The same four checks a change has to pass locally, in the same order.
+      - run: npm run build
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm test

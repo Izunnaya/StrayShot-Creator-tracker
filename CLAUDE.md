@@ -85,13 +85,16 @@ render (`domain/paymentLedger.ts`), never stored.
 ## Backend layout
 
 Controllers and models, plus the pieces Express needs. No view layer — the
-frontend is the view, and a controller assembles its own JSON. `server.ts`
-reads the environment and listens; `app.ts` builds the app without listening,
-so tests drive the whole stack through supertest without opening a port
-(`src/app.test.ts`). Under `src/`: `config/` (settings checked at boot),
-`routes/` (paths to controllers, nothing else), `controllers/` (read request,
-call work, answer), `models/` (records and their rules, from 0.15),
+frontend is the view, and a controller assembles its own JSON. `server.ts` is
+the whole server in one file: `dotenv/config` first, then the app, the
+middlewares and `listen` (skipped under `NODE_ENV=test`); it exports the app
+so `src/server.test.ts` drives the stack through supertest without a port.
+Settings are read straight from `process.env` — no config module. Under
+`src/`: `routes/` (paths to controllers, nothing else), `controllers/` (read
+request, call work, answer), `models/` (records and their rules, from 0.15),
 `middlewares/` (not-found, errors, later auth and logging).
+
+Keep backend code plain: no layer or wrapper that does not earn itself.
 
 Layers point one way: routes name controllers, controllers call models. A
 model never imports Express, so a rule can serve an endpoint, a seed script or

@@ -40,14 +40,17 @@ view layer here: the frontend is the view, and an endpoint answers with JSON.
 
 ```
 src/
-├── server.ts       Entry point: reads the environment, starts listening
-├── app.ts          Builds the Express app without listening, so tests can drive it
-├── config/         Settings read from the environment, checked at boot
+├── server.ts       The whole server: dotenv, the app, the middlewares, listen
 ├── routes/         Which path and method reach which controller. Nothing else
 ├── controllers/    Read the request, call the work, answer
 ├── models/         The records and the rules that make them valid (from 0.15)
 └── middlewares/    Work that wraps every request: not-found, errors, later auth
 ```
+
+`server.ts` loads `dotenv/config` on its first line, so anything below it
+reads settings straight from `process.env`. It exports the app, which is how
+`src/server.test.ts` sends requests through the whole stack without a port;
+listening is skipped under `NODE_ENV=test`.
 
 The layers only point one way: routes name controllers, controllers call
 models. A model never imports Express, which is what lets the same rule serve

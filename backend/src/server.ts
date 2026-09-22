@@ -1,24 +1,23 @@
-import { createApp } from './app.ts'
-import { readEnv } from './config/env.ts'
+import 'dotenv/config'
+import express from 'express'
+import { errorHandler } from './middlewares/errorHandler.ts'
+import { notFound } from './middlewares/notFound.ts'
+import { apiRoutes } from './routes/index.ts'
 
-/**
- * The entry point: read the environment, build the app, listen.
- *
- * Everything that could fail on a bad setting fails here, before the port is
- * open, so a misconfigured server never accepts a request it cannot serve.
- */
-const env = readEnv()
-const app = createApp(env.nodeEnv)
+const app = express()
+const port = process.env.PORT ?? 4000
 
-const server = app.listen(env.port, () => {
-  console.log(`API listening on http://localhost:${env.port} (${env.nodeEnv})`)
-})
+app.use(express.json())
+app.use('/api', apiRoutes)
 
-/* Docker and most hosts stop a container with SIGTERM, Ctrl+C sends SIGINT.
-   Both are answered the same way: stop taking new connections, let the ones
-   in flight finish, then exit -- rather than cutting off a request midway. */
-for (const signal of ['SIGTERM', 'SIGINT'] as const) {
-  process.on(signal, () => {
-    server.close(() => process.exit(0))
-  })
+// Last two, in this order: Express reaches the error handler only after
+// everything before it, and notFound answers whatever no route matched.
+app.use(notFound)
+app.use(errorHandler)
+
+// The tests send requests straight to `app`, so they never need a port.
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(port, () => console.log(`API listening on http://localhost:${port}`))
 }
+
+export default app

@@ -9,23 +9,27 @@ streamed, what has been paid, and what every install cost.
 ## Where it stands
 
 The team side of the product is built as a working frontend, at desktop and
-phone widths, running on the fixture data it holds in the browser. There is no
-database, API or sign-in yet, so every change is lost on reload.
+phone widths, running on the fixture data it holds in the browser. The API
+beside it is scaffolded — Express and TypeScript, with a health route and
+nothing else — so there is still no database, no sign-in and no persistence:
+every change is lost on reload.
 
-| Built                                                                      | Not yet built                                                 |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Campaign overview: headline figures, budget, installs chart, creator table | The API and PostgreSQL database (`backend/` is a placeholder) |
-| Creator screen: deal, payment progress, payment and stream history         | Team sign-in and roles (waits on open question Q3)            |
-| Payments ledger: search, campaign and date filters, sort, filtered total   | Creator portal: invite, claim, login, portal, expired link    |
-| Creating and editing campaigns                                             | Public code-redemption landing page                           |
-| Adding and editing creators, in the three-step form                        | YouTube and Twitch polling, stream matching                   |
-| Recording and reversing payments                                           | Install attribution and delivery verification                 |
-| Archiving a finished creator, discarding an untouched one                  | Loading and error states for data fetched over the network    |
-| An address for every screen: `/`, `/payments`, `/creators/:id`             |                                                               |
+| Built                                                                      | Not yet built                                                         |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Campaign overview: headline figures, budget, installs chart, creator table | The PostgreSQL database and every product endpoint (task 0.15 onward) |
+| Creator screen: deal, payment progress, payment and stream history         | Team sign-in and roles (waits on open question Q3)                    |
+| Payments ledger: search, campaign and date filters, sort, filtered total   | Creator portal: invite, claim, login, portal, expired link            |
+| Creating and editing campaigns                                             | Public code-redemption landing page                                   |
+| Adding and editing creators, in the three-step form                        | YouTube and Twitch polling, stream matching                           |
+| Recording and reversing payments                                           | Install attribution and delivery verification                         |
+| Archiving a finished creator, discarding an untouched one                  | Loading and error states for data fetched over the network            |
+| An address for every screen: `/`, `/payments`, `/creators/:id`             |                                                                       |
+| An Express API scaffolded with a health route, and CI on both packages     |                                                                       |
 
 ## Running it locally
 
-Needs Node 22.12 or later (or 20.19+). Everything runs from `frontend/`.
+Needs Node 22.12 or later (the frontend also runs on 20.19+). The two packages
+are installed and run separately.
 
 ```sh
 cd frontend
@@ -44,6 +48,20 @@ npm run dev          # http://localhost:5173
 | `npm run build`        | Type-check, then build the production bundle to `dist/` |
 | `npm run preview`      | Serve the built bundle locally                          |
 
+The API takes the same command names, from `backend/`:
+
+```sh
+cd backend
+npm install
+cp .env.example .env
+npm run dev          # http://localhost:4000
+```
+
+`npm run build`, `npm run lint`, `npm run format:check` and `npm test` mean the
+same thing there, plus `npm start` to run the compiled server. A change must
+pass those four in whichever package it touches; CI runs them on both for every
+pull request. Detail is in [backend/README.md](backend/README.md).
+
 ## Repository layout
 
 ```
@@ -55,7 +73,7 @@ npm run dev          # http://localhost:5173
 │   │   ├── data/        Types, fixture data, and the stand-in session
 │   │   └── lib/         Formatting, the router, small helpers
 │   └── vercel.json      Serves index.html for every path
-├── backend/             Placeholder for the Express + Prisma API (not started)
+├── backend/             Express + TypeScript API: a health route so far, Prisma and Postgres to come
 ├── docs/                Architecture and domain documentation
 ├── DECISIONS.md         Product questions that are settled, and why
 ├── OPEN-QUESTIONS.md    Questions raised during the build, still unanswered
@@ -71,6 +89,7 @@ npm run dev          # http://localhost:5173
 | [DECISIONS.md](DECISIONS.md)                 | Every settled product decision, with what was ruled out                  |
 | [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md)       | What is still undecided and what each question blocks                    |
 | [frontend/README.md](frontend/README.md)     | Frontend detail: screen behaviour, chart data, the test inventory        |
+| [backend/README.md](backend/README.md)       | API detail: how the server is laid out and what each layer may do       |
 | [CONTRIBUTING.md](CONTRIBUTING.md)           | How to make and land a change                                            |
 
 Scope comes from the project brief and its Additions document (the Additions

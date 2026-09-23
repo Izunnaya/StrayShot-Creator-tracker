@@ -47,16 +47,17 @@ Q-number or task it settles. Wrap it at about 72 characters.
 
 ## Before you push
 
-From `frontend/`:
+From the package you touched — `frontend/`, `backend/`, or both:
 
 ```sh
-npm run build          # type-check (tsc -b) and production build
+npm run build          # type-check (tsc -b), and the production build in the frontend
 npm run lint           # oxlint
 npm run format:check   # Prettier
 npm test               # the full suite
 ```
 
-All four must pass.
+All four must pass. CI runs the same four, in the same order, on both packages
+for every pull request.
 
 ## Code conventions
 

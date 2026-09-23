@@ -60,10 +60,6 @@ A controller assembles its own response body. What a model hands back is not
 automatically what should go over the wire, and the shape that does is the
 API's contract: `frontend/src/data/types.ts` is what it has to satisfy.
 
-`createApp()` is kept apart from `server.ts` so a test can send a request
-through the whole stack — routes, middlewares and all — without opening a
-port. `src/app.test.ts` does exactly that.
-
 Imports name the `.ts` file they mean; the compiler rewrites them to `.js` on
 the way out.
 

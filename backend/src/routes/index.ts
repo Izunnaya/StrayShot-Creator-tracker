@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { healthRoutes } from './health.routes.ts'
+import { readyRoutes } from './ready.routes.ts'
 
 /**
  * Every route the API serves, gathered under /api.
@@ -10,3 +11,4 @@ import { healthRoutes } from './health.routes.ts'
 export const apiRoutes = Router()
 
 apiRoutes.use(healthRoutes)
+apiRoutes.use(readyRoutes)

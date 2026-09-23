@@ -22,6 +22,14 @@ jobs:
     defaults:
       run:
         working-directory: ${{ matrix.package }}
+
+    # No database runs here. The backend's postinstall generates the Prisma
+    # client, which needs a URL to be present but never connects, and the one
+    # test that touches the database stubs it. A real Postgres arrives if and
+    # when a test needs real rows.
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+
     steps:
       - uses: actions/checkout@v4
 

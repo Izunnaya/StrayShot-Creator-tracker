@@ -10,21 +10,21 @@ streamed, what has been paid, and what every install cost.
 
 The team side of the product is built as a working frontend, at desktop and
 phone widths, running on the fixture data it holds in the browser. The API
-beside it is scaffolded — Express and TypeScript, with a health route and
-nothing else — so there is still no database, no sign-in and no persistence:
-every change is lost on reload.
+beside it is scaffolded — Express and TypeScript, now connected to a
+PostgreSQL database on Neon — but it serves no product endpoint yet, so the
+screens still read fixtures and every change is lost on reload.
 
-| Built                                                                      | Not yet built                                                         |
-| -------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Campaign overview: headline figures, budget, installs chart, creator table | The PostgreSQL database and every product endpoint (task 0.15 onward) |
-| Creator screen: deal, payment progress, payment and stream history         | Team sign-in and roles (waits on open question Q3)                    |
-| Payments ledger: search, campaign and date filters, sort, filtered total   | Creator portal: invite, claim, login, portal, expired link            |
-| Creating and editing campaigns                                             | Public code-redemption landing page                                   |
-| Adding and editing creators, in the three-step form                        | YouTube and Twitch polling, stream matching                           |
-| Recording and reversing payments                                           | Install attribution and delivery verification                         |
-| Archiving a finished creator, discarding an untouched one                  | Loading and error states for data fetched over the network            |
-| An address for every screen: `/`, `/payments`, `/creators/:id`             |                                                                       |
-| An Express API scaffolded with a health route, and CI on both packages     |                                                                       |
+| Built                                                                      | Not yet built                                                            |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Campaign overview: headline figures, budget, installs chart, creator table | The tables themselves: campaign, creator and payment (1.16, 4.21, 6.15)  |
+| Creator screen: deal, payment progress, payment and stream history         | Every product endpoint, and the screens reading them instead of fixtures |
+| Payments ledger: search, campaign and date filters, sort, filtered total   | Team sign-in and roles (waits on open question Q3)                       |
+| Creating and editing campaigns                                             | Creator portal: invite, claim, login, portal, expired link               |
+| Adding and editing creators, in the three-step form                        | Public code-redemption landing page                                      |
+| Recording and reversing payments                                           | YouTube and Twitch polling, stream matching                              |
+| Archiving a finished creator, discarding an untouched one                  | Install attribution and delivery verification                            |
+| An address for every screen: `/`, `/payments`, `/creators/:id`             | Loading and error states for data fetched over the network               |
+| An Express API, its connection to Postgres, and CI on both packages        |                                                                          |
 
 ## Running it locally
 
@@ -53,8 +53,9 @@ The API takes the same command names, from `backend/`:
 ```sh
 cd backend
 npm install
-cp .env.example .env
-npm run dev          # http://localhost:4000
+cp .env.example .env   # DATABASE_URL is a Neon connection string
+npm run db:generate
+npm run dev            # http://localhost:4000
 ```
 
 `npm run build`, `npm run lint`, `npm run format:check` and `npm test` mean the
@@ -73,7 +74,7 @@ pull request. Detail is in [backend/README.md](backend/README.md).
 │   │   ├── data/        Types, fixture data, and the stand-in session
 │   │   └── lib/         Formatting, the router, small helpers
 │   └── vercel.json      Serves index.html for every path
-├── backend/             Express + TypeScript API: a health route so far, Prisma and Postgres to come
+├── backend/             Express + TypeScript API over Postgres (Neon) with Prisma: health and readiness so far
 ├── docs/                Architecture and domain documentation
 ├── DECISIONS.md         Product questions that are settled, and why
 ├── OPEN-QUESTIONS.md    Questions raised during the build, still unanswered

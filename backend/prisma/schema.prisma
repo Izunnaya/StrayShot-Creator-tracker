@@ -1,0 +1,21 @@
+// The shape of the database.
+//
+// Nothing is modelled yet, on purpose: task 0.15 is the connection and the
+// conventions, and each table arrives with the module that needs it — campaign
+// (1.16), creator (4.21), payment (6.15).
+//
+// What every model added here has to hold to is in README.md under "Schema
+// conventions": money as Int cents, ids that match frontend/src/data/types.ts,
+// nothing derived ever stored, and payments only ever inserted.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+// Prisma 7 takes the connection string from prisma7.config.ts rather than from
+// this block, which is why there is no url here: the schema is committed, the
+// URL is not.
+datasource db {
+  provider = "postgresql"
+}

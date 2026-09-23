@@ -20,3 +20,6 @@ dist-ssr/
 .idea/
 .DS_Store
 *.log
+
+# Local working knowledge, not shared with the repository
+CLAUDE.md

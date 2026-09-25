@@ -183,9 +183,10 @@ Vitest runs in two environments:
 
 ## Where the API will attach
 
-The backend is planned as Express and TypeScript over PostgreSQL with Prisma
-(build plan tasks 0.11, 0.15 and 0.17 onward). The frontend is arranged so the
-switch is narrow:
+The backend is Express and TypeScript over PostgreSQL with Prisma (build plan
+tasks 0.11 and 0.15), serving a health and a readiness route so far. What its
+endpoints will answer is settled in [api.md](api.md) (0.17). The frontend is
+arranged so the switch is narrow:
 
 1. `data/types.ts` becomes the API contract, ideally shared with the server.
 2. `App.tsx` stops seeding from `fixtures.ts` and fills the same state from the

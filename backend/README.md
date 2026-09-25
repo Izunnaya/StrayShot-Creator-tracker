@@ -5,12 +5,12 @@ repository (Q50).
 
 **Stack:** Node, Express 5 and TypeScript, over PostgreSQL with Prisma 7.
 
-Scaffolded in task 0.11, connected to a database in 0.15. There is still no
-product endpoint and no table: the two routes are a health check, which proves
-the process is up, and a readiness check, which proves a query reaches
-Postgres. The first tables arrive with the modules that need them — campaign
-(1.16), creator (4.21), payment (6.15) — the response and error conventions in
-0.17, and team sign-in in 0.16, which waits on Q3.
+Scaffolded in task 0.11, connected to a database in 0.15, and answering in one
+agreed shape since 0.17 (`docs/api.md`). There is still no product endpoint
+and no table: the two routes are a health check, which proves the process is
+up, and a readiness check, which proves a query reaches Postgres. The first
+tables arrive with the modules that need them — campaign (1.16), creator
+(4.21), payment (6.15) — and team sign-in in 0.16, which waits on Q3.
 
 | Address       | Answers                                                            |
 | ------------- | ------------------------------------------------------------------ |
@@ -134,6 +134,10 @@ places, and the reasoning for each is in `DECISIONS.md` under its Q-number.
 
 Plus the scheduled integrations: YouTube and Twitch polling, stream matching,
 install attribution, and delivery verification.
+
+How an endpoint answers — success shapes, the error envelope, which status
+code carries which failure — is settled in `docs/api.md` (0.17), and an
+endpoint added later follows it rather than inventing its own shape.
 
 The business rules it has to enforce are already written down: `docs/domain.md`
 for what they are, `DECISIONS.md` for why. The frontend's `src/domain/` holds

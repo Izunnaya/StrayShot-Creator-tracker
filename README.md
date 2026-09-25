@@ -87,6 +87,7 @@ pull request. Detail is in [backend/README.md](backend/README.md).
 | -------------------------------------------- | ------------------------------------------------------------------------ |
 | [docs/architecture.md](docs/architecture.md) | How the app is put together, where state lives, how the API will slot in |
 | [docs/domain.md](docs/domain.md)             | What a campaign, creator, deal and payment are, and the rules on money   |
+| [docs/api.md](docs/api.md)                   | What every endpoint answers: success shapes, error shapes, status codes  |
 | [DECISIONS.md](DECISIONS.md)                 | Every settled product decision, with what was ruled out                  |
 | [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md)       | What is still undecided and what each question blocks                    |
 | [frontend/README.md](frontend/README.md)     | Frontend detail: screen behaviour, chart data, the test inventory        |

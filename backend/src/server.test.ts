@@ -38,14 +38,16 @@ describe('an address the API does not serve', () => {
 })
 
 describe('a request body', () => {
-  it('is parsed as JSON before a route sees it', async () => {
+  it('is parsed as JSON before a route sees it, and a broken one says whose fault it is', async () => {
     /* No route reads a body yet, so the parser is proved by what it refuses:
-       malformed JSON fails in the parser rather than reaching a route. */
+       malformed JSON fails in the parser rather than reaching a route, and
+       says so as 400 rather than claiming the server broke (0.17). */
     const response = await request(app)
       .post('/api/health')
       .set('Content-Type', 'application/json')
       .send('{"broken":')
 
-    expect(response.status).toBeGreaterThanOrEqual(400)
+    expect(response.status).toBe(400)
+    expect(response.body.error.code).toBe('invalid_json')
   })
 })

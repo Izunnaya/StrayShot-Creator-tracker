@@ -107,9 +107,12 @@ places, and the reasoning for each is in `DECISIONS.md` under its Q-number.
 
 - **Money is an `Int` of cents.** Never `Float`, never `Decimal`. `1600` is
   sixteen dollars, and only a formatter divides by 100. (Q8)
-- **Ids are the opaque strings `frontend/src/data/types.ts` already uses**, so
-  a fixture record and an API record are the same shape, and one can replace
-  the other without a screen noticing.
+- **Ids are integers**, as `frontend/src/data/types.ts` already has them
+  (`Payment.id`, `Campaign.id`, `creatorId` are all `number`), so a fixture
+  record and an API record are the same shape and one can replace the other
+  without a screen noticing. A table's primary key is that integer; the one
+  exception is `recordedByTeamMemberId`, a string, because it stands in for a
+  sign-in identity rather than a row this database owns (Q4).
 - **Records point at each other by id**, never by a copied name: a creator
   holds a campaign id, and the campaign's name is looked up.
 - **Nothing derived is stored.** Lifecycle status, outstanding balance, totals
